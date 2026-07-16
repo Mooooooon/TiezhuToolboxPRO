@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+publish/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# Screenshots generated at runtime
+screenshots/
+
+# OS
+Thumbs.db
+Desktop.ini
