@@ -31,8 +31,8 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 /// 强化建议（算法参考社区打铁助手脚本）：
 /// 分数阶梯 —— +3 前分数 ≥ 阈值，之后每 3 级要求 +6 分，+15 时 ≥ 阈值+30 建议重铸；
 /// 分数不达标时赌速度 —— 副属性速度 ≥ 3/6/9/12/12（对应 +3/+6/+9/+12/+15 前）可继续，+15 时速度 ≥ 15 建议重铸。
-/// 左三件（武器/头盔/铠甲）直接走上述流程；右三件（项链/戒指/鞋子）先淘汰固定值主属性，
-/// 且只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
+/// 左三件（武器/头盔/铠甲）直接走上述流程；项链/戒指即使是固定值主属性，只要速度达标也可作为速度散件继续赌；
+/// 其余右三件固定值主属性直接淘汰。只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
 /// </summary>
 public static class EnhancementAdvisor
 {
@@ -78,9 +78,16 @@ public static class EnhancementAdvisor
                    ?? SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score));
         }
 
-        // 右三件：固定攻击/防御/生命主属性直接放弃
+        // 项链/戒指的固定值主属性通常应放弃，但速度达标时仍可作为速度散件继续赌。
         if (IsFixedMainStat(info.MainStatName, info.MainStatValue))
         {
+            if (part is Part.Necklace or Part.Ring)
+            {
+                var speedOffPiece = SpeedOffPieceLadder(GetSpeed(info), enhance);
+                if (speedOffPiece != null)
+                    return speedOffPiece;
+            }
+
             return new EnhanceAdviceResult(EnhanceAdvice.GiveUpFixedMain,
                 "固定值主属性，建议放弃", $"右三件主属性为固定{info.MainStatName}，收益过低");
         }
@@ -134,6 +141,26 @@ public static class EnhancementAdvisor
             ? new EnhanceAdviceResult(EnhanceAdvice.Reforge,
                 "建议重铸", $"分数不足，但速度 {speed} ≥ 15，值得重铸")
             : new EnhanceAdviceResult(EnhanceAdvice.GiveUp, "分数过低，建议放弃", giveUpDetail);
+    }
+
+    /// <summary>固定值主属性项链/戒指的速度散件例外：速度达标返回建议，否则仍按固定主属性淘汰。</summary>
+    private static EnhanceAdviceResult? SpeedOffPieceLadder(int speed, int enhance)
+    {
+        foreach (var (cap, required) in SpeedSteps)
+        {
+            if (enhance < cap)
+            {
+                return speed >= required
+                    ? new EnhanceAdviceResult(EnhanceAdvice.GambleSpeed,
+                        "继续赌速度", $"固定值主属性仅作速度散件，速度 {speed} ≥ {required}（强化 +{cap} 前要求）")
+                    : null;
+            }
+        }
+
+        return enhance == 15 && speed >= 15
+            ? new EnhanceAdviceResult(EnhanceAdvice.Reforge,
+                "建议重铸", $"固定值主属性仅作速度散件，速度 {speed} ≥ 15，值得重铸")
+            : null;
     }
 
     /// <summary>从品质文本（如"传说武器"）识别装备部位。</summary>

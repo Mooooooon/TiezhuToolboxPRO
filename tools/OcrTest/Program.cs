@@ -90,6 +90,20 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "效果命中", Value = "7%" },
         },
     });
+    PrintAdvice("传说戒指 固定防御主属性速度4（应：作为速度散件继续赌）", new EquipmentInfo
+    {
+        Quality = "传说戒指",
+        MainStatName = "防御力",
+        MainStatValue = "60",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "防御力", Value = "8%" },
+            new SubStat { Name = "攻击力", Value = "38" },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "4" },
+        },
+    });
     PrintAdvice("传说武器 +0 低分带速度3（应：继续赌速度）", new EquipmentInfo
     {
         Quality = "传说武器",
@@ -110,7 +124,7 @@ if (args.Contains("--synthetic"))
         EnhanceLevel = 0,
         SubStats =
         {
-            new SubStat { Name = "速度", Value = "8" },
+            new SubStat { Name = "速度", Value = "2" },
             new SubStat { Name = "暴击率", Value = "8%" },
             new SubStat { Name = "攻击力", Value = "8%" },
             new SubStat { Name = "效果命中", Value = "7%" },
