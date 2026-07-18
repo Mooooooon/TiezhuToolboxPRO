@@ -5,7 +5,7 @@ namespace TiezhuToolbox.Modules.Ocr;
 
 /// <summary>
 /// OCR 引擎：识别装备文本信息。
-/// 使用 PaddleOCR 词坐标 + 结构锚点（装备分数行）定位，不依赖固定分辨率坐标。
+/// OCR 输入只保留左侧装备信息区域，并按属性、品质和套装文本各自定位。
 /// </summary>
 public class OcrEngine : IDisposable
 {
@@ -68,115 +68,107 @@ public class OcrEngine : IDisposable
 
         try
         {
-            // 装备信息面板在窗口左侧（约占宽度 45%）
-            var panelRect = new Rect(0, 0, (int)(mat.Width * 0.45), mat.Height);
+            // 预处理：只把左侧装备信息区域送入 OCR，排除顶部导航、中间强化区和右侧材料区。
+            var panelRect = ImagePreprocessor.GetEquipmentPanelRect(mat);
             using var panel = ImagePreprocessor.Crop(mat, panelRect);
 
             // PaddleOCR 检测 + 识别面板文本（模型缺失等异常由外层 catch 记录到 RawText）
             var words = GetPaddle().Run(panel)
-                .Select(tb => new OcrWord(tb.Text, tb.Box.X, tb.Box.Y, tb.Box.Width, tb.Box.Height))
+                .Select(tb => new OcrWord(
+                    tb.Text,
+                    tb.Box.X + panelRect.X,
+                    tb.Box.Y + panelRect.Y,
+                    tb.Box.Width,
+                    tb.Box.Height))
                 .ToList();
 
             var lines = GroupLines(words);
             info.RawText += string.Join(Environment.NewLine, lines.Select(l => l.Joined));
+            info.RawText += $"{Environment.NewLine}[debug] panel=({panelRect.X},{panelRect.Y},{panelRect.Width},{panelRect.Height})";
 
-            OcrLine? nameLine = null;
             OcrLine? qualityLine = null;
             Rect? iconZone = null;
 
-            // 结构锚点："装备分数"行（OCR 最稳定的一行，仅用作定位锚点，分数本身由副属性计算）
-            var scoreLine = lines.FirstOrDefault(l => l.Joined.Contains("装备分数"));
-            if (scoreLine != null)
+            // 属性行独立定位，不再检测或依赖游戏内的“装备分数”文本。
+            var statLines = lines
+                .Where(l => TrailingValueRegex.IsMatch(l.Joined)
+                         && !l.Joined.Contains('/')
+                         && MatchStatKeyword(l.Joined) != null)
+                .OrderBy(l => l.Y)
+                .ToList();
+
+            var mainDone = false;
+            foreach (var line in statLines)
             {
-                // 套装行：分数行下方，含 n/m 计数
-                var setLine = lines
-                    .Where(l => l.Y > scoreLine.Y + scoreLine.H * 0.5 && Regex.IsMatch(l.Joined, @"\d+\s*/\s*\d+"))
-                    .OrderBy(l => l.Y)
-                    .FirstOrDefault();
-                if (setLine != null)
+                var stat = MatchStatKeyword(line.Joined);
+                if (stat == null)
+                    continue;
+
+                var value = TrailingValueRegex.Match(line.Joined).Groups[1].Value.Replace(" ", "");
+                if (!mainDone)
                 {
-                    var setMatch = Regex.Match(setLine.Joined, @"([一-龥]{2,4})(?:套装|于装|讲装|讨装)");
-                    if (setMatch.Success)
-                        info.SetName = setMatch.Groups[1].Value + "套装";
+                    info.MainStatName = stat;
+                    info.MainStatValue = value;
+                    mainDone = true;
                 }
-
-                // 属性行：分数行上方"以数值结尾且含属性关键字"的行，最上面的是主属性
-                var statLines = lines
-                    .Where(l => l.Y + l.H < scoreLine.Y + scoreLine.H * 0.5
-                             && TrailingValueRegex.IsMatch(l.Joined)
-                             && !l.Joined.Contains('/')
-                             && MatchStatKeyword(l.Joined) != null)
-                    .OrderBy(l => l.Y)
-                    .ToList();
-
-                var mainDone = false;
-                foreach (var l in statLines)
+                else
                 {
-                    var stat = MatchStatKeyword(l.Joined);
-                    if (stat == null)
-                        continue;
-                    var value = TrailingValueRegex.Match(l.Joined).Groups[1].Value.Replace(" ", "");
-                    if (!mainDone)
+                    var sub = new SubStat { Name = stat };
+                    var enhanced = Regex.Match(value, @"^([^（(]+)[（(]([^）)]+)[）)]$");
+                    if (enhanced.Success)
                     {
-                        info.MainStatName = stat;
-                        info.MainStatValue = value;
-                        mainDone = true;
+                        sub.Value = enhanced.Groups[1].Value;
+                        sub.EnhanceValue = enhanced.Groups[2].Value;
                     }
                     else
                     {
-                        var sub = new SubStat { Name = stat };
-                        var em = Regex.Match(value, @"^([^（(]+)[（(]([^）)]+)[）)]$");
-                        if (em.Success)
-                        {
-                            sub.Value = em.Groups[1].Value;
-                            sub.EnhanceValue = em.Groups[2].Value;
-                        }
-                        else
-                        {
-                            sub.Value = value;
-                        }
-                        info.SubStats.Add(sub);
+                        sub.Value = value;
                     }
-                }
-
-                // 装备分数：按民间算法由副属性计算（强化增加值已在副属性总值内，不重复计）
-                info.Score = EquipmentScoreCalculator.Calculate(info.SubStats);
-
-                // 名称行：主属性行上方最近的中文行；品质行：名称行上方最近的中文行
-                var aboveStats = statLines.Count > 0 ? statLines[0].Y : scoreLine.Y;
-                nameLine = lines
-                    .Where(l => l.Y + l.H <= aboveStats + l.H * 0.5 && HasChinese(l.Joined) && !IsInfoLine(l.Joined))
-                    .OrderByDescending(l => l.Y)
-                    .FirstOrDefault();
-                if (nameLine != null)
-                {
-                    info.Name = ExtractName(nameLine.Joined);
-                    // 品质行：名称行上方最近的一行含品质词（传说/史诗/…）
-                    qualityLine = lines
-                        .Where(l => l.Y + l.H <= nameLine.Y + l.H * 0.5
-                                 && QualityWords.Any(q => l.Joined.Contains(q)))
-                        .OrderByDescending(l => l.Y)
-                        .FirstOrDefault();
-                    if (qualityLine != null)
-                        info.Quality = ExtractQuality(qualityLine.Joined);
+                    info.SubStats.Add(sub);
                 }
             }
 
-            // 小图标区域：名称/品质行左侧（含等级"88"和强化徽章"+3"）
-            if (nameLine != null)
+            // 套装行独立定位：位于属性块之后且带 n/m 件数，不依赖“装备分数”行。
+            var lastStatBottom = statLines.Count > 0 ? statLines[^1].Y + statLines[^1].H : 0;
+            var setLine = lines
+                .Where(l => l.Y >= lastStatBottom && Regex.IsMatch(l.Joined, @"\d+\s*/\s*\d+"))
+                .OrderBy(l => l.Y)
+                .FirstOrDefault();
+            if (setLine != null)
             {
-                var topRef = qualityLine ?? nameLine;
-                var zoneY = Math.Max(0, topRef.Y - 3 * topRef.H);
-                var zoneBottom = Math.Min(mat.Height, nameLine.Y + nameLine.H + nameLine.H / 2);
-                // 名称/品质文本从同一列开始（图标右侧）。取两者较大的 X：
-                // OCR 偶尔把图标噪声并入词框使 X 偏小，会导致区域右边界切掉徽章
-                var textX = Math.Max(nameLine.X, qualityLine?.X ?? 0);
-                var zoneRight = Math.Min(mat.Width, textX + 2 * nameLine.H);
-                iconZone = new Rect(0, zoneY, zoneRight, zoneBottom - zoneY);
-                RecognizeLevels(mat, iconZone.Value, topRef, info);
+                var setMatch = Regex.Match(setLine.Joined, @"([一-龥]{2,4})(?:套装|于装|讲装|讨装)");
+                if (setMatch.Success)
+                    info.SetName = setMatch.Groups[1].Value + "套装";
             }
 
-            SaveDebugImage(imagePath, mat, lines, scoreLine, iconZone);
+            // 品质必须是“品质 + 部位”开头的短行。装备名称即使含“英雄”也不会参与匹配。
+            var firstStatY = statLines.Count > 0 ? statLines[0].Y : int.MaxValue;
+            qualityLine = lines
+                .Where(l => l.Y < firstStatY && !string.IsNullOrEmpty(ExtractQuality(l.Joined)))
+                .OrderByDescending(l => l.Y)
+                .FirstOrDefault();
+            if (qualityLine != null)
+                info.Quality = ExtractQuality(qualityLine.Joined);
+
+            // 装备分数仅按副属性的民间算法计算，不读取截图中的游戏分数。
+            info.Score = EquipmentScoreCalculator.Calculate(info.SubStats);
+
+            // 小图标区域：品质行左侧到第一条属性上方，含等级和强化徽章。
+            if (qualityLine != null)
+            {
+                var zoneY = Math.Max(panelRect.Y, qualityLine.Y - 3 * qualityLine.H);
+                var zoneBottom = Math.Min(
+                    panelRect.Bottom,
+                    statLines.Count > 0 ? statLines[0].Y : qualityLine.Y + 6 * qualityLine.H);
+                var zoneRight = Math.Min(panelRect.Right, qualityLine.X + 2 * qualityLine.H);
+                if (zoneRight > panelRect.X && zoneBottom > zoneY)
+                {
+                    iconZone = new Rect(panelRect.X, zoneY, zoneRight - panelRect.X, zoneBottom - zoneY);
+                    RecognizeLevels(mat, iconZone.Value, qualityLine, info);
+                }
+            }
+
+            SaveDebugImage(imagePath, mat, panelRect, lines, iconZone);
         }
         catch (Exception ex)
         {
@@ -501,33 +493,18 @@ public class OcrEngine : IDisposable
 
     private static string ExtractQuality(string text)
     {
-        var m = Regex.Match(text, $@"({string.Join("|", QualityWords)})({string.Join("|", TypeWords)})?");
-        return m.Success ? m.Value : string.Empty;
+        var m = Regex.Match(text, $@"^[^一-龥]{{0,2}}({string.Join("|", QualityWords)})({string.Join("|", TypeWords)})");
+        return m.Success ? m.Groups[1].Value + m.Groups[2].Value : string.Empty;
     }
 
-    private static string ExtractName(string text)
-    {
-        var runs = Regex.Matches(text, @"[一-龥]{2,}");
-        return runs.Count == 0
-            ? text
-            : runs.OrderByDescending(m => m.Length).First().Value;
-    }
-
-    private static bool HasChinese(string text) => Regex.IsMatch(text, @"[一-龥]");
-
-    private static bool IsInfoLine(string text)
-        => QualityWords.Any(text.Contains) || StatKeywords.Any(text.Contains)
-           || text.Contains("装备分数") || text.Contains("套装");
-
-    private static void SaveDebugImage(string imagePath, Mat mat, List<OcrLine> lines, OcrLine? anchor, Rect? iconZone)
+    private static void SaveDebugImage(string imagePath, Mat mat, Rect panelRect, List<OcrLine> lines, Rect? iconZone)
     {
         try
         {
             using var debug = mat.Clone();
+            Cv2.Rectangle(debug, panelRect, new Scalar(0, 255, 255), 2);
             foreach (var l in lines)
                 Cv2.Rectangle(debug, new Rect(l.X, l.Y, l.W, l.H), new Scalar(0, 255, 0), 1);
-            if (anchor != null)
-                Cv2.Rectangle(debug, new Rect(anchor.X, anchor.Y, anchor.W, anchor.H), new Scalar(0, 0, 255), 2);
             if (iconZone is Rect z)
                 Cv2.Rectangle(debug, z, new Scalar(255, 0, 0), 2);
 

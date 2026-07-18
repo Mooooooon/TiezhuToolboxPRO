@@ -177,7 +177,6 @@ foreach (var name in imageNames)
     Console.WriteLine("识别结果:");
     Console.WriteLine($"  装备等级: {info.Level}");
     Console.WriteLine($"  强化等级: +{info.EnhanceLevel}");
-    Console.WriteLine($"  装备名称: {info.Name}");
     Console.WriteLine($"  装备品质: {info.Quality}");
     Console.WriteLine($"  主属性: {info.MainStatName} {info.MainStatValue}");
     Console.WriteLine($"  副属性:");

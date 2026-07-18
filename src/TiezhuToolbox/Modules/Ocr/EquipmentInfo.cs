@@ -11,9 +11,6 @@ public class EquipmentInfo
     /// <summary>强化等级，如 3 表示 +3。</summary>
     public int EnhanceLevel { get; set; }
 
-    /// <summary>装备名称，如“荣耀斗士战斧”。</summary>
-    public string Name { get; set; } = string.Empty;
-
     /// <summary>装备品质，如“传说武器”。</summary>
     public string Quality { get; set; } = string.Empty;
 

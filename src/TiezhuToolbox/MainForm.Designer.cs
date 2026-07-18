@@ -16,7 +16,7 @@ partial class MainForm
     private TableLayoutPanel mainTable;
     private Panel equipCard;
     private TableLayoutPanel equipTable;
-    private Label lblName;
+    private Label lblEquipmentTitle;
     private Label lblMeta;
     private Panel scorePanel;
     private Label lblScoreValue;
@@ -79,7 +79,7 @@ partial class MainForm
         this.mainTable = new TableLayoutPanel();
         this.equipCard = new Panel();
         this.equipTable = new TableLayoutPanel();
-        this.lblName = new Label();
+        this.lblEquipmentTitle = new Label();
         this.lblMeta = new Label();
         this.scorePanel = new Panel();
         this.lblScoreValue = new Label();
@@ -294,7 +294,7 @@ partial class MainForm
         //
         this.equipTable.ColumnCount = 1;
         this.equipTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-        this.equipTable.Controls.Add(this.lblName, 0, 0);
+        this.equipTable.Controls.Add(this.lblEquipmentTitle, 0, 0);
         this.equipTable.Controls.Add(this.lblMeta, 0, 1);
         this.equipTable.Controls.Add(this.scorePanel, 0, 2);
         this.equipTable.Controls.Add(this.advicePanel, 0, 3);
@@ -319,16 +319,16 @@ partial class MainForm
         this.equipTable.Size = new Size(318, 498);
         this.equipTable.TabIndex = 0;
         //
-        // lblName
+        // lblEquipmentTitle
         //
-        this.lblName.AutoSize = true;
-        this.lblName.Font = new Font("Microsoft YaHei UI", 15F, FontStyle.Bold);
-        this.lblName.ForeColor = Color.FromArgb(32, 33, 36);
-        this.lblName.Location = new Point(0, 0);
-        this.lblName.Margin = new Padding(0, 0, 0, 2);
-        this.lblName.Name = "lblName";
-        this.lblName.TabIndex = 0;
-        this.lblName.Text = "尚未识别";
+        this.lblEquipmentTitle.AutoSize = true;
+        this.lblEquipmentTitle.Font = new Font("Microsoft YaHei UI", 15F, FontStyle.Bold);
+        this.lblEquipmentTitle.ForeColor = Color.FromArgb(32, 33, 36);
+        this.lblEquipmentTitle.Location = new Point(0, 0);
+        this.lblEquipmentTitle.Margin = new Padding(0, 0, 0, 2);
+        this.lblEquipmentTitle.Name = "lblEquipmentTitle";
+        this.lblEquipmentTitle.TabIndex = 0;
+        this.lblEquipmentTitle.Text = "装备信息";
         //
         // lblMeta
         //
@@ -371,7 +371,7 @@ partial class MainForm
         this.lblScoreCaption.Name = "lblScoreCaption";
         this.lblScoreCaption.Size = new Size(318, 18);
         this.lblScoreCaption.TabIndex = 1;
-        this.lblScoreCaption.Text = "装备分数";
+        this.lblScoreCaption.Text = "民间分数";
         //
         // lblMainStat
         //

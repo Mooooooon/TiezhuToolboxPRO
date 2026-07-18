@@ -124,7 +124,7 @@ public partial class MainForm : Form
             var info = await engine.RecognizeAsync(_lastScreenshotPath);
 
             ShowEquipmentInfo(info);
-            UpdateStatus($"识别完成：{info.Name}，装备分数 {info.Score:0.##}");
+            UpdateStatus($"识别完成：等级 {info.Level}，民间分数 {info.Score:0.##}");
 
             WriteDebugLog($"识别成功\n截图路径: {_lastScreenshotPath}\n原始文本:\n{info.RawText}");
         }
@@ -169,8 +169,6 @@ public partial class MainForm : Form
     private void ShowEquipmentInfo(Modules.Ocr.EquipmentInfo info)
     {
         _lastInfo = info;
-
-        lblName.Text = string.IsNullOrEmpty(info.Name) ? "（未识别到装备名称）" : info.Name;
 
         var meta = $"等级 {info.Level} · 强化 +{info.EnhanceLevel}";
         if (!string.IsNullOrEmpty(info.Quality))

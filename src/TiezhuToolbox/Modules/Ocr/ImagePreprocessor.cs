@@ -35,6 +35,63 @@ public class ImagePreprocessor
     }
 
     /// <summary>
+    /// 获取当前截图中的左侧装备信息区域。右边界通过面板竖向分隔线定位，
+    /// 兼容纯 ADB 截图和带模拟器窗口边框、画面被横向截断的旧截图。
+    /// </summary>
+    public static Rect GetEquipmentPanelRect(Mat source)
+    {
+        var top = (int)Math.Round(source.Height * 0.09);
+        var bottom = (int)Math.Round(source.Height * 0.90);
+        var right = FindEquipmentPanelRight(source);
+        return new Rect(0, top, right, Math.Max(0, bottom - top));
+    }
+
+    /// <summary>在画面左侧 25%～46% 范围内寻找贯穿装备面板的竖向分隔线。</summary>
+    private static unsafe int FindEquipmentPanelRight(Mat source)
+    {
+        using var gray = new Mat();
+        if (source.Channels() == 1)
+            source.CopyTo(gray);
+        else if (source.Channels() == 4)
+            Cv2.CvtColor(source, gray, ColorConversionCodes.BGRA2GRAY);
+        else
+            Cv2.CvtColor(source, gray, ColorConversionCodes.BGR2GRAY);
+
+        var startX = Math.Clamp((int)(source.Width * 0.25), 0, source.Width - 2);
+        var endX = Math.Clamp((int)(source.Width * 0.46), startX + 1, source.Width - 1);
+        var startY = Math.Clamp((int)(source.Height * 0.12), 0, source.Height - 1);
+        var endY = Math.Clamp((int)(source.Height * 0.90), startY + 1, source.Height);
+        var step = (int)gray.Step();
+        var data = (byte*)gray.Data;
+
+        var bestX = Math.Clamp((int)(source.Width * 0.45), 1, source.Width);
+        var bestAverage = 0.0;
+        for (var x = startX; x < endX; x++)
+        {
+            long difference = 0;
+            var samples = 0;
+            for (var y = startY; y < endY; y += 2)
+            {
+                var row = data + y * step;
+                difference += Math.Abs(row[x + 1] - row[x]);
+                samples++;
+            }
+
+            var average = samples == 0 ? 0 : difference / (double)samples;
+            if (average > bestAverage)
+            {
+                bestAverage = average;
+                bestX = x;
+            }
+        }
+
+        // 找不到明显分隔线时退回左侧 45%，避免裁掉旧版画面的属性数值列。
+        return bestAverage >= 12
+            ? Math.Min(source.Width, bestX + 4)
+            : Math.Clamp((int)(source.Width * 0.45), 1, source.Width);
+    }
+
+    /// <summary>
     /// 裁剪指定区域并返回 Mat。
     /// </summary>
     public static Mat Crop(Mat source, Rect rect)
