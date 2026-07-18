@@ -84,14 +84,10 @@ public class OcrEngine : IDisposable
             OcrLine? qualityLine = null;
             Rect? iconZone = null;
 
-            // 结构锚点："装备分数"行（OCR 最稳定的一行）
+            // 结构锚点："装备分数"行（OCR 最稳定的一行，仅用作定位锚点，分数本身由副属性计算）
             var scoreLine = lines.FirstOrDefault(l => l.Joined.Contains("装备分数"));
             if (scoreLine != null)
             {
-                var sm = Regex.Match(scoreLine.Joined, @"装备分数\D*(\d+(?:[（(]\+\d+[）)])?)");
-                if (sm.Success)
-                    info.Score = sm.Groups[1].Value;
-
                 // 套装行：分数行下方，含 n/m 计数
                 var setLine = lines
                     .Where(l => l.Y > scoreLine.Y + scoreLine.H * 0.5 && Regex.IsMatch(l.Joined, @"\d+\s*/\s*\d+"))
@@ -142,6 +138,9 @@ public class OcrEngine : IDisposable
                         info.SubStats.Add(sub);
                     }
                 }
+
+                // 装备分数：按民间算法由副属性计算（强化增加值已在副属性总值内，不重复计）
+                info.Score = EquipmentScoreCalculator.Calculate(info.SubStats);
 
                 // 名称行：主属性行上方最近的中文行；品质行：名称行上方最近的中文行
                 var aboveStats = statLines.Count > 0 ? statLines[0].Y : scoreLine.Y;

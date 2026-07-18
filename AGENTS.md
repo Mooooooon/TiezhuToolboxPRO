@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-第七史诗（Epic Seven）打铁助手：Windows 桌面小工具，通过 **ADB 连接安卓模拟器**（MuMu 12 等）截取游戏画面，用 **PaddleOCR** 识别装备信息（等级、强化等级、名称、品质、主/副属性、套装、装备分数）。
+第七史诗（Epic Seven）打铁助手：Windows 桌面小工具，通过 **ADB 连接安卓模拟器**（MuMu 12 等）截取游戏画面，用 **PaddleOCR** 识别装备信息（等级、强化等级、名称、品质、主/副属性、套装），并按民间算法由副属性计算装备分数。
 
 ## 技术栈
 
@@ -27,6 +27,7 @@ src/TiezhuToolbox/            主程序（WinForms）
 │   ├── PaddleOcrEngine.cs    PP-OCRv4 det+rec 封装（ONNX Runtime）
 │   ├── DigitTemplateMatcher.cs 数字/掩码模板匹配（MatchTemplate，多 _mask 模板竞争取最优）
 │   ├── ImagePreprocessor.cs  裁剪、数字区域预处理、Mat→Bitmap
+│   ├── EquipmentScoreCalculator.cs 装备分数计算（民间算法，只统计副属性）
 │   └── EquipmentInfo.cs      识别结果模型
 ├── Assets/PaddleOCR/         ONNX 模型 + 字典（构建时拷贝到输出目录，勿删）
 └── Assets/Templates/digits/  数字模板（88.png、85_mask.png、88_mask.png 等）

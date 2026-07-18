@@ -29,8 +29,8 @@ public class EquipmentInfo
     /// <summary>套装名称，如“命中套装”。</summary>
     public string SetName { get; set; } = string.Empty;
 
-    /// <summary>装备分数，如 50(+11)。</summary>
-    public string Score { get; set; } = string.Empty;
+    /// <summary>装备分数：不再从截图识别，按民间算法由副属性计算（见 <see cref="EquipmentScoreCalculator"/>）。</summary>
+    public double Score { get; set; }
 
     /// <summary>识别原始文本，用于调试。</summary>
     public string RawText { get; set; } = string.Empty;
