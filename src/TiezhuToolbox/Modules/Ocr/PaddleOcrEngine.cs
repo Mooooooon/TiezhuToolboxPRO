@@ -186,33 +186,51 @@ public class PaddleOcrEngine : IDisposable
 
     /// <summary>
     /// BGR Mat -> NCHW float tensor，(x/255 - 0.5) / 0.5 归一化。
+    /// 输入允许是灰度图或 BGRA（如二值掩码放大后的数字条），内部先转为 3 通道 BGR，
+    /// 否则按 3 通道读取会越界导致 AccessViolationException。
     /// </summary>
     private static DenseTensor<float> ToNormalizedTensor(Mat bgr)
     {
-        var h = bgr.Height;
-        var w = bgr.Width;
-        var tensor = new DenseTensor<float>(new[] { 1, 3, h, w });
-
-        unsafe
+        Mat? converted = null;
+        if (bgr.Channels() != 3)
         {
-            var src = (byte*)bgr.Data;
-            var step = (int)bgr.Step();
-            for (var y = 0; y < h; y++)
-            {
-                var row = src + y * step;
-                for (var x = 0; x < w; x++)
-                {
-                    var b = row[x * 3] / 255.0f;
-                    var g = row[x * 3 + 1] / 255.0f;
-                    var r = row[x * 3 + 2] / 255.0f;
-                    tensor[0, 0, y, x] = (r - 0.5f) / 0.5f;
-                    tensor[0, 1, y, x] = (g - 0.5f) / 0.5f;
-                    tensor[0, 2, y, x] = (b - 0.5f) / 0.5f;
-                }
-            }
+            converted = new Mat();
+            Cv2.CvtColor(bgr, converted,
+                bgr.Channels() == 1 ? ColorConversionCodes.GRAY2BGR : ColorConversionCodes.BGRA2BGR);
+            bgr = converted;
         }
 
-        return tensor;
+        try
+        {
+            var h = bgr.Height;
+            var w = bgr.Width;
+            var tensor = new DenseTensor<float>(new[] { 1, 3, h, w });
+
+            unsafe
+            {
+                var src = (byte*)bgr.Data;
+                var step = (int)bgr.Step();
+                for (var y = 0; y < h; y++)
+                {
+                    var row = src + y * step;
+                    for (var x = 0; x < w; x++)
+                    {
+                        var b = row[x * 3] / 255.0f;
+                        var g = row[x * 3 + 1] / 255.0f;
+                        var r = row[x * 3 + 2] / 255.0f;
+                        tensor[0, 0, y, x] = (r - 0.5f) / 0.5f;
+                        tensor[0, 1, y, x] = (g - 0.5f) / 0.5f;
+                        tensor[0, 2, y, x] = (b - 0.5f) / 0.5f;
+                    }
+                }
+            }
+
+            return tensor;
+        }
+        finally
+        {
+            converted?.Dispose();
+        }
     }
 
     public void Dispose()

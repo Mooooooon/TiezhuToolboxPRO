@@ -1,14 +1,11 @@
 using OpenCvSharp;
-using System.Text;
 using System.Text.RegularExpressions;
-using Tesseract;
-using Rect = OpenCvSharp.Rect;
 
 namespace TiezhuToolbox.Modules.Ocr;
 
 /// <summary>
 /// OCR 引擎：识别装备文本信息。
-/// 使用 Tesseract 词坐标 + 结构锚点（装备分数行）定位，不依赖固定分辨率坐标。
+/// 使用 PaddleOCR 词坐标 + 结构锚点（装备分数行）定位，不依赖固定分辨率坐标。
 /// </summary>
 public class OcrEngine : IDisposable
 {
@@ -24,10 +21,7 @@ public class OcrEngine : IDisposable
         RegexOptions.Compiled);
 
     private readonly DigitTemplateMatcher _digitMatcher;
-    private readonly string _tessDataDir;
     private readonly string _paddleModelDir;
-    private readonly object _engineLock = new();
-    private readonly Dictionary<string, TesseractEngine> _engines = new();
     private PaddleOcrEngine? _paddle;
     private string? _debugImagePath;
 
@@ -54,7 +48,6 @@ public class OcrEngine : IDisposable
     public OcrEngine(string templateDir)
     {
         _digitMatcher = new DigitTemplateMatcher(templateDir);
-        _tessDataDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tessdata");
         _paddleModelDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "PaddleOCR");
     }
 
@@ -73,33 +66,16 @@ public class OcrEngine : IDisposable
 
         var info = new EquipmentInfo();
 
-        if (!Directory.Exists(_tessDataDir))
-        {
-            info.RawText = $"[Tesseract 错误: tessdata 目录不存在: {_tessDataDir}]";
-            return info;
-        }
-
         try
         {
             // 装备信息面板在窗口左侧（约占宽度 45%）
             var panelRect = new Rect(0, 0, (int)(mat.Width * 0.45), mat.Height);
             using var panel = ImagePreprocessor.Crop(mat, panelRect);
 
-            // 优先 PaddleOCR（中文游戏字体识别率高），失败时回退 Tesseract
-            List<OcrWord> words;
-            try
-            {
-                words = GetPaddle().Run(panel)
-                    .Select(tb => new OcrWord(tb.Text, tb.Box.X, tb.Box.Y, tb.Box.Width, tb.Box.Height))
-                    .ToList();
-            }
-            catch (Exception paddleEx)
-            {
-                using var preprocessed = ImagePreprocessor.PreprocessTextRegion(panel);
-                var scaleBack = panel.Width / (double)preprocessed.Width;
-                words = OcrWords(preprocessed, scaleBack, PageSegMode.SparseText, whitelist: null, bestModel: true);
-                info.RawText = $"[PaddleOCR 不可用，回退 Tesseract: {paddleEx.Message}]{Environment.NewLine}";
-            }
+            // PaddleOCR 检测 + 识别面板文本（模型缺失等异常由外层 catch 记录到 RawText）
+            var words = GetPaddle().Run(panel)
+                .Select(tb => new OcrWord(tb.Text, tb.Box.X, tb.Box.Y, tb.Box.Width, tb.Box.Height))
+                .ToList();
 
             var lines = GroupLines(words);
             info.RawText += string.Join(Environment.NewLine, lines.Select(l => l.Joined));
@@ -193,7 +169,10 @@ public class OcrEngine : IDisposable
                 var topRef = qualityLine ?? nameLine;
                 var zoneY = Math.Max(0, topRef.Y - 3 * topRef.H);
                 var zoneBottom = Math.Min(mat.Height, nameLine.Y + nameLine.H + nameLine.H / 2);
-                var zoneRight = Math.Min(mat.Width, nameLine.X + 2 * nameLine.H);
+                // 名称/品质文本从同一列开始（图标右侧）。取两者较大的 X：
+                // OCR 偶尔把图标噪声并入词框使 X 偏小，会导致区域右边界切掉徽章
+                var textX = Math.Max(nameLine.X, qualityLine?.X ?? 0);
+                var zoneRight = Math.Min(mat.Width, textX + 2 * nameLine.H);
                 iconZone = new Rect(0, zoneY, zoneRight, zoneBottom - zoneY);
                 RecognizeLevels(mat, iconZone.Value, topRef, info);
             }
@@ -247,19 +226,12 @@ public class OcrEngine : IDisposable
         {
             using var badgeMat = ImagePreprocessor.Crop(zoneMat, b);
 
-            // 优先 PaddleOCR，失败回退 Tesseract 数字白名单
+            // PaddleOCR 读徽章数字，读不出走下方模板兜底
             try
             {
                 badgeText = GetPaddle().RecognizeLine(badgeMat);
             }
-            catch { /* 忽略，走 Tesseract */ }
-
-            if (string.IsNullOrWhiteSpace(badgeText))
-            {
-                using var badgePre = PreprocessForDigits(badgeMat, 4);
-                var badgeWords = OcrWords(badgePre, 1.0, PageSegMode.SingleLine, "+0123456789", bestModel: false);
-                badgeText = string.Concat(badgeWords.Select(w => w.Text));
-            }
+            catch { /* 忽略，走模板兜底 */ }
 
             var m = Regex.Match(badgeText, @"\+?\s*(\d{1,2})");
             if (m.Success && int.TryParse(m.Groups[1].Value, out var enh))
@@ -274,14 +246,29 @@ public class OcrEngine : IDisposable
         }
         info.RawText += $"{Environment.NewLine}[debug] zone=({zone.X},{zone.Y},{zone.Width},{zone.Height}) badge={(badge?.ToString() ?? "null")} badgeText='{badgeText}'";
 
-        // 装备等级"88"：在徽章同一水平带上、徽章左侧（图标左上角绶带上的金色文字）
-        if (info.Level == 0 && badge is Rect bd)
+        // 装备等级"88"：图标左上角绶带上的金色文字。
+        // 有徽章（已强化）时取徽章同一水平带、徽章左侧；
+        // 无徽章（未强化）时没有定位锚点，取图标区上条带（尺寸随区域按比例换算）。
+        if (info.Level == 0)
         {
-            var stripRect = new Rect(
-                0,
-                Math.Max(0, bd.Y - 10),
-                Math.Max(0, bd.X - 8),
-                Math.Min(zoneMat.Height - Math.Max(0, bd.Y - 10), bd.Height + 35));
+            Rect stripRect;
+            if (badge is Rect bd)
+            {
+                stripRect = new Rect(
+                    0,
+                    Math.Max(0, bd.Y - 10),
+                    Math.Max(0, bd.X - 8),
+                    Math.Min(zoneMat.Height - Math.Max(0, bd.Y - 10), bd.Height + 35));
+            }
+            else
+            {
+                var bandY = zoneMat.Height / 6;
+                stripRect = new Rect(
+                    0,
+                    bandY,
+                    zoneMat.Width / 2,
+                    Math.Min(zoneMat.Height - bandY, zoneMat.Height / 2));
+            }
             using var strip = ImagePreprocessor.Crop(zoneMat, stripRect);
             if (!strip.Empty())
             {
@@ -291,25 +278,30 @@ public class OcrEngine : IDisposable
 
                 // 连通域过滤：数字笔画是饱满的块，边框是细长线（高填充率/超大），剔除
                 Cv2.FindContours(goldMask, out var goldContours, out _, RetrievalModes.External, ContourApproximationModes.ApproxSimple);
-                var digitRects = new List<Rect>();
+                var digitContours = new List<(Rect r, double area)>();
                 foreach (var c in goldContours)
                 {
                     var r = Cv2.BoundingRect(c);
                     if (r.Height < 6 || r.Height > 30 || r.Width < 2 || r.Width > 25)
                         continue;
-                    var fill = Cv2.ContourArea(c) / (r.Width * (double)r.Height);
+                    var area = Cv2.ContourArea(c);
+                    var fill = area / (r.Width * (double)r.Height);
                     if (fill > 0.75)
                         continue; // 实心细条 = 图标边框
-                    digitRects.Add(r);
+                    if (fill < 0.15)
+                        continue; // 稀疏碎屑 = 绶带花纹噪点
+                    digitContours.Add((r, area));
                 }
 
-                if (digitRects.Count > 0)
+                var digitRects = new List<Rect>();
+                if (digitContours.Count > 0)
                 {
-                    // 数字共享同一基线且笔画饱满：以面积最大的连通域为基准（细边框线面积小），
-                    // 剔除偏离基线的碎块，再取与基准相邻的连续段
-                    var main = digitRects.OrderByDescending(r => r.Width * (long)r.Height).First();
+                    // 数字共享同一基线且笔画饱满：以像素质量最大（而非外接框最大）的连通域为基准
+                    // （绶带花纹噪点常外接框更大但像素少），剔除偏离基线的碎块，再取与基准相邻的连续段
+                    var main = digitContours.OrderByDescending(d => d.area).First().r;
                     var mainCenterY = main.Y + main.Height / 2.0;
-                    var cluster = digitRects
+                    var cluster = digitContours
+                        .Select(d => d.r)
                         .Where(r => r.Height >= main.Height * 0.6
                                  && Math.Abs(r.Y + r.Height / 2.0 - mainCenterY) <= main.Height * 0.5)
                         .OrderBy(r => r.X)
@@ -357,13 +349,36 @@ public class OcrEngine : IDisposable
                     using var digitBig = new Mat();
                     Cv2.Resize(digitPadded, digitBig, new OpenCvSharp.Size(digitPadded.Width * 4, digitPadded.Height * 4), interpolation: InterpolationFlags.Cubic);
 
-                    // 方案 A：与标准"88"二值模板做相关匹配（字体固定，最稳定）
-                    var maskConf = _digitMatcher.MatchBinaryCrop(digitCrop, "88_mask");
-                    info.RawText += $"{Environment.NewLine}[debug] strip 88_mask conf={maskConf:F3}";
-                    if (maskConf >= 0.65)
-                        info.Level = 88;
+                    // 方案 A：与标准数字掩码模板（85_mask/88_mask）做相关匹配，多模板竞争取最优
+                    var (maskLabel, maskConf) = _digitMatcher.MatchBinaryCropBest(digitCrop);
+                    info.RawText += $"{Environment.NewLine}[debug] strip mask best='{maskLabel}' conf={maskConf:F3}";
+                    if (maskConf >= 0.65
+                        && int.TryParse(maskLabel.Replace("_mask", ""), out var maskLevel)
+                        && maskLevel is >= 1 and <= 99)
+                        info.Level = maskLevel;
 
-                    // 方案 B：PaddleOCR 整行识别
+                    // 方案 B：PaddleOCR 直读原始彩色数字条。
+                    // 等级是图标上的金色美术字，二值化掩码会丢笔画特征（"85" 被读成 "5"），
+                    // 实测彩色原图识别最稳定。裁剪比 digitCrop 稍大以保留上下文。
+                    if (info.Level == 0)
+                    {
+                        var cx1 = Math.Max(0, digitRects.Min(r => r.X) - 8);
+                        var cy1 = Math.Max(0, digitRects.Min(r => r.Y) - 6);
+                        var cx2 = Math.Min(strip.Width, digitRects.Max(r => r.Right) + 12);
+                        var cy2 = Math.Min(strip.Height, digitRects.Max(r => r.Bottom) + 10);
+                        using var stripColor = ImagePreprocessor.Crop(strip, new Rect(cx1, cy1, cx2 - cx1, cy2 - cy1));
+                        try
+                        {
+                            var colorText = GetPaddle().RecognizeLine(stripColor);
+                            info.RawText += $"{Environment.NewLine}[debug] strip paddle-color='{colorText}'";
+                            var cm = Regex.Match(colorText.Trim(), @"^(\d{1,3})\D{0,2}$");
+                            if (cm.Success && int.TryParse(cm.Groups[1].Value, out var clvl) && clvl is >= 1 and <= 99)
+                                info.Level = clvl;
+                        }
+                        catch { /* 忽略 */ }
+                    }
+
+                    // 方案 C：PaddleOCR 整行识别（二值掩码放大图）
                     if (info.Level == 0)
                     {
                         try
@@ -376,77 +391,18 @@ public class OcrEngine : IDisposable
                         }
                         catch { /* 忽略 */ }
                     }
-
-                    // 方案 B：Tesseract 整行识别
-                    if (info.Level == 0)
-                    {
-                        var lineWords = OcrWords(digitBig, 1.0, PageSegMode.SingleLine, "0123456789", bestModel: false);
-                        var lineText = string.Concat(lineWords.Select(w => w.Text));
-                        info.RawText += $"{Environment.NewLine}[debug] strip tess='{lineText}'";
-                        var tm = Regex.Match(lineText.Trim(), @"^\d{1,3}$");
-                        if (tm.Success && int.TryParse(tm.Value, out var tlvl))
-                            info.Level = tlvl;
-                    }
-
-                    // 方案 C：逐字识别（按宽高比切段）
-                    if (info.Level == 0)
-                    {
-                        var digitCount = Math.Clamp((int)Math.Round(digitCrop.Width / (double)Math.Max(1, digitCrop.Height)), 1, 3);
-                        var sb = new System.Text.StringBuilder();
-                        for (var i = 0; i < digitCount; i++)
-                        {
-                            var segW = digitCrop.Width / digitCount;
-                            using var seg = ImagePreprocessor.Crop(digitCrop, new Rect(i * segW, 0, Math.Min(segW + 2, digitCrop.Width - i * segW), digitCrop.Height));
-                            if (seg.Empty())
-                                continue;
-                            using var segInv = new Mat();
-                            Cv2.BitwiseNot(seg, segInv);
-                            using var segPadded = new Mat();
-                            Cv2.CopyMakeBorder(segInv, segPadded, 8, 8, 8, 8, BorderTypes.Constant, Scalar.White);
-                            using var segBig = new Mat();
-                            Cv2.Resize(segPadded, segBig, new OpenCvSharp.Size(segPadded.Width * 6, segPadded.Height * 6), interpolation: InterpolationFlags.Cubic);
-                            var charWords = OcrWords(segBig, 1.0, PageSegMode.SingleChar, "0123456789", bestModel: false);
-                            var ch = charWords.Select(w => w.Text).FirstOrDefault(t => Regex.IsMatch(t, @"^\d$"));
-                            sb.Append(ch ?? "?");
-                        }
-
-                        var stripText = sb.ToString();
-                        info.RawText += $"{Environment.NewLine}[debug] strip chars='{stripText}'";
-                        if (!stripText.Contains('?') && int.TryParse(stripText, out var slvl))
-                            info.Level = slvl;
-                    }
                 }
             }
         }
 
-        // 方案三：装备等级 Tesseract 数字 OCR（先把徽章涂黑避免干扰）
+        // 方案三：模板兜底（当前只有 88 模板）
         if (info.Level != 0)
             return;
 
-        using var gray = new Mat();
-        Cv2.CvtColor(zoneMat, gray, ColorConversionCodes.BGR2GRAY);
-        if (badge is Rect bb)
-            Cv2.Rectangle(gray, bb, Scalar.Black, -1);
-
-        using var zonePre = PreprocessForDigits(gray, 3);
-        var digitWords = OcrWords(zonePre, 1.0, PageSegMode.SparseText, "0123456789", bestModel: false);
-        var levelWord = digitWords
-            .Where(w => Regex.IsMatch(w.Text, @"^\d{1,3}$") && w.H >= textAnchor.H * 0.4 && w.H <= textAnchor.H * 2.5)
-            .OrderBy(w => w.Text.Length == 2 ? 0 : 1)
-            .ThenBy(w => w.Y)
-            .ThenBy(w => w.X)
-            .FirstOrDefault();
-        if (levelWord != null && int.TryParse(levelWord.Text, out var lvl))
-            info.Level = lvl;
-
-        // 模板兜底（当前只有 88 / +3 模板）
-        if (info.Level == 0)
-        {
-            using var topLeft = ImagePreprocessor.Crop(zoneMat, new Rect(0, 0, zoneMat.Width / 2, zoneMat.Height / 2));
-            var (v, conf) = _digitMatcher.RecognizeLevel(topLeft);
-            if (conf > 0.5)
-                info.Level = v;
-        }
+        using var topLeft = ImagePreprocessor.Crop(zoneMat, new Rect(0, 0, zoneMat.Width / 2, zoneMat.Height / 2));
+        var (tv, tconf) = _digitMatcher.RecognizeLevel(topLeft);
+        if (tconf > 0.5)
+            info.Level = tv;
     }
 
     /// <summary>
@@ -493,83 +449,10 @@ public class OcrEngine : IDisposable
             Math.Min(zoneBgr.Height - y, br.Height + 4));
     }
 
-    /// <summary>
-    /// 数字区域预处理：灰度、放大、Otsu 二值化，深底浅字时反转为白底黑字。
-    /// </summary>
-    private static Mat PreprocessForDigits(Mat src, int scale)
-    {
-        var gray = new Mat();
-        if (src.Channels() == 1)
-            src.CopyTo(gray);
-        else
-            Cv2.CvtColor(src, gray, ColorConversionCodes.BGR2GRAY);
-
-        var scaled = new Mat();
-        Cv2.Resize(gray, scaled, new OpenCvSharp.Size(src.Width * scale, src.Height * scale), interpolation: InterpolationFlags.Cubic);
-
-        var binary = new Mat();
-        Cv2.Threshold(scaled, binary, 0, 255, ThresholdTypes.Binary | ThresholdTypes.Otsu);
-        if (Cv2.Mean(binary).Val0 < 127)
-            Cv2.BitwiseNot(binary, binary);
-
-        gray.Dispose();
-        scaled.Dispose();
-        return binary;
-    }
-
-    private List<OcrWord> OcrWords(Mat processed, double scaleBack, PageSegMode psm, string? whitelist, bool bestModel)
-    {
-        var result = new List<OcrWord>();
-        if (processed.Empty())
-            return result;
-
-        lock (_engineLock)
-        {
-            var engine = GetEngine(bestModel);
-            engine.SetVariable("tessedit_char_whitelist", whitelist ?? "");
-
-            Cv2.ImEncode(".png", processed, out var buf);
-            using var pix = Pix.LoadFromMemory(buf);
-            using var page = engine.Process(pix, psm);
-            using var iter = page.GetIterator();
-            iter.Begin();
-            do
-            {
-                var text = iter.GetText(PageIteratorLevel.Word)?.Trim();
-                if (string.IsNullOrEmpty(text))
-                    continue;
-                if (iter.TryGetBoundingBox(PageIteratorLevel.Word, out var r))
-                {
-                    result.Add(new OcrWord(text,
-                        (int)(r.X1 * scaleBack), (int)(r.Y1 * scaleBack),
-                        (int)(r.Width * scaleBack), (int)(r.Height * scaleBack)));
-                }
-            }
-            while (iter.Next(PageIteratorLevel.Word));
-        }
-
-        return result;
-    }
-
     private PaddleOcrEngine GetPaddle()
     {
         _paddle ??= new PaddleOcrEngine(_paddleModelDir);
         return _paddle;
-    }
-
-    private TesseractEngine GetEngine(bool bestModel)
-    {
-        // 文本用高精度模型（tessdata_best），数字用快速模型即可
-        var lang = bestModel && File.Exists(Path.Combine(_tessDataDir, "chi_sim_best.traineddata"))
-            ? "chi_sim_best"
-            : "chi_sim";
-
-        if (!_engines.TryGetValue(lang, out var engine))
-        {
-            engine = new TesseractEngine(_tessDataDir, lang, EngineMode.Default);
-            _engines[lang] = engine;
-        }
-        return engine;
     }
 
     private static List<OcrLine> GroupLines(List<OcrWord> words)
@@ -661,12 +544,6 @@ public class OcrEngine : IDisposable
 
     public void Dispose()
     {
-        lock (_engineLock)
-        {
-            foreach (var engine in _engines.Values)
-                engine.Dispose();
-            _engines.Clear();
-        }
         _paddle?.Dispose();
         _digitMatcher.Dispose();
     }

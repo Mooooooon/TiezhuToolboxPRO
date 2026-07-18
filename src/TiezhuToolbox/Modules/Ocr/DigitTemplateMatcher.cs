@@ -51,6 +51,28 @@ public class DigitTemplateMatcher : IDisposable
     }
 
     /// <summary>
+    /// 将二值图与所有 "_mask" 结尾的模板（整串数字掩码，如 85_mask/88_mask）逐一匹配，
+    /// 返回置信度最高的 (标签, 置信度)。多模板竞争可避免单个 88 模板把 "85" 误判为 88。
+    /// </summary>
+    public (string label, double confidence) MatchBinaryCropBest(Mat binaryCrop)
+    {
+        var bestLabel = string.Empty;
+        var bestConf = 0.0;
+        foreach (var label in _templates.Keys)
+        {
+            if (!label.EndsWith("_mask", StringComparison.OrdinalIgnoreCase))
+                continue;
+            var conf = MatchBinaryCrop(binaryCrop, label);
+            if (conf > bestConf)
+            {
+                bestConf = conf;
+                bestLabel = label;
+            }
+        }
+        return (bestLabel, bestConf);
+    }
+
+    /// <summary>
     /// 识别装备等级（如 88）。
     /// </summary>
     public (int value, double confidence) RecognizeLevel(Mat region)

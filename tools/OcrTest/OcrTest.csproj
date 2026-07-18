@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\src\TiezhuToolbox\tessdata\*.traineddata">
-      <Link>tessdata\%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="..\..\src\TiezhuToolbox\Assets\PaddleOCR\*">
       <Link>Assets\PaddleOCR\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

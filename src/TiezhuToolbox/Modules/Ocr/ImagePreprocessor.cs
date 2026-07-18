@@ -81,36 +81,6 @@ public class ImagePreprocessor
     }
 
     /// <summary>
-    /// 预处理文本区域：灰度化、放大、Otsu 二值化。
-    /// 游戏面板是深底浅字，反转为白底黑字以提高 Tesseract 识别率。
-    /// </summary>
-    public static Mat PreprocessTextRegion(Mat region)
-    {
-        if (region.Empty())
-            return region;
-
-        var gray = new Mat();
-        Cv2.CvtColor(region, gray, ColorConversionCodes.BGR2GRAY);
-
-        // 放大 2 倍
-        var scaled = new Mat();
-        Cv2.Resize(gray, scaled, new OpenCvSharp.Size(region.Width * 2, region.Height * 2), interpolation: InterpolationFlags.Cubic);
-
-        // Otsu 二值化
-        var binary = new Mat();
-        Cv2.Threshold(scaled, binary, 0, 255, ThresholdTypes.Binary | ThresholdTypes.Otsu);
-
-        // 背景占比高：若均值偏暗（黑底白字），反转为白底黑字
-        if (Cv2.Mean(binary).Val0 < 127)
-            Cv2.BitwiseNot(binary, binary);
-
-        gray.Dispose();
-        scaled.Dispose();
-
-        return binary;
-    }
-
-    /// <summary>
     /// 将 Mat 转换为 Bitmap。
     /// </summary>
     public static Bitmap MatToBitmap(Mat mat)
