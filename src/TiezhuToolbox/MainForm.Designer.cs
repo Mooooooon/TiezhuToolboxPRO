@@ -25,6 +25,8 @@ partial class MainForm
     private ListBox listSubStats;
     private Label lblSet;
     private Label lblScore;
+    private Label lblHeroesTitle;
+    private FlowLayoutPanel flowHeroes;
 
     protected override void Dispose(bool disposing)
     {
@@ -65,6 +67,8 @@ partial class MainForm
         this.listSubStats = new ListBox();
         this.lblSet = new Label();
         this.lblScore = new Label();
+        this.lblHeroesTitle = new Label();
+        this.flowHeroes = new FlowLayoutPanel();
         this.topPanel.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
         this.statusStrip.SuspendLayout();
@@ -209,18 +213,22 @@ partial class MainForm
         this.infoTable.Controls.Add(this.listSubStats, 0, 5);
         this.infoTable.Controls.Add(this.lblSet, 0, 6);
         this.infoTable.Controls.Add(this.lblScore, 0, 7);
+        this.infoTable.Controls.Add(this.lblHeroesTitle, 0, 8);
+        this.infoTable.Controls.Add(this.flowHeroes, 0, 9);
         this.infoTable.Dock = DockStyle.Fill;
         this.infoTable.Location = new Point(10, 10);
         this.infoTable.Name = "infoTable";
-        this.infoTable.RowCount = 8;
+        this.infoTable.RowCount = 10;
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-        this.infoTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.Percent, 55F));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.Percent, 45F));
         this.infoTable.Size = new Size(278, 432);
         this.infoTable.TabIndex = 0;
         //
@@ -299,6 +307,26 @@ partial class MainForm
         this.lblScore.Padding = new Padding(0, 4, 0, 4);
         this.lblScore.TabIndex = 7;
         this.lblScore.Text = "装备分数：-";
+        //
+        // lblHeroesTitle
+        //
+        this.lblHeroesTitle.AutoSize = true;
+        this.lblHeroesTitle.Location = new Point(3, 0);
+        this.lblHeroesTitle.Name = "lblHeroesTitle";
+        this.lblHeroesTitle.Padding = new Padding(0, 8, 0, 2);
+        this.lblHeroesTitle.TabIndex = 8;
+        this.lblHeroesTitle.Text = "适用角色：-";
+        //
+        // flowHeroes
+        //
+        this.flowHeroes.AutoScroll = true;
+        this.flowHeroes.Dock = DockStyle.Fill;
+        this.flowHeroes.FlowDirection = FlowDirection.LeftToRight;
+        this.flowHeroes.Location = new Point(3, 100);
+        this.flowHeroes.Name = "flowHeroes";
+        this.flowHeroes.Size = new Size(272, 120);
+        this.flowHeroes.TabIndex = 9;
+        this.flowHeroes.WrapContents = true;
         //
         // MainForm
         //

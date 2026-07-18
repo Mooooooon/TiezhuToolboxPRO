@@ -198,6 +198,59 @@ public partial class MainForm : Form
 
         lblSet.Text = $"套装：{info.SetName}";
         lblScore.Text = $"装备分数：{info.Score}";
+
+        ShowHeroRecommendations(info);
+    }
+
+    /// <summary>
+    /// 根据识别出的装备信息，展示官方战绩（传说分段）匹配出的适用角色（头像 + 名字 + 匹配度）。
+    /// </summary>
+    private void ShowHeroRecommendations(Modules.Ocr.EquipmentInfo info)
+    {
+        // 清空旧的推荐项并释放头像图片
+        var oldItems = flowHeroes.Controls.Cast<Control>().ToList();
+        flowHeroes.Controls.Clear();
+        foreach (var control in oldItems)
+            control.Dispose();
+
+        if (!Modules.Recommend.HeroDatabase.Instance.IsLoaded)
+        {
+            lblHeroesTitle.Text = "适用角色：（缺少 heroes.json，请先运行 tools/HeroDataCollector）";
+            return;
+        }
+
+        var recommendations = Modules.Recommend.HeroRecommender.Recommend(info);
+        lblHeroesTitle.Text = recommendations.Count > 0 ? "适用角色：" : "适用角色：无匹配";
+
+        foreach (var rec in recommendations)
+        {
+            var item = new Panel { Width = 134, Height = 38, Margin = new Padding(0, 0, 0, 2) };
+
+            var avatar = new PictureBox
+                { Location = new Point(2, 3), Size = new Size(32, 32), SizeMode = PictureBoxSizeMode.Zoom };
+            if (rec.AvatarPath != null)
+                avatar.Image = LoadImageNoLock(rec.AvatarPath);
+
+            var label = new Label
+            {
+                Location = new Point(38, 3),
+                Size = new Size(94, 32),
+                Text = $"{rec.Name} {rec.Score}%",
+                TextAlign = ContentAlignment.MiddleLeft,
+                AutoEllipsis = true,
+            };
+
+            item.Controls.Add(avatar);
+            item.Controls.Add(label);
+            flowHeroes.Controls.Add(item);
+        }
+    }
+
+    /// <summary>读文件加载图片且不占用文件句柄（避免锁住 Assets 下的头像）。</summary>
+    private static Image LoadImageNoLock(string path)
+    {
+        var bytes = File.ReadAllBytes(path);
+        return new Bitmap(new MemoryStream(bytes));
     }
 
     /// <summary>

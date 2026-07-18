@@ -1,4 +1,5 @@
 using TiezhuToolbox.Modules.Ocr;
+using TiezhuToolbox.Modules.Recommend;
 
 var screenshotsDir = @"E:\coding\TiezhuToolboxPRO\src\TiezhuToolbox\bin\Release\net9.0-windows\win-x64\publish\screenshots";
 var templateDir = @"E:\coding\TiezhuToolboxPRO\src\TiezhuToolbox\Assets\Templates";
@@ -7,6 +8,69 @@ var templateDir = @"E:\coding\TiezhuToolboxPRO\src\TiezhuToolbox\Assets\Template
 var imageNames = args.Length > 0
     ? args
     : new[] { "MuMuNxDevice_20260717_031029.png", "MuMuNxDevice_20260717_041111.png" };
+
+// 合成样例自检（无需截图）：
+// 样例一：速度套 + 速度主属性鞋 + 副属性{防御,生命,速度,命中} → 调香师维波里丝(c5154) 应为 100%
+// 样例二：暴击套 + 暴击率主属性项链 + 同样副属性 → c5154 主属性/套装均不符，不得出现
+// 样例三：速度套速度鞋，副属性{生命,防御,速度,暴击率}但强化全跳暴击率 → c5154 应出现但匹配度大降（<50%）
+if (args.Contains("--synthetic"))
+{
+    void Print(string title, EquipmentInfo info)
+    {
+        Console.WriteLine($"===== 合成样例: {title} =====");
+        var recs = HeroRecommender.Recommend(info);
+        foreach (var rec in recs)
+            Console.WriteLine($"  {rec.Name}({rec.Code}) 匹配度 {rec.Score}%");
+        Console.WriteLine(recs.Any(r => r.Code == "c5154") ? "  → 含 c5154" : "  → 不含 c5154");
+        Console.WriteLine();
+    }
+
+    Print("速度套速度鞋 副属性{防御,生命,速度,命中}", new EquipmentInfo
+    {
+        Level = 88,
+        SetName = "速度套装",
+        MainStatName = "速度",
+        MainStatValue = "45",
+        SubStats =
+        {
+            new SubStat { Name = "防御力", Value = "10%" },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "8" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    });
+
+    Print("暴击套暴击项链 副属性{防御,生命,速度,命中}", new EquipmentInfo
+    {
+        Level = 88,
+        SetName = "暴击套装",
+        MainStatName = "暴击率",
+        MainStatValue = "55%",
+        SubStats =
+        {
+            new SubStat { Name = "防御力", Value = "10%" },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "8" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    });
+
+    Print("速度套速度鞋 副属性{生命,防御,速度,暴击率}强化全跳暴击", new EquipmentInfo
+    {
+        Level = 88,
+        SetName = "速度套装",
+        MainStatName = "速度",
+        MainStatValue = "45",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "6%" },
+            new SubStat { Name = "防御力", Value = "6%" },
+            new SubStat { Name = "速度", Value = "4" },
+            new SubStat { Name = "暴击率", Value = "20%" },
+        },
+    });
+    return;
+}
 
 using var engine = new OcrEngine(templateDir);
 
@@ -36,6 +100,15 @@ foreach (var name in imageNames)
     }
     Console.WriteLine($"  套装: {info.SetName}");
     Console.WriteLine($"  装备分数: {info.Score}");
+
+    // 装备 → 适用角色推荐（官方战绩传说分段数据）
+    var recommendations = HeroRecommender.Recommend(info);
+    Console.WriteLine("  适用角色:");
+    foreach (var rec in recommendations)
+        Console.WriteLine($"    - {rec.Name}({rec.Code}) 匹配度 {rec.Score}%  命中副属性=[{string.Join(",", rec.MatchedStats)}] 套装命中={rec.SetMatched}");
+    if (recommendations.Count == 0)
+        Console.WriteLine("    （无匹配或 heroes.json 缺失）");
+
     Console.WriteLine();
     Console.WriteLine("原始文本:");
     Console.WriteLine(info.RawText);

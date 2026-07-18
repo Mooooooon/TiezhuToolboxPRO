@@ -16,6 +16,10 @@
       <Link>Assets\PaddleOCR\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\src\TiezhuToolbox\Assets\HeroData\heroes.json">
+      <Link>Assets\HeroData\heroes.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

@@ -11,25 +11,28 @@ public static class EquipmentScoreCalculator
     /// </summary>
     public static double Calculate(IEnumerable<SubStat> subStats)
     {
-        double score = 0;
-        foreach (var sub in subStats)
-        {
-            var isPercent = sub.Value.Contains('%');
-            if (!double.TryParse(sub.Value.Replace("%", ""), out var value))
-                continue;
+        return Math.Round(subStats.Sum(Calculate), 2);
+    }
 
-            score += sub.Name switch
-            {
-                "攻击力" => isPercent ? value : value * 3.46 / 39,
-                "防御力" => isPercent ? value : value * 4.99 / 31,
-                "生命值" => isPercent ? value : value * 3.09 / 174,
-                "效果命中" or "效果抗性" => value,
-                "速度" => value * 2,
-                "暴击伤害" => value * 1.125,
-                "暴击率" => value * 1.5,
-                _ => 0,
-            };
-        }
-        return Math.Round(score, 2);
+    /// <summary>
+    /// 计算单条副属性的分数贡献（未识别的属性计 0 分）。
+    /// </summary>
+    public static double Calculate(SubStat sub)
+    {
+        var isPercent = sub.Value.Contains('%');
+        if (!double.TryParse(sub.Value.Replace("%", ""), out var value))
+            return 0;
+
+        return sub.Name switch
+        {
+            "攻击力" => isPercent ? value : value * 3.46 / 39,
+            "防御力" => isPercent ? value : value * 4.99 / 31,
+            "生命值" => isPercent ? value : value * 3.09 / 174,
+            "效果命中" or "效果抗性" => value,
+            "速度" => value * 2,
+            "暴击伤害" => value * 1.125,
+            "暴击率" => value * 1.5,
+            _ => 0,
+        };
     }
 }

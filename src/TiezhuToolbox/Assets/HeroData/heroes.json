@@ -1,0 +1,5201 @@
+{
+  "seasonCode": "pvp_rta_ss20",
+  "gradeCode": "legend",
+  "updatedAt": "2026-07-19 01:15:56",
+  "sets": [
+    {
+      "code": "set_acc",
+      "name": "命中套装"
+    },
+    {
+      "code": "set_att",
+      "name": "攻击套装"
+    },
+    {
+      "code": "set_chase",
+      "name": "追击套装"
+    },
+    {
+      "code": "set_coop",
+      "name": "夹攻套装"
+    },
+    {
+      "code": "set_counter",
+      "name": "反击套装"
+    },
+    {
+      "code": "set_cri",
+      "name": "暴击套装"
+    },
+    {
+      "code": "set_cri_dmg",
+      "name": "破灭套装"
+    },
+    {
+      "code": "set_def",
+      "name": "防御套装"
+    },
+    {
+      "code": "set_immune",
+      "name": "免疫套装"
+    },
+    {
+      "code": "set_max_hp",
+      "name": "生命值套装"
+    },
+    {
+      "code": "set_might",
+      "name": "全力套装"
+    },
+    {
+      "code": "set_opener",
+      "name": "开战套装"
+    },
+    {
+      "code": "set_penetrate",
+      "name": "穿透套装"
+    },
+    {
+      "code": "set_rage",
+      "name": "愤怒套装"
+    },
+    {
+      "code": "set_res",
+      "name": "抵抗套装"
+    },
+    {
+      "code": "set_revenant",
+      "name": "逆袭套装"
+    },
+    {
+      "code": "set_riposte",
+      "name": "回击套装"
+    },
+    {
+      "code": "set_scar",
+      "name": "伤口套装"
+    },
+    {
+      "code": "set_shield",
+      "name": "守护套装"
+    },
+    {
+      "code": "set_speed",
+      "name": "速度套装"
+    },
+    {
+      "code": "set_torrent",
+      "name": "激流套装"
+    },
+    {
+      "code": "set_vampire",
+      "name": "吸血套装"
+    },
+    {
+      "code": "set_weak",
+      "name": "弱化套装"
+    }
+  ],
+  "heroes": [
+    {
+      "code": "c2124",
+      "name": "组长亚露嘉",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 77.87,
+          "winRate": 58.4
+        }
+      ]
+    },
+    {
+      "code": "c2184",
+      "name": "萨洛美",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 37.45,
+          "winRate": 55.74
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 36.18,
+          "winRate": 57.7
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 11.91,
+          "winRate": 57.09
+        }
+      ]
+    },
+    {
+      "code": "c2131",
+      "name": "保健室老师律荷",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 47.4,
+          "winRate": 61.44
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 45.71,
+          "winRate": 60.71
+        }
+      ]
+    },
+    {
+      "code": "c1172",
+      "name": "芙莉莲",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 44.64,
+          "winRate": 62.64
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 41.67,
+          "winRate": 61.62
+        }
+      ]
+    },
+    {
+      "code": "c1022",
+      "name": "光之瑞儿",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_revenant"
+          ],
+          "rate": 40.6,
+          "winRate": 62.15
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_revenant"
+          ],
+          "rate": 24.23,
+          "winRate": 59.79
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 11.79,
+          "winRate": 59.96
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 10.69,
+          "winRate": 61.58
+        }
+      ]
+    },
+    {
+      "code": "c5154",
+      "name": "调香师维波里丝",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 41.06,
+          "winRate": 63.21
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 34.48,
+          "winRate": 64.67
+        }
+      ]
+    },
+    {
+      "code": "c1183",
+      "name": "艾丝黛",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 72.4,
+          "winRate": 58.78
+        }
+      ]
+    },
+    {
+      "code": "c6005",
+      "name": "天秤之主",
+      "usefulStats": [
+        "防御力",
+        "速度",
+        "效果命中",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 34.07,
+          "winRate": 64.45
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 24.53,
+          "winRate": 64.65
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 16.36,
+          "winRate": 64.87
+        }
+      ]
+    },
+    {
+      "code": "c2076",
+      "name": "黑暗牧者迪埃妮",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 33.31,
+          "winRate": 64.08
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 18.36,
+          "winRate": 65.42
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 17.68,
+          "winRate": 62.41
+        }
+      ]
+    },
+    {
+      "code": "c1168",
+      "name": "利纳柯",
+      "usefulStats": [
+        "攻击力",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 42.63,
+          "winRate": 59.18
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 39.79,
+          "winRate": 58.99
+        }
+      ]
+    },
+    {
+      "code": "c2181",
+      "name": "诺托斯",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_opener"
+          ],
+          "rate": 82.78,
+          "winRate": 60.07
+        }
+      ]
+    },
+    {
+      "code": "c1117",
+      "name": "伯里安",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 23.73,
+          "winRate": 59.22
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 21.15,
+          "winRate": 57.94
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 18.64,
+          "winRate": 58.66
+        }
+      ]
+    },
+    {
+      "code": "c2185",
+      "name": "里安娜路西艾拉",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 35.69,
+          "winRate": 57.5
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 19.69,
+          "winRate": 59.58
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 15.26,
+          "winRate": 57.84
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 15.19,
+          "winRate": 57.14
+        }
+      ]
+    },
+    {
+      "code": "c2007",
+      "name": "执行官维德瑞",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 52.33,
+          "winRate": 58.71
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 26.48,
+          "winRate": 59.14
+        }
+      ]
+    },
+    {
+      "code": "c1176",
+      "name": "雪花",
+      "usefulStats": [
+        "生命值",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_riposte"
+          ],
+          "rate": 90.56,
+          "winRate": 60.16
+        }
+      ]
+    },
+    {
+      "code": "c1133",
+      "name": "智武",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 43.8,
+          "winRate": 54.43
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 39.93,
+          "winRate": 50.12
+        }
+      ]
+    },
+    {
+      "code": "c5072",
+      "name": "疾速赛车手赛珂兰特",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 56.16,
+          "winRate": 59.59
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 35.72,
+          "winRate": 60.05
+        }
+      ]
+    },
+    {
+      "code": "c2024",
+      "name": "灰光森林的伊赛丽亚",
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 67.09,
+          "winRate": 59.76
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 15.82,
+          "winRate": 62.5
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 13.21,
+          "winRate": 61.45
+        }
+      ]
+    },
+    {
+      "code": "c2071",
+      "name": "一轮孤月维尔萝娜",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 79.82,
+          "winRate": 60.09
+        }
+      ]
+    },
+    {
+      "code": "c6024",
+      "name": "宝剑君主伊赛丽亚",
+      "usefulStats": [
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 53.87,
+          "winRate": 60.24
+        },
+        {
+          "sets": [
+            "set_chase",
+            "set_counter"
+          ],
+          "rate": 44.86,
+          "winRate": 60.13
+        }
+      ]
+    },
+    {
+      "code": "c1171",
+      "name": "兔菈玫",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_penetrate",
+            "set_torrent"
+          ],
+          "rate": 96.27,
+          "winRate": 62
+        }
+      ]
+    },
+    {
+      "code": "c2129",
+      "name": "风纪委员艾莉雅",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 86.25,
+          "winRate": 61.79
+        }
+      ]
+    },
+    {
+      "code": "c2103",
+      "name": "灵眼的瑟琳",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 66.1,
+          "winRate": 57.94
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 33.22,
+          "winRate": 58.96
+        }
+      ]
+    },
+    {
+      "code": "c2066",
+      "name": "新月露娜",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 80.38,
+          "winRate": 60.93
+        }
+      ]
+    },
+    {
+      "code": "c6037",
+      "name": "月兔多米妮尔",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 61.91,
+          "winRate": 60.08
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 19.72,
+          "winRate": 61.65
+        }
+      ]
+    },
+    {
+      "code": "c2001",
+      "name": "起源拉斯",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 67.76,
+          "winRate": 61.69
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 18.88,
+          "winRate": 63.65
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_cri_dmg"
+          ],
+          "rate": 10.05,
+          "winRate": 61.73
+        }
+      ]
+    },
+    {
+      "code": "c4123",
+      "name": "银波克莉丝媞",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果命中",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_res",
+            "set_res",
+            "set_res"
+          ],
+          "rate": 35.05,
+          "winRate": 56.42
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_res"
+          ],
+          "rate": 20.53,
+          "winRate": 57.48
+        },
+        {
+          "sets": [
+            "set_res"
+          ],
+          "rate": 14.2,
+          "winRate": 60.06
+        }
+      ]
+    },
+    {
+      "code": "c1153",
+      "name": "赫尔赛蒂",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_scar"
+          ],
+          "rate": 55.61,
+          "winRate": 58.03
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 12.05,
+          "winRate": 61.23
+        }
+      ]
+    },
+    {
+      "code": "c5069",
+      "name": "黎明的序曲鲁特比",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_weak"
+          ],
+          "rate": 53.4,
+          "winRate": 55.82
+        },
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 38.09,
+          "winRate": 55.31
+        }
+      ]
+    },
+    {
+      "code": "c5033",
+      "name": "战术型可丽",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 98.36,
+          "winRate": 59.24
+        }
+      ]
+    },
+    {
+      "code": "c1178",
+      "name": "赫卡特",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_opener"
+          ],
+          "rate": 42.74,
+          "winRate": 56.96
+        },
+        {
+          "sets": [
+            "set_opener",
+            "set_torrent"
+          ],
+          "rate": 32.64,
+          "winRate": 57.61
+        }
+      ]
+    },
+    {
+      "code": "c2112",
+      "name": "海上幽灵佛里蒂丝",
+      "usefulStats": [
+        "防御力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 58.42,
+          "winRate": 60.75
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 25.11,
+          "winRate": 61.49
+        }
+      ]
+    },
+    {
+      "code": "c1104",
+      "name": "魔勒",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 28.07,
+          "winRate": 62.35
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 24.32,
+          "winRate": 67.92
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 14.89,
+          "winRate": 63.02
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 12.66,
+          "winRate": 63.38
+        }
+      ]
+    },
+    {
+      "code": "c5147",
+      "name": "深海之眼芙米尔",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 56.78,
+          "winRate": 58.02
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 35.28,
+          "winRate": 53.48
+        }
+      ]
+    },
+    {
+      "code": "c6050",
+      "name": "湖畔魔女泰妮布里雅",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 94.51,
+          "winRate": 56.41
+        }
+      ]
+    },
+    {
+      "code": "c1046",
+      "name": "丽迪卡",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 51.77,
+          "winRate": 58.57
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 33.28,
+          "winRate": 63
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 13.67,
+          "winRate": 59.88
+        }
+      ]
+    },
+    {
+      "code": "c2113",
+      "name": "苍穹伊莉娜芙",
+      "usefulStats": [
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 77.09,
+          "winRate": 59.58
+        }
+      ]
+    },
+    {
+      "code": "c1143",
+      "name": "雅咪德",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 86.94,
+          "winRate": 58.11
+        }
+      ]
+    },
+    {
+      "code": "c2110",
+      "name": "海盗船长芙兰",
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 68.74,
+          "winRate": 62.15
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 28.53,
+          "winRate": 64.77
+        }
+      ]
+    },
+    {
+      "code": "c4004",
+      "name": "自由骑士雅洛薇",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 66.36,
+          "winRate": 64.33
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_immune",
+            "set_max_hp"
+          ],
+          "rate": 12.82,
+          "winRate": 65.71
+        }
+      ]
+    },
+    {
+      "code": "c1034",
+      "name": "史瑞杰思",
+      "usefulStats": [
+        "攻击力",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 79.43,
+          "winRate": 60.37
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 19.14,
+          "winRate": 56.79
+        }
+      ]
+    },
+    {
+      "code": "c1182",
+      "name": "伊凡娜",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 36.2,
+          "winRate": 56.75
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 33.89,
+          "winRate": 60
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 10.72,
+          "winRate": 51.34
+        }
+      ]
+    },
+    {
+      "code": "c5111",
+      "name": "庆典艾妲",
+      "usefulStats": [
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 25.45,
+          "winRate": 58.37
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 23.37,
+          "winRate": 57.71
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 18.8,
+          "winRate": 61.26
+        },
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 19.14,
+          "winRate": 58.38
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 10.99,
+          "winRate": 53.35
+        }
+      ]
+    },
+    {
+      "code": "c5110",
+      "name": "午时戏水芙兰",
+      "usefulStats": [
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 45.05,
+          "winRate": 58.38
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 22.18,
+          "winRate": 52.3
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 17.63,
+          "winRate": 64.48
+        }
+      ]
+    },
+    {
+      "code": "c2049",
+      "name": "仆人克萝爱",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 56.22,
+          "winRate": 63.42
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 26.07,
+          "winRate": 62.38
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 13.56,
+          "winRate": 66.4
+        }
+      ]
+    },
+    {
+      "code": "c1007",
+      "name": "维德瑞",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 70.83,
+          "winRate": 61.8
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 14.54,
+          "winRate": 65.23
+        },
+        {
+          "sets": [
+            "set_torrent",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 13.61,
+          "winRate": 54.13
+        }
+      ]
+    },
+    {
+      "code": "c1091",
+      "name": "艾蕾娜",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 63.19,
+          "winRate": 57.86
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 18.83,
+          "winRate": 57.01
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 13.25,
+          "winRate": 57.56
+        }
+      ]
+    },
+    {
+      "code": "c1162",
+      "name": "小小赛娜",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_immune",
+            "set_max_hp"
+          ],
+          "rate": 41.65,
+          "winRate": 62.03
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 14.88,
+          "winRate": 64.58
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 13.33,
+          "winRate": 60.08
+        }
+      ]
+    },
+    {
+      "code": "c2128",
+      "name": "旁观者和英",
+      "usefulStats": [
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_penetrate"
+          ],
+          "rate": 66.17,
+          "winRate": 57.96
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 30.57,
+          "winRate": 61.06
+        }
+      ]
+    },
+    {
+      "code": "c2127",
+      "name": "继承人太悟",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 49.59,
+          "winRate": 53.23
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 36.24,
+          "winRate": 61.45
+        }
+      ]
+    },
+    {
+      "code": "c1177",
+      "name": "萨若米亚",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 50.23,
+          "winRate": 56.44
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 42.78,
+          "winRate": 61.57
+        }
+      ]
+    },
+    {
+      "code": "c1150",
+      "name": "贝洛妮卡",
+      "usefulStats": [
+        "速度",
+        "暴击率",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 43.89,
+          "winRate": 60.08
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 18.9,
+          "winRate": 62.12
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 19.16,
+          "winRate": 55.22
+        }
+      ]
+    },
+    {
+      "code": "c2080",
+      "name": "司令官帕贝尔",
+      "usefulStats": [
+        "攻击力",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_torrent",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 47.24,
+          "winRate": 66.16
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 50.81,
+          "winRate": 59.43
+        }
+      ]
+    },
+    {
+      "code": "c5175",
+      "name": "亚澜",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 76.21,
+          "winRate": 68.44
+        }
+      ]
+    },
+    {
+      "code": "c2048",
+      "name": "白银刀刃的雅拉敏塔",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 95.83,
+          "winRate": 61.89
+        }
+      ]
+    },
+    {
+      "code": "c2132",
+      "name": "龙王莎伦",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 50.37,
+          "winRate": 62.74
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 19.5,
+          "winRate": 62.9
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 14.08,
+          "winRate": 58.23
+        }
+      ]
+    },
+    {
+      "code": "c5149",
+      "name": "丽希",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 63.93,
+          "winRate": 62.78
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 27.59,
+          "winRate": 60.61
+        }
+      ]
+    },
+    {
+      "code": "c1103",
+      "name": "瑟琳",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 61.64,
+          "winRate": 60.49
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 34.63,
+          "winRate": 60.88
+        }
+      ]
+    },
+    {
+      "code": "c6017",
+      "name": "未知的可能性雅卡泰丝",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 41.27,
+          "winRate": 58.94
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 24.03,
+          "winRate": 56.83
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 11.41,
+          "winRate": 71.21
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 14.29,
+          "winRate": 56.45
+        }
+      ]
+    },
+    {
+      "code": "c1160",
+      "name": "碧儿姬达",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 80.41,
+          "winRate": 62.63
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 11.8,
+          "winRate": 59.28
+        }
+      ]
+    },
+    {
+      "code": "c2079",
+      "name": "狮心王洁若米亚",
+      "usefulStats": [
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 19.19,
+          "winRate": 58.31
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 20.82,
+          "winRate": 51.88
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_def"
+          ],
+          "rate": 14.31,
+          "winRate": 61.82
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 13.99,
+          "winRate": 56.28
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 10.08,
+          "winRate": 62.58
+        }
+      ]
+    },
+    {
+      "code": "c2090",
+      "name": "死亡探究者雷伊",
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 67.61,
+          "winRate": 53.06
+        }
+      ]
+    },
+    {
+      "code": "c2070",
+      "name": "最后的骑士克劳乌",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 70.34,
+          "winRate": 56.39
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_max_hp",
+            "set_res"
+          ],
+          "rate": 11.74,
+          "winRate": 52.57
+        }
+      ]
+    },
+    {
+      "code": "c2126",
+      "name": "小恶魔路雅",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 50.82,
+          "winRate": 59.03
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 34.59,
+          "winRate": 63.51
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 10.33,
+          "winRate": 60.32
+        }
+      ]
+    },
+    {
+      "code": "c1020",
+      "name": "修里",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 83.41,
+          "winRate": 59.94
+        }
+      ]
+    },
+    {
+      "code": "c1109",
+      "name": "兰蒂",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 71.49,
+          "winRate": 55.67
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 15.49,
+          "winRate": 64.9
+        }
+      ]
+    },
+    {
+      "code": "c1179",
+      "name": "亚奇",
+      "usefulStats": [
+        "攻击力"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 71.95,
+          "winRate": 54.85
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 14.9,
+          "winRate": 52.25
+        }
+      ]
+    },
+    {
+      "code": "c1076",
+      "name": "迪埃妮",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 47.02,
+          "winRate": 53.41
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 18.46,
+          "winRate": 61.49
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_speed"
+          ],
+          "rate": 13.99,
+          "winRate": 54.1
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 12.04,
+          "winRate": 54.29
+        }
+      ]
+    },
+    {
+      "code": "c2082",
+      "name": "最强模特儿璐璐卡",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 35.45,
+          "winRate": 52.24
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 26.98,
+          "winRate": 57.84
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 17.86,
+          "winRate": 61.48
+        }
+      ]
+    },
+    {
+      "code": "c1083",
+      "name": "杰诺",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 16.71,
+          "winRate": 57.25
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 11.62,
+          "winRate": 63.54
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 12.47,
+          "winRate": 56.31
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_speed"
+          ],
+          "rate": 11.14,
+          "winRate": 58.7
+        }
+      ]
+    },
+    {
+      "code": "c2102",
+      "name": "镇魂的罗安纳",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_acc",
+            "set_acc"
+          ],
+          "rate": 33.04,
+          "winRate": 53.2
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_acc"
+          ],
+          "rate": 11.57,
+          "winRate": 57.69
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_acc",
+            "set_torrent"
+          ],
+          "rate": 11.9,
+          "winRate": 47.66
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 10.12,
+          "winRate": 49.45
+        }
+      ]
+    },
+    {
+      "code": "c5089",
+      "name": "夜宴莉莉亚斯",
+      "usefulStats": [
+        "攻击力",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 81.79,
+          "winRate": 61.78
+        }
+      ]
+    },
+    {
+      "code": "c1148",
+      "name": "艾碧拉",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 27.63,
+          "winRate": 63.8
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_res"
+          ],
+          "rate": 24.41,
+          "winRate": 59.03
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 10.34,
+          "winRate": 65.57
+        }
+      ]
+    },
+    {
+      "code": "c2004",
+      "name": "流浪者席可",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 90.58,
+          "winRate": 60.51
+        }
+      ]
+    },
+    {
+      "code": "c2012",
+      "name": "黑暗的科尔布思",
+      "usefulStats": [
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_opener"
+          ],
+          "rate": 68.32,
+          "winRate": 63.77
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_opener"
+          ],
+          "rate": 29.7,
+          "winRate": 65.24
+        }
+      ]
+    },
+    {
+      "code": "c2125",
+      "name": "孤狼沛伊拉",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 46.68,
+          "winRate": 61.05
+        },
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 28.49,
+          "winRate": 58.57
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 11.53,
+          "winRate": 47.06
+        }
+      ]
+    },
+    {
+      "code": "c2095",
+      "name": "设计师莉莉贝",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 54.36,
+          "winRate": 55.97
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 22.72,
+          "winRate": 63.39
+        }
+      ]
+    },
+    {
+      "code": "c2015",
+      "name": "贤者巴尔&塞尚",
+      "usefulStats": [
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 45.8,
+          "winRate": 68.7
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 27.45,
+          "winRate": 58.6
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 13.99,
+          "winRate": 67.5
+        }
+      ]
+    },
+    {
+      "code": "c2111",
+      "name": "雪国的苏莉塔妮亚",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 64.95,
+          "winRate": 60.47
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 12.39,
+          "winRate": 70.73
+        }
+      ]
+    },
+    {
+      "code": "c2099",
+      "name": "策画者莱伊卡",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 55.03,
+          "winRate": 58.65
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 24.07,
+          "winRate": 52.75
+        },
+        {
+          "sets": [
+            "set_might",
+            "set_speed"
+          ],
+          "rate": 16.93,
+          "winRate": 67.19
+        }
+      ]
+    },
+    {
+      "code": "c2002",
+      "name": "堕落的赛西莉亚",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 48.45,
+          "winRate": 57.69
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 23.6,
+          "winRate": 59.65
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 20.08,
+          "winRate": 50.52
+        }
+      ]
+    },
+    {
+      "code": "c2023",
+      "name": "扭曲的亡灵凯隆",
+      "usefulStats": [
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_immune",
+            "set_max_hp"
+          ],
+          "rate": 60.44,
+          "winRate": 55.64
+        }
+      ]
+    },
+    {
+      "code": "c1112",
+      "name": "佛里蒂丝",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 32.79,
+          "winRate": 71.13
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 16.4,
+          "winRate": 63.38
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_weak"
+          ],
+          "rate": 15.94,
+          "winRate": 65.22
+        }
+      ]
+    },
+    {
+      "code": "c4158",
+      "name": "传承雅蜜琪",
+      "usefulStats": [
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_counter"
+          ],
+          "rate": 43.49,
+          "winRate": 57.22
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_res"
+          ],
+          "rate": 22.79,
+          "winRate": 52.04
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 12.79,
+          "winRate": 54.55
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_torrent"
+          ],
+          "rate": 10.7,
+          "winRate": 58.7
+        }
+      ]
+    },
+    {
+      "code": "c1147",
+      "name": "芙米尔",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 66.77,
+          "winRate": 56.4
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 25,
+          "winRate": 65.82
+        }
+      ]
+    },
+    {
+      "code": "c2016",
+      "name": "深渊优芬妮",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 31.46,
+          "winRate": 60.93
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 30.42,
+          "winRate": 57.53
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_vampire"
+          ],
+          "rate": 10.63,
+          "winRate": 50.98
+        }
+      ]
+    },
+    {
+      "code": "c5009",
+      "name": "暑假夏绿蒂",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 72.14,
+          "winRate": 55.6
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 16.43,
+          "winRate": 45.76
+        }
+      ]
+    },
+    {
+      "code": "c2019",
+      "name": "末日萝菲",
+      "usefulStats": [
+        "生命值",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 39.03,
+          "winRate": 55.14
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 26.37,
+          "winRate": 64.8
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 10.34,
+          "winRate": 55.1
+        }
+      ]
+    },
+    {
+      "code": "c2011",
+      "name": "血剑卡琳",
+      "usefulStats": [
+        "攻击力",
+        "暴击率",
+        "暴击伤害",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 28.92,
+          "winRate": 62.77
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 22.77,
+          "winRate": 47.3
+        },
+        {
+          "sets": [
+            "set_torrent",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 16.62,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 14.15,
+          "winRate": 45.65
+        }
+      ]
+    },
+    {
+      "code": "c2069",
+      "name": "永劫漂流者鲁特比",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 81.91,
+          "winRate": 58.01
+        }
+      ]
+    },
+    {
+      "code": "c2101",
+      "name": "都市暗影小泡芙",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_speed"
+          ],
+          "rate": 84.07,
+          "winRate": 55.56
+        }
+      ]
+    },
+    {
+      "code": "c1151",
+      "name": "落月",
+      "usefulStats": [
+        "防御力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 76.35,
+          "winRate": 59.24
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 16.18,
+          "winRate": 46.15
+        }
+      ]
+    },
+    {
+      "code": "c2022",
+      "name": "戴丝蒂娜",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 29.26,
+          "winRate": 61.17
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 19.32,
+          "winRate": 72.06
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 11.65,
+          "winRate": 68.29
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_res"
+          ],
+          "rate": 12.22,
+          "winRate": 60.47
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 10.23,
+          "winRate": 66.67
+        }
+      ]
+    },
+    {
+      "code": "c5001",
+      "name": "冒险家拉斯",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c5082",
+      "name": "海洋香气璐璐卡",
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 23.11,
+          "winRate": 67.27
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 21.01,
+          "winRate": 60
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 18.91,
+          "winRate": 64.44
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 14.71,
+          "winRate": 60
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_speed"
+          ],
+          "rate": 11.76,
+          "winRate": 71.43
+        }
+      ]
+    },
+    {
+      "code": "c5128",
+      "name": "银光海啸和英",
+      "usefulStats": [
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 47.62,
+          "winRate": 62
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 33.33,
+          "winRate": 42.86
+        }
+      ]
+    },
+    {
+      "code": "c2042",
+      "name": "野心份子泰温",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 60.45,
+          "winRate": 59.81
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 19.21,
+          "winRate": 61.76
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 17.51,
+          "winRate": 35.48
+        }
+      ]
+    },
+    {
+      "code": "c1131",
+      "name": "律荷",
+      "usefulStats": [
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 39.18,
+          "winRate": 59.65
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 20.27,
+          "winRate": 57.63
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 19.24,
+          "winRate": 55.36
+        }
+      ]
+    },
+    {
+      "code": "c2038",
+      "name": "实验体赛兹",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 84.5,
+          "winRate": 55.36
+        }
+      ]
+    },
+    {
+      "code": "c6020",
+      "name": "西风处刑者修里",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1060",
+      "name": "修尼尔",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 45.3,
+          "winRate": 60.38
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 31.62,
+          "winRate": 62.16
+        }
+      ]
+    },
+    {
+      "code": "c2106",
+      "name": "龙之伴侣赛娜",
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 45.64,
+          "winRate": 57.27
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 14.11,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 10.79,
+          "winRate": 42.31
+        }
+      ]
+    },
+    {
+      "code": "c1173",
+      "name": "费伦",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_opener",
+            "set_penetrate"
+          ],
+          "rate": 57.96,
+          "winRate": 61.37
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_riposte"
+          ],
+          "rate": 19.9,
+          "winRate": 65
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_riposte"
+          ],
+          "rate": 19.15,
+          "winRate": 53.25
+        }
+      ]
+    },
+    {
+      "code": "c1158",
+      "name": "佩里斯",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 57.69,
+          "winRate": 58.1
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 30.22,
+          "winRate": 63.64
+        }
+      ]
+    },
+    {
+      "code": "c1163",
+      "name": "弗莉达",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 30.39,
+          "winRate": 54.55
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 34.81,
+          "winRate": 46.03
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 12.15,
+          "winRate": 54.55
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 11.05,
+          "winRate": 45
+        }
+      ]
+    },
+    {
+      "code": "c1118",
+      "name": "岚",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2062",
+      "name": "罪戾的安洁莉卡",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 44.1,
+          "winRate": 61.97
+        },
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 34.16,
+          "winRate": 58.18
+        }
+      ]
+    },
+    {
+      "code": "c5046",
+      "name": "花园丽迪卡",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1038",
+      "name": "赛兹",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 55.43,
+          "winRate": 49.48
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 27.43,
+          "winRate": 54.17
+        }
+      ]
+    },
+    {
+      "code": "c1065",
+      "name": "苏琳",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 42.28,
+          "winRate": 57.14
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 32.21,
+          "winRate": 64.58
+        }
+      ]
+    },
+    {
+      "code": "c2073",
+      "name": "协调者卡威利",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 56,
+          "winRate": 56.25
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 30.5,
+          "winRate": 47.54
+        }
+      ]
+    },
+    {
+      "code": "c2008",
+      "name": "红焰亚敏",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 86.93,
+          "winRate": 58.54
+        }
+      ]
+    },
+    {
+      "code": "c2072",
+      "name": "操作员赛珂兰特",
+      "usefulStats": [
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 67.68,
+          "winRate": 56.72
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 21.21,
+          "winRate": 38.1
+        }
+      ]
+    },
+    {
+      "code": "c6062",
+      "name": "光之天使安洁莉卡",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 62.96,
+          "winRate": 69.12
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 20.37,
+          "winRate": 63.64
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 10.19,
+          "winRate": 54.55
+        }
+      ]
+    },
+    {
+      "code": "c2091",
+      "name": "星辰的神谕艾蕾娜",
+      "usefulStats": [
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 32.79,
+          "winRate": 52.5
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 23.77,
+          "winRate": 51.72
+        },
+        {
+          "sets": [
+            "set_rage",
+            "set_torrent"
+          ],
+          "rate": 11.48,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c2089",
+      "name": "支配者莉莉亚斯",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1014",
+      "name": "席德",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1126",
+      "name": "路雅",
+      "usefulStats": [
+        "防御力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 45.76,
+          "winRate": 56.79
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 41.24,
+          "winRate": 50.68
+        }
+      ]
+    },
+    {
+      "code": "c2013",
+      "name": "杀手卡尔图哈",
+      "usefulStats": [
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 15.46,
+          "winRate": 73.33
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 14.43,
+          "winRate": 57.14
+        }
+      ]
+    },
+    {
+      "code": "c2109",
+      "name": "海军上校兰蒂",
+      "usefulStats": [
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 53.06,
+          "winRate": 46.15
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_penetrate"
+          ],
+          "rate": 20.41,
+          "winRate": 35
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 12.24,
+          "winRate": 16.67
+        }
+      ]
+    },
+    {
+      "code": "c2053",
+      "name": "沙漠宝石巴萨尔",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_res",
+            "set_speed"
+          ],
+          "rate": 48.04,
+          "winRate": 40.82
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 22.55,
+          "winRate": 39.13
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 12.75,
+          "winRate": 53.85
+        }
+      ]
+    },
+    {
+      "code": "c1144",
+      "name": "雅碧凯",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 36.14,
+          "winRate": 56.67
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_immune",
+            "set_max_hp"
+          ],
+          "rate": 14.46,
+          "winRate": 58.33
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 13.25,
+          "winRate": 54.55
+        }
+      ]
+    },
+    {
+      "code": "c2165",
+      "name": "转学生艾庭",
+      "usefulStats": [
+        "攻击力",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2009",
+      "name": "年轻的女王夏绿蒂",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 76.72,
+          "winRate": 66.29
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 11.21,
+          "winRate": 38.46
+        }
+      ]
+    },
+    {
+      "code": "c2088",
+      "name": "森之贤者薇薇安",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 53.7,
+          "winRate": 68.97
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 22.22,
+          "winRate": 41.67
+        }
+      ]
+    },
+    {
+      "code": "c6014",
+      "name": "流浪王子席德",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2050",
+      "name": "幻影的泰妮布里雅",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 63.33,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_coop",
+            "set_speed"
+          ],
+          "rate": 12.22,
+          "winRate": 54.55
+        }
+      ]
+    },
+    {
+      "code": "c1055",
+      "name": "济纽亚",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 88.61,
+          "winRate": 54.29
+        }
+      ]
+    },
+    {
+      "code": "c1180",
+      "name": "露易莎",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1102",
+      "name": "罗安纳",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 21.62,
+          "winRate": 62.5
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 17.57,
+          "winRate": 69.23
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_res"
+          ],
+          "rate": 10.81,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 10.81,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c1129",
+      "name": "艾莉雅",
+      "usefulStats": [
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_res",
+            "set_vampire"
+          ],
+          "rate": 50,
+          "winRate": 42.55
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_vampire"
+          ],
+          "rate": 30.85,
+          "winRate": 37.93
+        }
+      ]
+    },
+    {
+      "code": "c1127",
+      "name": "太悟",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1006",
+      "name": "绮世",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 26.32,
+          "winRate": 40
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 36.84,
+          "winRate": 14.29
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 15.79,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_torrent",
+            "set_torrent"
+          ],
+          "rate": 10.53,
+          "winRate": 0
+        }
+      ]
+    },
+    {
+      "code": "c1169",
+      "name": "露彬",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1159",
+      "name": "莱娅",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 50.75,
+          "winRate": 55.88
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_opener"
+          ],
+          "rate": 20.9,
+          "winRate": 78.57
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_opener"
+          ],
+          "rate": 17.91,
+          "winRate": 66.67
+        }
+      ]
+    },
+    {
+      "code": "c2037",
+      "name": "挑战者多米妮尔",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1130",
+      "name": "洁克‧欧",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1142",
+      "name": "艾利戈斯",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1009",
+      "name": "夏绿蒂",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_max_hp"
+          ],
+          "rate": 67.8,
+          "winRate": 52.5
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 18.64,
+          "winRate": 63.64
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_torrent"
+          ],
+          "rate": 10.17,
+          "winRate": 66.67
+        }
+      ]
+    },
+    {
+      "code": "c2074",
+      "name": "残影的菲奥雷托",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c5024",
+      "name": "南国的伊赛丽亚",
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c6003",
+      "name": "悲叹萝季",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_shield"
+          ],
+          "rate": 65.63,
+          "winRate": 52.38
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_revenant"
+          ],
+          "rate": 25,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c1122",
+      "name": "蜜莉姆",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 44.44,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 33.33,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_riposte"
+          ],
+          "rate": 11.11,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c2006",
+      "name": "审判者绮世",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1170",
+      "name": "斐妮",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c5016",
+      "name": "度假风优芬妮",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1099",
+      "name": "指挥型莱伊卡",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1111",
+      "name": "艾妲",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1134",
+      "name": "爱德华‧爱力克",
+      "usefulStats": [
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 44.44,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 30.56,
+          "winRate": 63.64
+        }
+      ]
+    },
+    {
+      "code": "c1161",
+      "name": "不灭神机悟空",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_max_hp"
+          ],
+          "rate": 58.82,
+          "winRate": 45
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_max_hp",
+            "set_max_hp"
+          ],
+          "rate": 14.71,
+          "winRate": 60
+        }
+      ]
+    },
+    {
+      "code": "c1156",
+      "name": "雅儿贝德",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 19.05,
+          "winRate": 100
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_shield"
+          ],
+          "rate": 23.81,
+          "winRate": 60
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 19.05,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c2039",
+      "name": "赤月的贵族海斯特",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_counter",
+            "set_max_hp"
+          ],
+          "rate": 35.29,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 23.53,
+          "winRate": 75
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_res"
+          ],
+          "rate": 29.41,
+          "winRate": 40
+        }
+      ]
+    },
+    {
+      "code": "c4144",
+      "name": "救援者艾庭",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_att",
+            "set_penetrate"
+          ],
+          "rate": 42.11,
+          "winRate": 58.33
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 24.56,
+          "winRate": 35.71
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 14.04,
+          "winRate": 62.5
+        }
+      ]
+    },
+    {
+      "code": "c1128",
+      "name": "和英",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c5070",
+      "name": "护卫队长克劳乌",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 30,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_speed"
+          ],
+          "rate": 30,
+          "winRate": 55.56
+        },
+        {
+          "sets": [
+            "set_def",
+            "set_def",
+            "set_immune"
+          ],
+          "rate": 13.33,
+          "winRate": 75
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 16.67,
+          "winRate": 20
+        }
+      ]
+    },
+    {
+      "code": "c5050",
+      "name": "童话泰妮布里雅",
+      "usefulStats": [
+        "防御力",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2020",
+      "name": "注视者修里",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2014",
+      "name": "杀手席德",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1146",
+      "name": "红丸",
+      "usefulStats": [],
+      "setCombos": [
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 28.57,
+          "winRate": 25
+        },
+        {
+          "sets": [
+            "set_cri",
+            "set_speed"
+          ],
+          "rate": 21.43,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_torrent"
+          ],
+          "rate": 21.43,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_speed"
+          ],
+          "rate": 14.29,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c1089",
+      "name": "莉莉亚斯",
+      "usefulStats": [
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 27.27,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 18.18,
+          "winRate": 100
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 27.27,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_speed"
+          ],
+          "rate": 18.18,
+          "winRate": 50
+        }
+      ]
+    },
+    {
+      "code": "c5071",
+      "name": "海边的维尔萝娜",
+      "usefulStats": [
+        "攻击力",
+        "生命值"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_chase",
+            "set_immune",
+            "set_max_hp"
+          ],
+          "rate": 28.57,
+          "winRate": 33.33
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 14.29,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_immune",
+            "set_vampire"
+          ],
+          "rate": 38.1,
+          "winRate": 12.5
+        }
+      ]
+    },
+    {
+      "code": "c4051",
+      "name": "研究者卡萝",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1119",
+      "name": "札哈克",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c5004",
+      "name": "魔神的暗影",
+      "usefulStats": [
+        "防御力",
+        "速度"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_speed"
+          ],
+          "rate": 33.33,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_acc",
+            "set_speed"
+          ],
+          "rate": 22.22,
+          "winRate": 50
+        },
+        {
+          "sets": [
+            "set_chase"
+          ],
+          "rate": 11.11,
+          "winRate": 100
+        },
+        {
+          "sets": [
+            "set_speed",
+            "set_torrent"
+          ],
+          "rate": 11.11,
+          "winRate": 0
+        },
+        {
+          "sets": [
+            "set_counter",
+            "set_immune"
+          ],
+          "rate": 11.11,
+          "winRate": 0
+        }
+      ]
+    },
+    {
+      "code": "c1095",
+      "name": "莉莉贝",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1121",
+      "name": "利姆路",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c6011",
+      "name": "最后的碎片卡琳",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3074",
+      "name": "格鲁美兰",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1070",
+      "name": "克劳乌",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2047",
+      "name": "武斗家肯恩",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "暴击伤害",
+        "效果抗性"
+      ],
+      "setCombos": [
+        {
+          "sets": [
+            "set_immune",
+            "set_penetrate",
+            "set_res"
+          ],
+          "rate": 17.65,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_penetrate"
+          ],
+          "rate": 17.65,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_cri_dmg",
+            "set_immune"
+          ],
+          "rate": 17.65,
+          "winRate": 66.67
+        },
+        {
+          "sets": [
+            "set_penetrate",
+            "set_speed"
+          ],
+          "rate": 11.76,
+          "winRate": 100
+        },
+        {
+          "sets": [
+            "set_max_hp",
+            "set_penetrate",
+            "set_res"
+          ],
+          "rate": 23.53,
+          "winRate": 25
+        }
+      ]
+    },
+    {
+      "code": "c2027",
+      "name": "末日指挥官查尔斯",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3064",
+      "name": "赛雷斯特",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c4005",
+      "name": "黑骑士费莉丝",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "m8042_apr",
+      "name": "m8042_apr",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1140",
+      "name": "ae-NINGNING",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1042",
+      "name": "泰温",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "m8041_apr",
+      "name": "m8041_apr",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c2043",
+      "name": "仁慈的洛曼",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c4035",
+      "name": "指挥官萝里娜",
+      "usefulStats": [
+        "攻击力",
+        "暴击率",
+        "暴击伤害",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1155",
+      "name": "安兹‧乌尔‧恭",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1008",
+      "name": "亚敏",
+      "usefulStats": [
+        "生命值",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1135",
+      "name": "罗伊‧马斯坦古",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1141",
+      "name": "雨修",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1174",
+      "name": "修塔尔克",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1157",
+      "name": "夏提雅",
+      "usefulStats": [
+        "攻击力",
+        "暴击率"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3024",
+      "name": "坤特",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1074",
+      "name": "菲奥雷托",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1019",
+      "name": "萝菲",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1096",
+      "name": "梅丽莎",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3094",
+      "name": "伊顿",
+      "usefulStats": [
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "m8042",
+      "name": "m8042",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3156",
+      "name": "克劳蒂亚",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1100",
+      "name": "艾莲西雅",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "暴击率",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c4052",
+      "name": "引导者捷娜",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1132",
+      "name": "莎伦",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1166",
+      "name": "维多丽卡",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3125",
+      "name": "潘尼罗佩",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c4013",
+      "name": "义贼鲁兹德",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1053",
+      "name": "巴萨尔",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1016",
+      "name": "优芬妮",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1137",
+      "name": "ae-KARINA",
+      "usefulStats": [
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1139",
+      "name": "ae-WINTER",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2031",
+      "name": "辅助型拉兹",
+      "usefulStats": [
+        "速度",
+        "暴击率"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2003",
+      "name": "暗影萝季",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3124",
+      "name": "卡蜜拉",
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3134",
+      "name": "尹凌",
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "暴击率",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1097",
+      "name": "暴击型卡农",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1115",
+      "name": "拉姆",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "m0574",
+      "name": "m0574",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1106",
+      "name": "赛娜",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1114",
+      "name": "雷姆",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3065",
+      "name": "汪达",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3003",
+      "name": "可露莉",
+      "usefulStats": [
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1023",
+      "name": "凯隆",
+      "usefulStats": [
+        "攻击力",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1032",
+      "name": "玛雅",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1154",
+      "name": "维波里丝",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1069",
+      "name": "鲁特比",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2085",
+      "name": "烈焰的卡瓦朱",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3123",
+      "name": "克莉丝媞",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3014",
+      "name": "米勒莎",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3135",
+      "name": "夏率",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1073",
+      "name": "卡威利",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3131",
+      "name": "扎努塔",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1090",
+      "name": "雷伊",
+      "usefulStats": [
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1085",
+      "name": "卡瓦朱",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c6065",
+      "name": "封眼苏琳",
+      "usefulStats": [
+        "攻击力",
+        "速度"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1125",
+      "name": "沛伊拉",
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1039",
+      "name": "海斯特",
+      "usefulStats": [
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c2046",
+      "name": "无神论者丽迪卡",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1048",
+      "name": "雅拉敏塔",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c1066",
+      "name": "露娜",
+      "usefulStats": [
+        "攻击力",
+        "防御力",
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果命中",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1093",
+      "name": "梅喧",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c2065",
+      "name": "风云苏琳",
+      "usefulStats": [
+        "速度",
+        "暴击率",
+        "暴击伤害",
+        "效果抗性"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1017",
+      "name": "雅卡泰丝",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c4105",
+      "name": "艾诺斯2.0",
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c1067",
+      "name": "塔玛林尔",
+      "usefulStats": [],
+      "setCombos": []
+    },
+    {
+      "code": "c3163",
+      "name": "蕾娅",
+      "usefulStats": [
+        "暴击率"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3164",
+      "name": "朗巴特",
+      "usefulStats": [
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
+      "setCombos": []
+    },
+    {
+      "code": "c3155",
+      "name": "斯坦",
+      "usefulStats": [],
+      "setCombos": []
+    }
+  ]
+}
