@@ -69,6 +69,93 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "暴击率", Value = "20%" },
         },
     });
+
+    // 强化建议自检（阈值 24/24）
+    void PrintAdvice(string title, EquipmentInfo info)
+    {
+        var r = EnhancementAdvisor.Analyze(info, 24, 24);
+        Console.WriteLine($"  [强化建议] {title} → {r.Text}（{r.Detail}）");
+    }
+
+    Console.WriteLine("===== 强化建议样例（阈值 24/24） =====");
+    PrintAdvice("传说武器 +0 高分（应：继续强化）", new EquipmentInfo
+    {
+        Quality = "传说武器",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "8" },
+            new SubStat { Name = "暴击率", Value = "8%" },
+            new SubStat { Name = "攻击力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    });
+    PrintAdvice("传说武器 +0 低分带速度3（应：继续赌速度）", new EquipmentInfo
+    {
+        Quality = "传说武器",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "3" },
+            new SubStat { Name = "生命值", Value = "4%" },
+            new SubStat { Name = "防御力", Value = "4%" },
+            new SubStat { Name = "效果命中", Value = "4%" },
+        },
+    });
+    PrintAdvice("传说戒指 固定攻击主属性（应：固定值主属性，建议放弃）", new EquipmentInfo
+    {
+        Quality = "传说戒指",
+        MainStatName = "攻击力",
+        MainStatValue = "500",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "8" },
+            new SubStat { Name = "暴击率", Value = "8%" },
+            new SubStat { Name = "攻击力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    });
+    PrintAdvice("传说戒指 百分比主属性低分无速度（应：分数过低，建议放弃）", new EquipmentInfo
+    {
+        Quality = "传说戒指",
+        MainStatName = "攻击力",
+        MainStatValue = "60%",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "4%" },
+            new SubStat { Name = "防御力", Value = "4%" },
+            new SubStat { Name = "效果命中", Value = "4%" },
+            new SubStat { Name = "效果抗性", Value = "4%" },
+        },
+    });
+    PrintAdvice("传说铠甲 +15 高分（应：建议重铸）", new EquipmentInfo
+    {
+        Quality = "传说铠甲",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "10" },
+            new SubStat { Name = "暴击率", Value = "10%" },
+            new SubStat { Name = "攻击力", Value = "10%" },
+            new SubStat { Name = "生命值", Value = "10%" },
+        },
+    });
+    PrintAdvice("速度鞋 低分（应：分数过低，建议放弃，鞋子不赌速度）", new EquipmentInfo
+    {
+        Quality = "传说鞋子",
+        MainStatName = "速度",
+        MainStatValue = "45",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "4%" },
+            new SubStat { Name = "防御力", Value = "4%" },
+            new SubStat { Name = "效果命中", Value = "4%" },
+            new SubStat { Name = "效果抗性", Value = "4%" },
+        },
+    });
     return;
 }
 
@@ -100,6 +187,10 @@ foreach (var name in imageNames)
     }
     Console.WriteLine($"  套装: {info.SetName}");
     Console.WriteLine($"  装备分数: {info.Score}");
+
+    // 强化建议（阈值 24/24）
+    var advice = EnhancementAdvisor.Analyze(info, 24, 24);
+    Console.WriteLine($"  强化建议: {advice.Text}（{advice.Detail}）");
 
     // 装备 → 适用角色推荐（官方战绩传说分段数据）
     var recommendations = HeroRecommender.Recommend(info);
