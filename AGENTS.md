@@ -17,7 +17,9 @@
 ```
 src/TiezhuToolbox/            主程序（WinForms）
 ├── Program.cs                入口
-├── MainForm.cs / .Designer.cs 主界面：设备下拉框 + 地址框 + 连接/刷新/截图/目录/识别
+├── MainForm.cs / .Designer.cs 主界面：设备下拉框 + 地址框 + 连接/刷新/截图/目录/识别，
+│                             右侧面板显示识别结果（等级/名称/主副属性/套装/分数，不再弹窗），
+│                             调试信息（原始文本、异常堆栈）写入 exe 目录 logs/debug.log
 ├── AdbHelper.cs              adb.exe 定位（程序目录→PATH→SDK 环境变量→Android Studio 默认路径）、
 │                             设备枚举（devices -l）、connect、exec-out screencap 截图
 ├── ScreenshotHelper.cs       截图保存（exe 同目录 screenshots/，兼容单文件发布）

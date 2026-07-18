@@ -165,36 +165,56 @@ public partial class MainForm : Form
 
             UpdateStatus(message);
 
-            // 显示详细信息
-            var detail = $"装备等级: {info.Level}\n" +
-                         $"强化等级: +{info.EnhanceLevel}\n" +
-                         $"装备名称: {info.Name}\n" +
-                         $"装备品质: {info.Quality}\n" +
-                         $"主属性: {info.MainStatName} {info.MainStatValue}\n" +
-                         $"副属性:\n";
-            foreach (var sub in info.SubStats)
-            {
-                detail += $"  - {sub.Name} {sub.Value}";
-                if (!string.IsNullOrEmpty(sub.EnhanceValue))
-                    detail += $" ({sub.EnhanceValue})";
-                detail += "\n";
-            }
-            detail += $"套装: {info.SetName}\n" +
-                      $"装备分数: {info.Score}\n\n" +
-                      $"原始文本:\n{info.RawText}\n\n" +
-                      $"截图路径: {_lastScreenshotPath}\n" +
-                      $"截图尺寸: {new Bitmap(_lastScreenshotPath).Width}x{new Bitmap(_lastScreenshotPath).Height}";
+            ShowEquipmentInfo(info);
 
-            MessageBox.Show(detail, "识别结果", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            WriteDebugLog($"识别成功\n截图路径: {_lastScreenshotPath}\n原始文本:\n{info.RawText}");
         }
         catch (Exception ex)
         {
             UpdateStatus($"识别失败：{ex.Message}");
-            MessageBox.Show($"识别失败：{ex.Message}\n\n{ex.StackTrace}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            WriteDebugLog($"识别失败：{ex}");
         }
         finally
         {
             btnRecognize.Enabled = true;
+        }
+    }
+
+    private void ShowEquipmentInfo(Modules.Ocr.EquipmentInfo info)
+    {
+        lblLevel.Text = $"等级 {info.Level}  强化 +{info.EnhanceLevel}";
+        lblName.Text = $"装备名称：{info.Name}";
+        lblQuality.Text = $"装备品质：{info.Quality}";
+        lblMainStat.Text = $"主属性：{info.MainStatName} {info.MainStatValue}";
+
+        listSubStats.Items.Clear();
+        foreach (var sub in info.SubStats)
+        {
+            var text = $"{sub.Name} {sub.Value}";
+            if (!string.IsNullOrEmpty(sub.EnhanceValue))
+                text += $" ({sub.EnhanceValue})";
+            listSubStats.Items.Add(text);
+        }
+
+        lblSet.Text = $"套装：{info.SetName}";
+        lblScore.Text = $"装备分数：{info.Score}";
+    }
+
+    /// <summary>
+    /// 把调试信息（原始识别文本、异常堆栈等）追加写入程序目录 logs/debug.log，不在界面显示。
+    /// </summary>
+    private void WriteDebugLog(string message)
+    {
+        try
+        {
+            var dir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+            Directory.CreateDirectory(dir);
+            File.AppendAllText(Path.Combine(dir, "debug.log"),
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}");
+        }
+        catch
+        {
+            // 日志写入失败不影响主流程
         }
     }
 

@@ -15,6 +15,16 @@ partial class MainForm
     private PictureBox pictureBox;
     private StatusStrip statusStrip;
     private ToolStripStatusLabel toolStripStatusLabel;
+    private Panel infoPanel;
+    private TableLayoutPanel infoTable;
+    private Label lblLevel;
+    private Label lblName;
+    private Label lblQuality;
+    private Label lblMainStat;
+    private Label lblSubStatsTitle;
+    private ListBox listSubStats;
+    private Label lblSet;
+    private Label lblScore;
 
     protected override void Dispose(bool disposing)
     {
@@ -45,9 +55,21 @@ partial class MainForm
         this.pictureBox = new PictureBox();
         this.statusStrip = new StatusStrip();
         this.toolStripStatusLabel = new ToolStripStatusLabel();
+        this.infoPanel = new Panel();
+        this.infoTable = new TableLayoutPanel();
+        this.lblLevel = new Label();
+        this.lblName = new Label();
+        this.lblQuality = new Label();
+        this.lblMainStat = new Label();
+        this.lblSubStatsTitle = new Label();
+        this.listSubStats = new ListBox();
+        this.lblSet = new Label();
+        this.lblScore = new Label();
         this.topPanel.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
         this.statusStrip.SuspendLayout();
+        this.infoPanel.SuspendLayout();
+        this.infoTable.SuspendLayout();
         this.SuspendLayout();
         //
         // topPanel
@@ -164,12 +186,127 @@ partial class MainForm
         this.toolStripStatusLabel.Size = new Size(39, 17);
         this.toolStripStatusLabel.Text = "就绪";
         //
+        // infoPanel
+        //
+        this.infoPanel.BorderStyle = BorderStyle.FixedSingle;
+        this.infoPanel.Controls.Add(this.infoTable);
+        this.infoPanel.Dock = DockStyle.Right;
+        this.infoPanel.Location = new Point(900, 48);
+        this.infoPanel.Name = "infoPanel";
+        this.infoPanel.Padding = new Padding(10);
+        this.infoPanel.Size = new Size(300, 454);
+        this.infoPanel.TabIndex = 3;
+        //
+        // infoTable
+        //
+        this.infoTable.ColumnCount = 1;
+        this.infoTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+        this.infoTable.Controls.Add(this.lblLevel, 0, 0);
+        this.infoTable.Controls.Add(this.lblName, 0, 1);
+        this.infoTable.Controls.Add(this.lblQuality, 0, 2);
+        this.infoTable.Controls.Add(this.lblMainStat, 0, 3);
+        this.infoTable.Controls.Add(this.lblSubStatsTitle, 0, 4);
+        this.infoTable.Controls.Add(this.listSubStats, 0, 5);
+        this.infoTable.Controls.Add(this.lblSet, 0, 6);
+        this.infoTable.Controls.Add(this.lblScore, 0, 7);
+        this.infoTable.Dock = DockStyle.Fill;
+        this.infoTable.Location = new Point(10, 10);
+        this.infoTable.Name = "infoTable";
+        this.infoTable.RowCount = 8;
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        this.infoTable.Size = new Size(278, 432);
+        this.infoTable.TabIndex = 0;
+        //
+        // lblLevel
+        //
+        this.lblLevel.AutoSize = true;
+        this.lblLevel.Font = new Font("Microsoft YaHei UI", 12F, FontStyle.Bold);
+        this.lblLevel.Location = new Point(3, 0);
+        this.lblLevel.Name = "lblLevel";
+        this.lblLevel.Padding = new Padding(0, 4, 0, 4);
+        this.lblLevel.TabIndex = 0;
+        this.lblLevel.Text = "等级 -  强化 -";
+        //
+        // lblName
+        //
+        this.lblName.AutoSize = true;
+        this.lblName.Location = new Point(3, 0);
+        this.lblName.Name = "lblName";
+        this.lblName.Padding = new Padding(0, 2, 0, 2);
+        this.lblName.TabIndex = 1;
+        this.lblName.Text = "装备名称：-";
+        //
+        // lblQuality
+        //
+        this.lblQuality.AutoSize = true;
+        this.lblQuality.Location = new Point(3, 0);
+        this.lblQuality.Name = "lblQuality";
+        this.lblQuality.Padding = new Padding(0, 2, 0, 2);
+        this.lblQuality.TabIndex = 2;
+        this.lblQuality.Text = "装备品质：-";
+        //
+        // lblMainStat
+        //
+        this.lblMainStat.AutoSize = true;
+        this.lblMainStat.Location = new Point(3, 0);
+        this.lblMainStat.Name = "lblMainStat";
+        this.lblMainStat.Padding = new Padding(0, 2, 0, 2);
+        this.lblMainStat.TabIndex = 3;
+        this.lblMainStat.Text = "主属性：-";
+        //
+        // lblSubStatsTitle
+        //
+        this.lblSubStatsTitle.AutoSize = true;
+        this.lblSubStatsTitle.Location = new Point(3, 0);
+        this.lblSubStatsTitle.Name = "lblSubStatsTitle";
+        this.lblSubStatsTitle.Padding = new Padding(0, 8, 0, 2);
+        this.lblSubStatsTitle.TabIndex = 4;
+        this.lblSubStatsTitle.Text = "副属性：";
+        //
+        // listSubStats
+        //
+        this.listSubStats.Dock = DockStyle.Fill;
+        this.listSubStats.FormattingEnabled = true;
+        this.listSubStats.ItemHeight = 17;
+        this.listSubStats.Location = new Point(3, 100);
+        this.listSubStats.MinimumSize = new Size(4, 80);
+        this.listSubStats.Name = "listSubStats";
+        this.listSubStats.Size = new Size(272, 200);
+        this.listSubStats.TabIndex = 5;
+        //
+        // lblSet
+        //
+        this.lblSet.AutoSize = true;
+        this.lblSet.Location = new Point(3, 0);
+        this.lblSet.Name = "lblSet";
+        this.lblSet.Padding = new Padding(0, 8, 0, 2);
+        this.lblSet.TabIndex = 6;
+        this.lblSet.Text = "套装：-";
+        //
+        // lblScore
+        //
+        this.lblScore.AutoSize = true;
+        this.lblScore.Font = new Font("Microsoft YaHei UI", 11F, FontStyle.Bold);
+        this.lblScore.Location = new Point(3, 0);
+        this.lblScore.Name = "lblScore";
+        this.lblScore.Padding = new Padding(0, 4, 0, 4);
+        this.lblScore.TabIndex = 7;
+        this.lblScore.Text = "装备分数：-";
+        //
         // MainForm
         //
         this.AutoScaleDimensions = new SizeF(7F, 17F);
         this.AutoScaleMode = AutoScaleMode.Font;
         this.ClientSize = new Size(1200, 524);
         this.Controls.Add(this.pictureBox);
+        this.Controls.Add(this.infoPanel);
         this.Controls.Add(this.topPanel);
         this.Controls.Add(this.statusStrip);
         this.Name = "MainForm";
@@ -181,6 +318,9 @@ partial class MainForm
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
         this.statusStrip.ResumeLayout(false);
         this.statusStrip.PerformLayout();
+        this.infoPanel.ResumeLayout(false);
+        this.infoTable.ResumeLayout(false);
+        this.infoTable.PerformLayout();
         this.ResumeLayout(false);
         this.PerformLayout();
     }
