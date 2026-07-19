@@ -26,6 +26,8 @@ public partial class MainForm : Form
     private Keys _registeredRecognitionHotKey = Keys.None;
     private bool _isRecognizing;
     private bool _isUpdatingHotKeySelection;
+    // AntdUI.Select 不支持 DataSource 绑定，设备列表单独保存，SelectedIndex 对应下标。
+    private List<AdbDeviceInfo> _devices = new();
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -49,7 +51,8 @@ public partial class MainForm : Form
     {
         if (AdbHelper.FindAdbPath() == null)
         {
-            comboDevices.DataSource = null;
+            _devices = new List<AdbDeviceInfo>();
+            comboDevices.Items.Clear();
             UpdateStatus("未找到 adb.exe，请将 platform-tools 的 adb.exe 放到程序目录或加入 PATH");
             return;
         }
@@ -57,8 +60,10 @@ public partial class MainForm : Form
         try
         {
             var devices = AdbHelper.GetDevices();
-            comboDevices.DataSource = null;
-            comboDevices.DataSource = devices;
+            _devices = devices;
+            comboDevices.Items.Clear();
+            foreach (var device in devices)
+                comboDevices.Items.Add(device.ToString());
 
             if (comboDevices.Items.Count > 0)
                 comboDevices.SelectedIndex = 0;
@@ -123,7 +128,8 @@ public partial class MainForm : Form
         if (_isRecognizing)
             return;
 
-        if (comboDevices.SelectedItem is not AdbDeviceInfo device)
+        var deviceIndex = comboDevices.SelectedIndex;
+        if (deviceIndex < 0 || deviceIndex >= _devices.Count)
         {
             if (chkContinuousRecognition.Checked)
                 chkContinuousRecognition.Checked = false;
@@ -131,6 +137,8 @@ public partial class MainForm : Form
             UpdateStatus("请先选择一个设备");
             return;
         }
+
+        var device = _devices[deviceIndex];
 
         _isRecognizing = true;
         var isContinuous = chkContinuousRecognition.Checked;
@@ -191,7 +199,7 @@ public partial class MainForm : Form
         }
     }
 
-    private void comboRecognitionHotKey_SelectedIndexChanged(object sender, EventArgs e)
+    private void comboRecognitionHotKey_SelectedIndexChanged(object sender, AntdUI.IntEventArgs e)
     {
         if (IsHandleCreated && !_isUpdatingHotKeySelection)
             RegisterSelectedRecognitionHotKey(showSuccess: true);
@@ -199,7 +207,9 @@ public partial class MainForm : Form
 
     private void RegisterSelectedRecognitionHotKey(bool showSuccess)
     {
-        if (!Enum.TryParse<Keys>(comboRecognitionHotKey.Text, out var selectedKey))
+        // AntdUI.Select 的选中项通过 SelectedValue 读取（Items 里存的就是 "F1"~"F12" 字符串）。
+        var selectedText = comboRecognitionHotKey.SelectedValue as string ?? comboRecognitionHotKey.Text;
+        if (!Enum.TryParse<Keys>(selectedText, out var selectedKey))
             return;
 
         var previousKey = _registeredRecognitionHotKey;
@@ -219,7 +229,7 @@ public partial class MainForm : Form
             _registeredRecognitionHotKey = previousKey;
 
         _isUpdatingHotKeySelection = true;
-        comboRecognitionHotKey.SelectedItem = _registeredRecognitionHotKey == Keys.None
+        comboRecognitionHotKey.SelectedValue = _registeredRecognitionHotKey == Keys.None
             ? "F2"
             : _registeredRecognitionHotKey.ToString();
         _isUpdatingHotKeySelection = false;
@@ -227,7 +237,7 @@ public partial class MainForm : Form
         UpdateStatus($"无法注册快捷键 {selectedKey}，可能已被其他程序占用");
     }
 
-    private void chkContinuousRecognition_CheckedChanged(object sender, EventArgs e)
+    private void chkContinuousRecognition_CheckedChanged(object sender, AntdUI.BoolEventArgs e)
     {
         continuousRecognitionTimer.Enabled = chkContinuousRecognition.Checked;
         UpdateStatus(chkContinuousRecognition.Checked
@@ -235,7 +245,7 @@ public partial class MainForm : Form
             : "持续识别已关闭");
     }
 
-    private void numRecognitionInterval_ValueChanged(object sender, EventArgs e)
+    private void numRecognitionInterval_ValueChanged(object sender, AntdUI.DecimalEventArgs e)
     {
         continuousRecognitionTimer.Interval = Math.Max(100, (int)(numRecognitionInterval.Value * 1000));
     }
@@ -388,7 +398,7 @@ public partial class MainForm : Form
         lblAdviceDetail.Text = result.Detail;
     }
 
-    private void numThreshold_ValueChanged(object sender, EventArgs e)
+    private void numThreshold_ValueChanged(object sender, AntdUI.DecimalEventArgs e)
     {
         UpdateAdvice();
     }

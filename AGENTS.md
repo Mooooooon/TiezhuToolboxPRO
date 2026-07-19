@@ -7,6 +7,7 @@
 ## 技术栈
 
 - **.NET 9 / C#（net9.0-windows）+ WinForms**：主程序，单文件自包含发布（win-x64）
+- **AntdUI 2.4.3**：现代化控件库，顶部工具栏（Select/Input/Button）与底部设置区（InputNumber/Select/Checkbox）全部使用 AntdUI 控件；注意其事件签名为自定义委托（IntEventHandler/BoolEventHandler/DecimalEventHandler），Button.Type 用 TTypeMini 枚举
 - **OpenCvSharp4**：图像处理（裁剪、掩码、连通域、模板匹配）
 - **Microsoft.ML.OnnxRuntime + PaddleOCR PP-OCRv4 ONNX**：文本检测（det）+ 单行识别（rec），唯一的 OCR 引擎
 - **ADB（外部进程）**：截图，不依赖任何 adb 托管库

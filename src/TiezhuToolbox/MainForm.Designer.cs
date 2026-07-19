@@ -6,13 +6,13 @@ partial class MainForm
 
     private Panel topPanel;
     private Panel topBorder;
-    private ComboBox comboDevices;
-    private TextBox txtAddress;
-    private Button btnConnect;
-    private Button btnRefresh;
-    private Button btnOpenFolder;
-    private Button btnToggleShot;
-    private Button btnCaptureRecognize;
+    private AntdUI.Select comboDevices;
+    private AntdUI.Input txtAddress;
+    private AntdUI.Button btnConnect;
+    private AntdUI.Button btnRefresh;
+    private AntdUI.Button btnOpenFolder;
+    private AntdUI.Button btnToggleShot;
+    private AntdUI.Button btnCaptureRecognize;
     private TableLayoutPanel mainTable;
     private Panel equipCard;
     private TableLayoutPanel equipTable;
@@ -29,17 +29,20 @@ partial class MainForm
     private Label lblAdviceBadge;
     private Label lblAdviceDetail;
     private FlowLayoutPanel thresholdPanel;
+    private Label lblThresholdGroup;
     private Label lblThLeft;
-    private NumericUpDown numLeftThreshold;
+    private AntdUI.InputNumber numLeftThreshold;
     private Label lblThRight;
-    private NumericUpDown numRightThreshold;
+    private AntdUI.InputNumber numRightThreshold;
     private FlowLayoutPanel recognitionSettingsPanel;
+    private Label lblRecognitionGroup;
     private Label lblRecognitionHotKey;
-    private ComboBox comboRecognitionHotKey;
-    private CheckBox chkContinuousRecognition;
+    private AntdUI.Select comboRecognitionHotKey;
+    private AntdUI.Checkbox chkContinuousRecognition;
     private Label lblRecognitionInterval;
-    private NumericUpDown numRecognitionInterval;
+    private AntdUI.InputNumber numRecognitionInterval;
     private Label lblIntervalUnit;
+    private Panel settingsDivider;
     private System.Windows.Forms.Timer continuousRecognitionTimer;
     private Panel heroesPanel;
     private FlowLayoutPanel heroesHeader;
@@ -51,7 +54,7 @@ partial class MainForm
     private Panel shotBorder;
     private Panel shotHeader;
     private Label lblShotTitle;
-    private Button btnCollapseShot;
+    private AntdUI.Button btnCollapseShot;
     private PictureBox pictureBox;
     private StatusStrip statusStrip;
     private ToolStripStatusLabel toolStripStatusLabel;
@@ -78,13 +81,13 @@ partial class MainForm
         this.components = new System.ComponentModel.Container();
         this.topPanel = new Panel();
         this.topBorder = new Panel();
-        this.comboDevices = new ComboBox();
-        this.txtAddress = new TextBox();
-        this.btnConnect = new Button();
-        this.btnRefresh = new Button();
-        this.btnOpenFolder = new Button();
-        this.btnToggleShot = new Button();
-        this.btnCaptureRecognize = new Button();
+        this.comboDevices = new AntdUI.Select();
+        this.txtAddress = new AntdUI.Input();
+        this.btnConnect = new AntdUI.Button();
+        this.btnRefresh = new AntdUI.Button();
+        this.btnOpenFolder = new AntdUI.Button();
+        this.btnToggleShot = new AntdUI.Button();
+        this.btnCaptureRecognize = new AntdUI.Button();
         this.mainTable = new TableLayoutPanel();
         this.equipCard = new Panel();
         this.equipTable = new TableLayoutPanel();
@@ -101,17 +104,20 @@ partial class MainForm
         this.lblAdviceBadge = new Label();
         this.lblAdviceDetail = new Label();
         this.thresholdPanel = new FlowLayoutPanel();
+        this.lblThresholdGroup = new Label();
         this.lblThLeft = new Label();
-        this.numLeftThreshold = new NumericUpDown();
+        this.numLeftThreshold = new AntdUI.InputNumber();
         this.lblThRight = new Label();
-        this.numRightThreshold = new NumericUpDown();
+        this.numRightThreshold = new AntdUI.InputNumber();
         this.recognitionSettingsPanel = new FlowLayoutPanel();
+        this.lblRecognitionGroup = new Label();
         this.lblRecognitionHotKey = new Label();
-        this.comboRecognitionHotKey = new ComboBox();
-        this.chkContinuousRecognition = new CheckBox();
+        this.comboRecognitionHotKey = new AntdUI.Select();
+        this.chkContinuousRecognition = new AntdUI.Checkbox();
         this.lblRecognitionInterval = new Label();
-        this.numRecognitionInterval = new NumericUpDown();
+        this.numRecognitionInterval = new AntdUI.InputNumber();
         this.lblIntervalUnit = new Label();
+        this.settingsDivider = new Panel();
         this.continuousRecognitionTimer = new System.Windows.Forms.Timer(this.components);
         this.heroesPanel = new Panel();
         this.heroesHeader = new FlowLayoutPanel();
@@ -123,7 +129,7 @@ partial class MainForm
         this.shotBorder = new Panel();
         this.shotHeader = new Panel();
         this.lblShotTitle = new Label();
-        this.btnCollapseShot = new Button();
+        this.btnCollapseShot = new AntdUI.Button();
         this.pictureBox = new PictureBox();
         this.statusStrip = new StatusStrip();
         this.toolStripStatusLabel = new ToolStripStatusLabel();
@@ -141,9 +147,6 @@ partial class MainForm
         this.advicePanel.SuspendLayout();
         this.thresholdPanel.SuspendLayout();
         this.recognitionSettingsPanel.SuspendLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.numLeftThreshold)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numRightThreshold)).BeginInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numRecognitionInterval)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
         this.statusStrip.SuspendLayout();
         this.SuspendLayout();
@@ -177,108 +180,89 @@ partial class MainForm
         // comboDevices
         //
         this.comboDevices.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-        this.comboDevices.DropDownStyle = ComboBoxStyle.DropDownList;
-        this.comboDevices.FlatStyle = FlatStyle.Flat;
-        this.comboDevices.FormattingEnabled = true;
-        this.comboDevices.Location = new Point(12, 18);
+        this.comboDevices.Location = new Point(12, 15);
         this.comboDevices.Name = "comboDevices";
-        this.comboDevices.Size = new Size(348, 25);
+        this.comboDevices.Radius = 6;
+        this.comboDevices.Size = new Size(348, 34);
         this.comboDevices.TabIndex = 0;
         //
         // txtAddress
         //
         this.txtAddress.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.txtAddress.BorderStyle = BorderStyle.FixedSingle;
-        this.txtAddress.Location = new Point(368, 18);
+        this.txtAddress.Location = new Point(368, 15);
         this.txtAddress.Name = "txtAddress";
-        this.txtAddress.Size = new Size(148, 23);
+        this.txtAddress.Radius = 6;
+        this.txtAddress.Size = new Size(148, 34);
         this.txtAddress.TabIndex = 1;
         this.txtAddress.Text = "127.0.0.1:16384";
         //
         // btnConnect
         //
         this.btnConnect.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnConnect.BackColor = Color.White;
-        this.btnConnect.FlatAppearance.BorderColor = Color.FromArgb(218, 220, 224);
-        this.btnConnect.FlatAppearance.MouseDownBackColor = Color.FromArgb(232, 234, 237);
-        this.btnConnect.FlatAppearance.MouseOverBackColor = Color.FromArgb(241, 243, 244);
-        this.btnConnect.FlatStyle = FlatStyle.Flat;
-        this.btnConnect.ForeColor = Color.FromArgb(32, 33, 36);
-        this.btnConnect.Location = new Point(524, 14);
+        this.btnConnect.BorderWidth = 1F;
+        this.btnConnect.DefaultBack = Color.White;
+        this.btnConnect.DefaultBorderColor = Color.FromArgb(218, 220, 224);
+        this.btnConnect.Location = new Point(524, 15);
         this.btnConnect.Name = "btnConnect";
+        this.btnConnect.Radius = 6;
         this.btnConnect.Size = new Size(76, 34);
         this.btnConnect.TabIndex = 2;
         this.btnConnect.Text = "连接";
-        this.btnConnect.UseVisualStyleBackColor = false;
         this.btnConnect.Click += new EventHandler(this.btnConnect_Click);
         //
         // btnRefresh
         //
         this.btnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnRefresh.BackColor = Color.White;
-        this.btnRefresh.FlatAppearance.BorderColor = Color.FromArgb(218, 220, 224);
-        this.btnRefresh.FlatAppearance.MouseDownBackColor = Color.FromArgb(232, 234, 237);
-        this.btnRefresh.FlatAppearance.MouseOverBackColor = Color.FromArgb(241, 243, 244);
-        this.btnRefresh.FlatStyle = FlatStyle.Flat;
-        this.btnRefresh.ForeColor = Color.FromArgb(32, 33, 36);
-        this.btnRefresh.Location = new Point(608, 14);
+        this.btnRefresh.BorderWidth = 1F;
+        this.btnRefresh.DefaultBack = Color.White;
+        this.btnRefresh.DefaultBorderColor = Color.FromArgb(218, 220, 224);
+        this.btnRefresh.Location = new Point(608, 15);
         this.btnRefresh.Name = "btnRefresh";
+        this.btnRefresh.Radius = 6;
         this.btnRefresh.Size = new Size(76, 34);
         this.btnRefresh.TabIndex = 3;
         this.btnRefresh.Text = "刷新";
-        this.btnRefresh.UseVisualStyleBackColor = false;
         this.btnRefresh.Click += new EventHandler(this.btnRefresh_Click);
         //
         // btnOpenFolder
         //
         this.btnOpenFolder.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnOpenFolder.BackColor = Color.White;
-        this.btnOpenFolder.FlatAppearance.BorderColor = Color.FromArgb(218, 220, 224);
-        this.btnOpenFolder.FlatAppearance.MouseDownBackColor = Color.FromArgb(232, 234, 237);
-        this.btnOpenFolder.FlatAppearance.MouseOverBackColor = Color.FromArgb(241, 243, 244);
-        this.btnOpenFolder.FlatStyle = FlatStyle.Flat;
-        this.btnOpenFolder.ForeColor = Color.FromArgb(32, 33, 36);
-        this.btnOpenFolder.Location = new Point(692, 14);
+        this.btnOpenFolder.BorderWidth = 1F;
+        this.btnOpenFolder.DefaultBack = Color.White;
+        this.btnOpenFolder.DefaultBorderColor = Color.FromArgb(218, 220, 224);
+        this.btnOpenFolder.Location = new Point(692, 15);
         this.btnOpenFolder.Name = "btnOpenFolder";
+        this.btnOpenFolder.Radius = 6;
         this.btnOpenFolder.Size = new Size(76, 34);
         this.btnOpenFolder.TabIndex = 4;
         this.btnOpenFolder.Text = "目录";
-        this.btnOpenFolder.UseVisualStyleBackColor = false;
         this.btnOpenFolder.Click += new EventHandler(this.btnOpenFolder_Click);
         //
         // btnToggleShot
         //
         this.btnToggleShot.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnToggleShot.BackColor = Color.White;
-        this.btnToggleShot.FlatAppearance.BorderColor = Color.FromArgb(218, 220, 224);
-        this.btnToggleShot.FlatAppearance.MouseDownBackColor = Color.FromArgb(232, 234, 237);
-        this.btnToggleShot.FlatAppearance.MouseOverBackColor = Color.FromArgb(241, 243, 244);
-        this.btnToggleShot.FlatStyle = FlatStyle.Flat;
-        this.btnToggleShot.ForeColor = Color.FromArgb(32, 33, 36);
-        this.btnToggleShot.Location = new Point(776, 14);
+        this.btnToggleShot.BorderWidth = 1F;
+        this.btnToggleShot.DefaultBack = Color.White;
+        this.btnToggleShot.DefaultBorderColor = Color.FromArgb(218, 220, 224);
+        this.btnToggleShot.Location = new Point(776, 15);
         this.btnToggleShot.Name = "btnToggleShot";
+        this.btnToggleShot.Radius = 6;
         this.btnToggleShot.Size = new Size(92, 34);
         this.btnToggleShot.TabIndex = 5;
         this.btnToggleShot.Text = "查看截图";
-        this.btnToggleShot.UseVisualStyleBackColor = false;
         this.btnToggleShot.Click += new EventHandler(this.btnToggleScreenshot_Click);
         //
         // btnCaptureRecognize
         //
         this.btnCaptureRecognize.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnCaptureRecognize.BackColor = Color.FromArgb(26, 115, 232);
-        this.btnCaptureRecognize.FlatAppearance.BorderSize = 0;
-        this.btnCaptureRecognize.FlatAppearance.MouseDownBackColor = Color.FromArgb(24, 90, 188);
-        this.btnCaptureRecognize.FlatAppearance.MouseOverBackColor = Color.FromArgb(25, 103, 210);
-        this.btnCaptureRecognize.FlatStyle = FlatStyle.Flat;
         this.btnCaptureRecognize.Font = new Font("Microsoft YaHei UI", 9.75F, FontStyle.Bold);
-        this.btnCaptureRecognize.ForeColor = Color.White;
-        this.btnCaptureRecognize.Location = new Point(876, 14);
+        this.btnCaptureRecognize.Location = new Point(876, 15);
         this.btnCaptureRecognize.Name = "btnCaptureRecognize";
+        this.btnCaptureRecognize.Radius = 6;
         this.btnCaptureRecognize.Size = new Size(112, 34);
         this.btnCaptureRecognize.TabIndex = 6;
         this.btnCaptureRecognize.Text = "截图识别";
-        this.btnCaptureRecognize.UseVisualStyleBackColor = false;
+        this.btnCaptureRecognize.Type = AntdUI.TTypeMini.Primary;
         this.btnCaptureRecognize.Click += new EventHandler(this.btnCaptureRecognize_Click);
         //
         // mainTable
@@ -321,12 +305,13 @@ partial class MainForm
         this.equipTable.Controls.Add(this.lblSubStatsTitle, 0, 5);
         this.equipTable.Controls.Add(this.listSubStats, 0, 6);
         this.equipTable.Controls.Add(this.lblSet, 0, 7);
-        this.equipTable.Controls.Add(this.thresholdPanel, 0, 8);
-        this.equipTable.Controls.Add(this.recognitionSettingsPanel, 0, 9);
+        this.equipTable.Controls.Add(this.settingsDivider, 0, 8);
+        this.equipTable.Controls.Add(this.thresholdPanel, 0, 9);
+        this.equipTable.Controls.Add(this.recognitionSettingsPanel, 0, 10);
         this.equipTable.Dock = DockStyle.Fill;
         this.equipTable.Location = new Point(18, 16);
         this.equipTable.Name = "equipTable";
-        this.equipTable.RowCount = 10;
+        this.equipTable.RowCount = 11;
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 78F));
@@ -334,6 +319,7 @@ partial class MainForm
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -481,70 +467,100 @@ partial class MainForm
         this.lblAdviceDetail.TabIndex = 1;
         this.lblAdviceDetail.Text = "识别装备后给出是否继续强化的建议";
         //
+        // settingsDivider
+        //
+        this.settingsDivider.BackColor = Color.FromArgb(232, 234, 237);
+        this.settingsDivider.Dock = DockStyle.Top;
+        this.settingsDivider.Location = new Point(0, 482);
+        this.settingsDivider.Margin = new Padding(0, 10, 0, 0);
+        this.settingsDivider.Name = "settingsDivider";
+        this.settingsDivider.Size = new Size(318, 1);
+        this.settingsDivider.TabIndex = 8;
+        //
         // thresholdPanel
         //
         this.thresholdPanel.AutoSize = true;
+        this.thresholdPanel.Controls.Add(this.lblThresholdGroup);
         this.thresholdPanel.Controls.Add(this.lblThLeft);
         this.thresholdPanel.Controls.Add(this.numLeftThreshold);
         this.thresholdPanel.Controls.Add(this.lblThRight);
         this.thresholdPanel.Controls.Add(this.numRightThreshold);
         this.thresholdPanel.Dock = DockStyle.Fill;
-        this.thresholdPanel.Location = new Point(0, 473);
-        this.thresholdPanel.Margin = new Padding(0, 12, 0, 0);
+        this.thresholdPanel.Location = new Point(0, 493);
+        this.thresholdPanel.Margin = new Padding(0, 10, 0, 0);
         this.thresholdPanel.Name = "thresholdPanel";
-        this.thresholdPanel.Size = new Size(318, 25);
-        this.thresholdPanel.TabIndex = 8;
+        this.thresholdPanel.Size = new Size(318, 26);
+        this.thresholdPanel.TabIndex = 9;
         this.thresholdPanel.WrapContents = false;
+        //
+        // lblThresholdGroup
+        //
+        this.lblThresholdGroup.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblThresholdGroup.Location = new Point(0, 0);
+        this.lblThresholdGroup.Margin = new Padding(0, 0, 6, 0);
+        this.lblThresholdGroup.Name = "lblThresholdGroup";
+        this.lblThresholdGroup.Size = new Size(34, 26);
+        this.lblThresholdGroup.TabIndex = 0;
+        this.lblThresholdGroup.Text = "阈值";
+        this.lblThresholdGroup.TextAlign = ContentAlignment.MiddleLeft;
+        this.toolTip.SetToolTip(this.lblThresholdGroup, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
         //
         // lblThLeft
         //
-        this.lblThLeft.AutoSize = true;
         this.lblThLeft.ForeColor = Color.FromArgb(95, 99, 104);
-        this.lblThLeft.Location = new Point(0, 5);
-        this.lblThLeft.Margin = new Padding(0, 5, 4, 0);
+        this.lblThLeft.Location = new Point(40, 0);
+        this.lblThLeft.Margin = new Padding(0, 0, 6, 0);
         this.lblThLeft.Name = "lblThLeft";
-        this.lblThLeft.TabIndex = 0;
-        this.lblThLeft.Text = "阈值 左三件";
+        this.lblThLeft.Size = new Size(46, 26);
+        this.lblThLeft.TabIndex = 1;
+        this.lblThLeft.Text = "左三件";
+        this.lblThLeft.TextAlign = ContentAlignment.MiddleLeft;
         this.toolTip.SetToolTip(this.lblThLeft, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
         //
         // numLeftThreshold
         //
-        this.numLeftThreshold.Location = new Point(68, 3);
-        this.numLeftThreshold.Margin = new Padding(0, 3, 0, 0);
-        this.numLeftThreshold.Maximum = new decimal(new int[] { 200, 0, 0, 0 });
+        this.numLeftThreshold.Location = new Point(92, 0);
+        this.numLeftThreshold.Margin = new Padding(0, 0, 12, 0);
+        this.numLeftThreshold.Maximum = new decimal(200);
+        this.numLeftThreshold.Minimum = new decimal(0);
         this.numLeftThreshold.Name = "numLeftThreshold";
-        this.numLeftThreshold.Size = new Size(50, 23);
-        this.numLeftThreshold.TabIndex = 1;
+        this.numLeftThreshold.Radius = 6;
+        this.numLeftThreshold.Size = new Size(54, 26);
+        this.numLeftThreshold.TabIndex = 2;
         this.toolTip.SetToolTip(this.numLeftThreshold, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
-        this.numLeftThreshold.Value = new decimal(new int[] { 24, 0, 0, 0 });
-        this.numLeftThreshold.ValueChanged += new EventHandler(this.numThreshold_ValueChanged);
+        this.numLeftThreshold.Value = new decimal(24);
+        this.numLeftThreshold.ValueChanged += new AntdUI.DecimalEventHandler(this.numThreshold_ValueChanged);
         //
         // lblThRight
         //
-        this.lblThRight.AutoSize = true;
         this.lblThRight.ForeColor = Color.FromArgb(95, 99, 104);
-        this.lblThRight.Location = new Point(130, 5);
-        this.lblThRight.Margin = new Padding(12, 5, 4, 0);
+        this.lblThRight.Location = new Point(158, 0);
+        this.lblThRight.Margin = new Padding(0, 0, 6, 0);
         this.lblThRight.Name = "lblThRight";
-        this.lblThRight.TabIndex = 2;
+        this.lblThRight.Size = new Size(46, 26);
+        this.lblThRight.TabIndex = 3;
         this.lblThRight.Text = "右三件";
+        this.lblThRight.TextAlign = ContentAlignment.MiddleLeft;
         this.toolTip.SetToolTip(this.lblThRight, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
         //
         // numRightThreshold
         //
-        this.numRightThreshold.Location = new Point(178, 3);
-        this.numRightThreshold.Margin = new Padding(0, 3, 0, 0);
-        this.numRightThreshold.Maximum = new decimal(new int[] { 200, 0, 0, 0 });
+        this.numRightThreshold.Location = new Point(210, 0);
+        this.numRightThreshold.Margin = new Padding(0);
+        this.numRightThreshold.Maximum = new decimal(200);
+        this.numRightThreshold.Minimum = new decimal(0);
         this.numRightThreshold.Name = "numRightThreshold";
-        this.numRightThreshold.Size = new Size(50, 23);
-        this.numRightThreshold.TabIndex = 3;
+        this.numRightThreshold.Radius = 6;
+        this.numRightThreshold.Size = new Size(54, 26);
+        this.numRightThreshold.TabIndex = 4;
         this.toolTip.SetToolTip(this.numRightThreshold, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
-        this.numRightThreshold.Value = new decimal(new int[] { 24, 0, 0, 0 });
-        this.numRightThreshold.ValueChanged += new EventHandler(this.numThreshold_ValueChanged);
+        this.numRightThreshold.Value = new decimal(24);
+        this.numRightThreshold.ValueChanged += new AntdUI.DecimalEventHandler(this.numThreshold_ValueChanged);
         //
         // recognitionSettingsPanel
         //
         this.recognitionSettingsPanel.AutoSize = true;
+        this.recognitionSettingsPanel.Controls.Add(this.lblRecognitionGroup);
         this.recognitionSettingsPanel.Controls.Add(this.lblRecognitionHotKey);
         this.recognitionSettingsPanel.Controls.Add(this.comboRecognitionHotKey);
         this.recognitionSettingsPanel.Controls.Add(this.chkContinuousRecognition);
@@ -552,85 +568,97 @@ partial class MainForm
         this.recognitionSettingsPanel.Controls.Add(this.numRecognitionInterval);
         this.recognitionSettingsPanel.Controls.Add(this.lblIntervalUnit);
         this.recognitionSettingsPanel.Dock = DockStyle.Fill;
-        this.recognitionSettingsPanel.Location = new Point(0, 504);
-        this.recognitionSettingsPanel.Margin = new Padding(0, 6, 0, 0);
+        this.recognitionSettingsPanel.Location = new Point(0, 529);
+        this.recognitionSettingsPanel.Margin = new Padding(0, 8, 0, 0);
         this.recognitionSettingsPanel.Name = "recognitionSettingsPanel";
-        this.recognitionSettingsPanel.Size = new Size(318, 25);
-        this.recognitionSettingsPanel.TabIndex = 9;
+        this.recognitionSettingsPanel.Size = new Size(318, 26);
+        this.recognitionSettingsPanel.TabIndex = 10;
         this.recognitionSettingsPanel.WrapContents = false;
+        //
+        // lblRecognitionGroup
+        //
+        this.lblRecognitionGroup.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblRecognitionGroup.Location = new Point(0, 0);
+        this.lblRecognitionGroup.Margin = new Padding(0, 0, 6, 0);
+        this.lblRecognitionGroup.Name = "lblRecognitionGroup";
+        this.lblRecognitionGroup.Size = new Size(34, 26);
+        this.lblRecognitionGroup.TabIndex = 0;
+        this.lblRecognitionGroup.Text = "识别";
+        this.lblRecognitionGroup.TextAlign = ContentAlignment.MiddleLeft;
         //
         // lblRecognitionHotKey
         //
-        this.lblRecognitionHotKey.AutoSize = true;
         this.lblRecognitionHotKey.ForeColor = Color.FromArgb(95, 99, 104);
-        this.lblRecognitionHotKey.Location = new Point(0, 5);
-        this.lblRecognitionHotKey.Margin = new Padding(0, 5, 4, 0);
+        this.lblRecognitionHotKey.Location = new Point(40, 0);
+        this.lblRecognitionHotKey.Margin = new Padding(0, 0, 6, 0);
         this.lblRecognitionHotKey.Name = "lblRecognitionHotKey";
-        this.lblRecognitionHotKey.TabIndex = 0;
+        this.lblRecognitionHotKey.Size = new Size(46, 26);
+        this.lblRecognitionHotKey.TabIndex = 1;
         this.lblRecognitionHotKey.Text = "快捷键";
+        this.lblRecognitionHotKey.TextAlign = ContentAlignment.MiddleLeft;
         this.toolTip.SetToolTip(this.lblRecognitionHotKey, "全局识别快捷键，切换到模拟器窗口后也可使用");
         //
         // comboRecognitionHotKey
         //
-        this.comboRecognitionHotKey.DropDownStyle = ComboBoxStyle.DropDownList;
-        this.comboRecognitionHotKey.FormattingEnabled = true;
         this.comboRecognitionHotKey.Items.AddRange(new object[] { "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" });
-        this.comboRecognitionHotKey.Location = new Point(48, 1);
-        this.comboRecognitionHotKey.Margin = new Padding(0, 1, 0, 0);
+        this.comboRecognitionHotKey.Location = new Point(92, 0);
+        this.comboRecognitionHotKey.Margin = new Padding(0, 0, 4, 0);
         this.comboRecognitionHotKey.Name = "comboRecognitionHotKey";
-        this.comboRecognitionHotKey.Size = new Size(54, 25);
-        this.comboRecognitionHotKey.TabIndex = 1;
+        this.comboRecognitionHotKey.Radius = 6;
+        this.comboRecognitionHotKey.Size = new Size(44, 26);
+        this.comboRecognitionHotKey.TabIndex = 2;
         this.comboRecognitionHotKey.SelectedIndex = 1;
-        this.comboRecognitionHotKey.SelectedIndexChanged += new EventHandler(this.comboRecognitionHotKey_SelectedIndexChanged);
+        this.comboRecognitionHotKey.SelectedIndexChanged += new AntdUI.IntEventHandler(this.comboRecognitionHotKey_SelectedIndexChanged);
         this.toolTip.SetToolTip(this.comboRecognitionHotKey, "全局识别快捷键，默认 F2");
         //
         // chkContinuousRecognition
         //
-        this.chkContinuousRecognition.AutoSize = true;
-        this.chkContinuousRecognition.Location = new Point(110, 3);
-        this.chkContinuousRecognition.Margin = new Padding(8, 3, 0, 0);
+        this.chkContinuousRecognition.Location = new Point(140, 0);
+        this.chkContinuousRecognition.Margin = new Padding(0, 0, 4, 0);
         this.chkContinuousRecognition.Name = "chkContinuousRecognition";
-        this.chkContinuousRecognition.Size = new Size(75, 21);
-        this.chkContinuousRecognition.TabIndex = 2;
+        this.chkContinuousRecognition.Size = new Size(70, 26);
+        this.chkContinuousRecognition.TabIndex = 3;
         this.chkContinuousRecognition.Text = "持续识别";
-        this.chkContinuousRecognition.UseVisualStyleBackColor = true;
-        this.chkContinuousRecognition.CheckedChanged += new EventHandler(this.chkContinuousRecognition_CheckedChanged);
+        this.chkContinuousRecognition.CheckedChanged += new AntdUI.BoolEventHandler(this.chkContinuousRecognition_CheckedChanged);
         this.toolTip.SetToolTip(this.chkContinuousRecognition, "开启后自动截图识别；上一轮完成前不会重复启动");
         //
         // lblRecognitionInterval
         //
-        this.lblRecognitionInterval.AutoSize = true;
         this.lblRecognitionInterval.ForeColor = Color.FromArgb(95, 99, 104);
-        this.lblRecognitionInterval.Location = new Point(189, 5);
-        this.lblRecognitionInterval.Margin = new Padding(4, 5, 3, 0);
+        this.lblRecognitionInterval.Location = new Point(214, 0);
+        this.lblRecognitionInterval.Margin = new Padding(0, 0, 4, 0);
         this.lblRecognitionInterval.Name = "lblRecognitionInterval";
-        this.lblRecognitionInterval.TabIndex = 3;
+        this.lblRecognitionInterval.Size = new Size(34, 26);
+        this.lblRecognitionInterval.TabIndex = 4;
         this.lblRecognitionInterval.Text = "间隔";
+        this.lblRecognitionInterval.TextAlign = ContentAlignment.MiddleLeft;
         //
         // numRecognitionInterval
         //
         this.numRecognitionInterval.DecimalPlaces = 1;
         this.numRecognitionInterval.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-        this.numRecognitionInterval.Location = new Point(224, 2);
-        this.numRecognitionInterval.Margin = new Padding(0, 2, 0, 0);
-        this.numRecognitionInterval.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+        this.numRecognitionInterval.Location = new Point(252, 0);
+        this.numRecognitionInterval.Margin = new Padding(0, 0, 4, 0);
+        this.numRecognitionInterval.Maximum = new decimal(60);
         this.numRecognitionInterval.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
         this.numRecognitionInterval.Name = "numRecognitionInterval";
-        this.numRecognitionInterval.Size = new Size(52, 23);
-        this.numRecognitionInterval.TabIndex = 4;
+        this.numRecognitionInterval.Radius = 6;
+        this.numRecognitionInterval.Size = new Size(42, 26);
+        this.numRecognitionInterval.TabIndex = 5;
         this.numRecognitionInterval.Value = new decimal(new int[] { 1, 0, 0, 65536 });
-        this.numRecognitionInterval.ValueChanged += new EventHandler(this.numRecognitionInterval_ValueChanged);
+        this.numRecognitionInterval.ValueChanged += new AntdUI.DecimalEventHandler(this.numRecognitionInterval_ValueChanged);
         this.toolTip.SetToolTip(this.numRecognitionInterval, "两轮识别的最短间隔；实际速度受截图和 OCR 耗时限制");
         //
         // lblIntervalUnit
         //
-        this.lblIntervalUnit.AutoSize = true;
         this.lblIntervalUnit.ForeColor = Color.FromArgb(95, 99, 104);
-        this.lblIntervalUnit.Location = new Point(279, 5);
-        this.lblIntervalUnit.Margin = new Padding(3, 5, 0, 0);
+        this.lblIntervalUnit.Location = new Point(298, 0);
+        this.lblIntervalUnit.Margin = new Padding(0);
         this.lblIntervalUnit.Name = "lblIntervalUnit";
-        this.lblIntervalUnit.TabIndex = 5;
+        this.lblIntervalUnit.Size = new Size(16, 26);
+        this.lblIntervalUnit.TabIndex = 6;
         this.lblIntervalUnit.Text = "秒";
+        this.lblIntervalUnit.TextAlign = ContentAlignment.MiddleLeft;
         //
         // continuousRecognitionTimer
         //
@@ -754,18 +782,15 @@ partial class MainForm
         // btnCollapseShot
         //
         this.btnCollapseShot.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-        this.btnCollapseShot.BackColor = Color.White;
-        this.btnCollapseShot.FlatAppearance.BorderColor = Color.FromArgb(218, 220, 224);
-        this.btnCollapseShot.FlatAppearance.MouseDownBackColor = Color.FromArgb(232, 234, 237);
-        this.btnCollapseShot.FlatAppearance.MouseOverBackColor = Color.FromArgb(241, 243, 244);
-        this.btnCollapseShot.FlatStyle = FlatStyle.Flat;
-        this.btnCollapseShot.ForeColor = Color.FromArgb(32, 33, 36);
+        this.btnCollapseShot.BorderWidth = 1F;
+        this.btnCollapseShot.DefaultBack = Color.White;
+        this.btnCollapseShot.DefaultBorderColor = Color.FromArgb(218, 220, 224);
         this.btnCollapseShot.Location = new Point(916, 6);
         this.btnCollapseShot.Name = "btnCollapseShot";
+        this.btnCollapseShot.Radius = 6;
         this.btnCollapseShot.Size = new Size(72, 24);
         this.btnCollapseShot.TabIndex = 1;
         this.btnCollapseShot.Text = "收起";
-        this.btnCollapseShot.UseVisualStyleBackColor = false;
         this.btnCollapseShot.Click += new EventHandler(this.btnToggleScreenshot_Click);
         //
         // pictureBox
@@ -833,9 +858,6 @@ partial class MainForm
         this.thresholdPanel.PerformLayout();
         this.recognitionSettingsPanel.ResumeLayout(false);
         this.recognitionSettingsPanel.PerformLayout();
-        ((System.ComponentModel.ISupportInitialize)(this.numLeftThreshold)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numRightThreshold)).EndInit();
-        ((System.ComponentModel.ISupportInitialize)(this.numRecognitionInterval)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
         this.statusStrip.ResumeLayout(false);
         this.statusStrip.PerformLayout();
