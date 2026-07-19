@@ -144,16 +144,56 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "效果抗性", Value = "4%" },
         },
     });
-    PrintAdvice("传说铠甲 +15 高分（应：建议重铸）", new EquipmentInfo
+    PrintAdvice("传说武器 +15 预计重铸恰好 65 分（应：建议重铸）", new EquipmentInfo
     {
-        Quality = "传说铠甲",
+        Level = 85,
+        Quality = "传说武器",
         EnhanceLevel = 15,
         SubStats =
         {
-            new SubStat { Name = "速度", Value = "10" },
-            new SubStat { Name = "暴击率", Value = "10%" },
-            new SubStat { Name = "攻击力", Value = "10%" },
-            new SubStat { Name = "生命值", Value = "10%" },
+            new SubStat { Name = "效果命中", Value = "7%", RollCount = 0 },
+            new SubStat { Name = "攻击力", Value = "15%", RollCount = 1 },
+            new SubStat { Name = "暴击率", Value = "4%", RollCount = 0 },
+            new SubStat { Name = "暴击伤害", Value = "22%", RollCount = 4 },
+        },
+    });
+    PrintAdvice("传说武器 +15 预计重铸 64 分（应：分数过低，建议放弃）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "传说武器",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "效果命中", Value = "6%", RollCount = 0 },
+            new SubStat { Name = "攻击力", Value = "15%", RollCount = 1 },
+            new SubStat { Name = "暴击率", Value = "4%", RollCount = 0 },
+            new SubStat { Name = "暴击伤害", Value = "22%", RollCount = 4 },
+        },
+    });
+    PrintAdvice("传说武器 +15 预计重铸低于 65 但速度 15（应：建议重铸）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "传说武器",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "15", RollCount = 5 },
+            new SubStat { Name = "生命值", Value = "4%", RollCount = 0 },
+            new SubStat { Name = "防御力", Value = "4%", RollCount = 0 },
+            new SubStat { Name = "效果命中", Value = "4%", RollCount = 0 },
+        },
+    });
+    PrintAdvice("传说武器 90 级 +15（应：已完成重铸）", new EquipmentInfo
+    {
+        Level = 90,
+        Quality = "传说武器",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "16", RollCount = 5 },
+            new SubStat { Name = "生命值", Value = "18%", RollCount = 0 },
+            new SubStat { Name = "防御力", Value = "18%", RollCount = 0 },
+            new SubStat { Name = "效果命中", Value = "18%", RollCount = 0 },
         },
     });
     PrintAdvice("速度鞋 低分（应：分数过低，建议放弃，鞋子不赌速度）", new EquipmentInfo
@@ -196,7 +236,8 @@ foreach (var name in imageNames)
     Console.WriteLine($"  副属性:");
     foreach (var sub in info.SubStats)
     {
-        Console.WriteLine($"    - {sub.Name} {sub.Value}" + (string.IsNullOrEmpty(sub.EnhanceValue) ? "" : $" ({sub.EnhanceValue})"));
+        var rollText = sub.RollCount > 0 ? $"({sub.RollCount})" : string.Empty;
+        Console.WriteLine($"    - {sub.Name}{rollText} {sub.Value}" + (string.IsNullOrEmpty(sub.EnhanceValue) ? "" : $" ({sub.EnhanceValue})"));
     }
     Console.WriteLine($"  套装: {info.SetName}");
     Console.WriteLine($"  装备分数: {info.Score}");

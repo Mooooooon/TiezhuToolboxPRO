@@ -46,4 +46,7 @@ public class SubStat
 
     /// <summary>强化增加值，如“+8%”。</summary>
     public string? EnhanceValue { get; set; }
+
+    /// <summary>该副属性被强化的次数；0 表示初始属性，重铸增量按此值计算。</summary>
+    public int RollCount { get; set; }
 }

@@ -14,7 +14,7 @@ public enum EnhanceAdvice
     /// <summary>分数不足，但副属性速度达标，可继续赌速度。</summary>
     GambleSpeed,
 
-    /// <summary>+15 且分数/速度达标，建议重铸。</summary>
+    /// <summary>+15 且预计重铸分数或速度达标，建议重铸。</summary>
     Reforge,
 
     /// <summary>分数与速度均不达标，建议放弃。</summary>
@@ -29,13 +29,15 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 
 /// <summary>
 /// 强化建议（算法参考社区打铁助手脚本）：
-/// 分数阶梯 —— +3 前分数 ≥ 阈值，之后每 3 级要求 +6 分，+15 时 ≥ 阈值+30 建议重铸；
+/// 分数阶梯 —— +3 前分数 ≥ 阈值，之后每 3 级要求 +6 分，+15 时模拟游戏增量且重铸后分数 ≥ 65；
 /// 分数不达标时赌速度 —— 副属性速度 ≥ 3/6/9/12/12（对应 +3/+6/+9/+12/+15 前）可继续，+15 时速度 ≥ 15 建议重铸。
 /// 左三件（武器/头盔/铠甲）直接走上述流程；项链/戒指即使是固定值主属性，只要速度达标也可作为速度散件继续赌；
 /// 其余右三件固定值主属性直接淘汰。只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
 /// </summary>
 public static class EnhancementAdvisor
 {
+    private const double ReforgeScoreThreshold = 65;
+
     /// <summary>装备部位。</summary>
     private enum Part
     {
@@ -70,12 +72,19 @@ public static class EnhancementAdvisor
 
         // 分数用民间算法由副属性现算，不依赖调用方是否已填 info.Score
         var score = EquipmentScoreCalculator.Calculate(info.SubStats);
+        var reforgedScore = EquipmentScoreCalculator.CalculateReforged(info.SubStats);
         var enhance = info.EnhanceLevel;
+
+        // 游戏只允许 85 级 +15 装备重铸到 90 级；等级未识别时仍继续判断，避免 OCR 偶发漏读导致无建议。
+        if (enhance == 15 && info.Level == 90)
+            return new EnhanceAdviceResult(EnhanceAdvice.None, "已完成重铸", "装备等级已是 90");
+        if (enhance == 15 && info.Level > 0 && info.Level != 85)
+            return new EnhanceAdviceResult(EnhanceAdvice.None, "不支持重铸", $"装备等级 {info.Level} 不能重铸为 90 级");
 
         if (part is Part.Weapon or Part.Helm or Part.Armor)
         {
-            return ScoreLadder(score, enhance, leftThreshold)
-                   ?? SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score));
+            return ScoreLadder(score, reforgedScore, enhance, leftThreshold)
+                   ?? SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score, reforgedScore, enhance));
         }
 
         // 项链/戒指的固定值主属性通常应放弃，但速度达标时仍可作为速度散件继续赌。
@@ -92,18 +101,18 @@ public static class EnhancementAdvisor
                 "固定值主属性，建议放弃", $"右三件主属性为固定{info.MainStatName}，收益过低");
         }
 
-        var byScore = ScoreLadder(score, enhance, rightThreshold);
+        var byScore = ScoreLadder(score, reforgedScore, enhance, rightThreshold);
         if (byScore != null)
             return byScore;
 
         if (part is Part.Necklace or Part.Ring)
-            return SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score));
+            return SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score, reforgedScore, enhance));
 
-        return new EnhanceAdviceResult(EnhanceAdvice.GiveUp, "分数过低，建议放弃", GiveUpDetail(score));
+        return new EnhanceAdviceResult(EnhanceAdvice.GiveUp, "分数过低，建议放弃", GiveUpDetail(score, reforgedScore, enhance));
     }
 
     /// <summary>分数阶梯：达标返回继续强化/建议重铸，当前档位不达标返回 null。</summary>
-    private static EnhanceAdviceResult? ScoreLadder(double score, int enhance, double threshold)
+    private static EnhanceAdviceResult? ScoreLadder(double score, double reforgedScore, int enhance, double threshold)
     {
         foreach (var (cap, offset) in ScoreSteps)
         {
@@ -117,9 +126,9 @@ public static class EnhancementAdvisor
             }
         }
 
-        return enhance == 15 && score >= threshold + 30
+        return enhance == 15 && reforgedScore >= ReforgeScoreThreshold
             ? new EnhanceAdviceResult(EnhanceAdvice.Reforge,
-                "建议重铸", $"分数 {score:0.##} ≥ {threshold + 30:0.##}（重铸要求）")
+                "建议重铸", $"预计重铸分数 {reforgedScore:0.##} ≥ {ReforgeScoreThreshold:0.##}")
             : null;
     }
 
@@ -190,6 +199,8 @@ public static class EnhancementAdvisor
         return int.TryParse(digits, out var speed) ? speed : 0;
     }
 
-    private static string GiveUpDetail(double score)
-        => $"分数 {score:0.##} 未达当前强化档位要求，速度也未达标";
+    private static string GiveUpDetail(double score, double reforgedScore, int enhance)
+        => enhance == 15
+            ? $"预计重铸分数 {reforgedScore:0.##} < {ReforgeScoreThreshold:0.##}，速度也未达标"
+            : $"分数 {score:0.##} 未达当前强化档位要求，速度也未达标";
 }

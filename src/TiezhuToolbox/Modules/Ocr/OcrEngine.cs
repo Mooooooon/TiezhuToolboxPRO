@@ -113,7 +113,14 @@ public class OcrEngine : IDisposable
                 }
                 else
                 {
-                    var sub = new SubStat { Name = stat };
+                    var rollMatch = Regex.Match(line.Joined, @"[（(]\s*(\d+)\s*[）)]");
+                    var sub = new SubStat
+                    {
+                        Name = stat,
+                        RollCount = rollMatch.Success && int.TryParse(rollMatch.Groups[1].Value, out var rolls)
+                            ? Math.Clamp(rolls, 0, 5)
+                            : 0,
+                    };
                     var enhanced = Regex.Match(value, @"^([^（(]+)[（(]([^）)]+)[）)]$");
                     if (enhanced.Success)
                     {
@@ -149,6 +156,17 @@ public class OcrEngine : IDisposable
                 .FirstOrDefault();
             if (qualityLine != null)
                 info.Quality = ExtractQuality(qualityLine.Joined);
+
+            // 传说装备初始即有 4 条副属性，每强化 3 级会在对应属性后增加一次 (n) 计数。
+            // 这个计数比右上角十几像素高的美术字徽章稳定，优先用它推导 +3～+15。
+            var totalRolls = info.SubStats.Sum(s => s.RollCount);
+            if (info.Quality.StartsWith("传说", StringComparison.Ordinal)
+                && info.SubStats.Count == 4
+                && totalRolls is >= 1 and <= 5)
+            {
+                info.EnhanceLevel = totalRolls * 3;
+                info.RawText += $"{Environment.NewLine}[debug] enhance-by-rolls={totalRolls} -> +{info.EnhanceLevel}";
+            }
 
             // 装备分数仅按副属性的民间算法计算，不读取截图中的游戏分数。
             info.Score = EquipmentScoreCalculator.Calculate(info.SubStats);
@@ -204,7 +222,10 @@ public class OcrEngine : IDisposable
                 info.Level = lvl2;
 
             var enhBox = boxes.FirstOrDefault(t => Regex.IsMatch(t.Text.Trim(), @"^\+\d{1,2}$"));
-            if (enhBox != null && int.TryParse(enhBox.Text.Trim().TrimStart('+'), out var enh2))
+            if (info.EnhanceLevel == 0
+                && enhBox != null
+                && int.TryParse(enhBox.Text.Trim().TrimStart('+'), out var enh2)
+                && IsValidEnhanceLevel(enh2))
                 info.EnhanceLevel = enh2;
         }
         catch { /* 忽略，走徽章定位 */ }
@@ -225,13 +246,15 @@ public class OcrEngine : IDisposable
             catch { /* 忽略，走模板兜底 */ }
 
             var m = Regex.Match(badgeText, @"\+?\s*(\d{1,2})");
-            if (m.Success && int.TryParse(m.Groups[1].Value, out var enh))
+            if (m.Success
+                && int.TryParse(m.Groups[1].Value, out var enh)
+                && IsValidEnhanceLevel(enh))
                 info.EnhanceLevel = enh;
 
             if (info.EnhanceLevel == 0)
             {
                 var (v, conf) = _digitMatcher.RecognizeEnhanceLevel(badgeMat);
-                if (conf > 0.5)
+                if (conf > 0.5 && IsValidEnhanceLevel(v))
                     info.EnhanceLevel = v;
             }
         }
@@ -445,6 +468,9 @@ public class OcrEngine : IDisposable
         _paddle ??= new PaddleOcrEngine(_paddleModelDir);
         return _paddle;
     }
+
+    private static bool IsValidEnhanceLevel(int level)
+        => level is 3 or 6 or 9 or 12 or 15;
 
     private static List<OcrLine> GroupLines(List<OcrWord> words)
     {

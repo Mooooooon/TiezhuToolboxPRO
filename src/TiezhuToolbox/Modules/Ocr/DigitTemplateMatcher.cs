@@ -99,7 +99,10 @@ public class DigitTemplateMatcher : IDisposable
             return (0, 0);
 
         var preprocessed = ImagePreprocessor.PreprocessDigitRegion(region);
-        var (label, confidence) = MatchTemplate(preprocessed);
+        // 强化等级只能与“+数字”模板竞争，避免误命中装备等级的 3/8/85/88 模板。
+        var (label, confidence) = MatchTemplate(
+            preprocessed,
+            label => label.StartsWith("+", StringComparison.Ordinal));
         preprocessed.Dispose();
 
         // 解析 "+3" 格式的标签
@@ -113,7 +116,7 @@ public class DigitTemplateMatcher : IDisposable
         return (0, 0);
     }
 
-    private (string label, double confidence) MatchTemplate(Mat image)
+    private (string label, double confidence) MatchTemplate(Mat image, Func<string, bool>? labelFilter = null)
     {
         if (image.Empty())
             return (string.Empty, 0);
@@ -123,6 +126,9 @@ public class DigitTemplateMatcher : IDisposable
 
         foreach (var (label, template) in _templates)
         {
+            if (labelFilter != null && !labelFilter(label))
+                continue;
+
             // 调整模板尺寸以匹配输入
             var resizedTemplate = new Mat();
             Cv2.Resize(template, resizedTemplate, image.Size());

@@ -307,7 +307,8 @@ public partial class MainForm : Form
         listSubStats.Items.Clear();
         foreach (var sub in info.SubStats)
         {
-            var text = $"{sub.Name} {sub.Value}";
+            var rollText = sub.RollCount > 0 ? $"({sub.RollCount})" : string.Empty;
+            var text = $"{sub.Name}{rollText} {sub.Value}";
             if (!string.IsNullOrEmpty(sub.EnhanceValue))
                 text += $" ({sub.EnhanceValue})";
             listSubStats.Items.Add(text);
