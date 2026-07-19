@@ -340,6 +340,26 @@ if (args.Contains("--synthetic"))
     AssertCustom("戒指拒绝固定生命值", CustomGear("传说戒指", "生命值", "500"), false);
     Console.WriteLine();
 
+    Console.WriteLine("===== 默认主属性推导规则 =====");
+    void AssertDerived(string title, IReadOnlyCollection<string> actual, params string[] expected)
+    {
+        var matches = actual.Count == expected.Length && expected.All(actual.Contains);
+        Console.WriteLine($"  {title} → {string.Join("、", actual)}");
+        if (!matches)
+            throw new InvalidOperationException($"默认主属性推导失败：{title}，期望 {string.Join("、", expected)}");
+    }
+    AssertDerived("有效属性含暴击时项链只保留暴击",
+        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "生命值", "暴击率" }), "暴击率");
+    AssertDerived("有效属性含暴击和爆伤时项链只保留两者",
+        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "暴击率", "暴击伤害" }), "暴击率", "暴击伤害");
+    AssertDerived("无暴击属性时项链按普通有效属性推导",
+        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "生命值" }), "攻击力%", "生命值%");
+    AssertDerived("有效属性含速度时鞋子只保留速度",
+        EquipmentRules.DeriveBootsMainStats(new[] { "速度", "生命值", "防御力" }), "速度");
+    AssertDerived("无速度属性时鞋子按普通有效属性推导",
+        EquipmentRules.DeriveBootsMainStats(new[] { "生命值", "防御力" }), "防御力%", "生命值%");
+    Console.WriteLine();
+
     // 强化建议自检（阈值 24/24）
     void PrintAdvice(string title, EquipmentInfo info, EnhanceAdvice? expected = null)
     {

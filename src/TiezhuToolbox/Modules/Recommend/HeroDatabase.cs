@@ -149,9 +149,9 @@ public sealed class HeroDatabase
             UsefulStats = useful,
             AllowedSets = hero.SetCombos.SelectMany(c => c.Sets).Where(SetNames.ContainsKey)
                 .Distinct(StringComparer.Ordinal).OrderBy(s => s).ToList(),
-            NecklaceMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.NecklaceMainStats),
+            NecklaceMainStats = EquipmentRules.DeriveNecklaceMainStats(useful),
             RingMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.RingMainStats),
-            BootsMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.BootsMainStats),
+            BootsMainStats = EquipmentRules.DeriveBootsMainStats(useful),
         };
 
         if (!_overrides.Heroes.TryGetValue(hero.Code, out var custom))

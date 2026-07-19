@@ -63,4 +63,21 @@ public static class EquipmentRules
         var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
         return candidates.Where(candidate => useful.Contains(candidate.TrimEnd('%'))).ToList();
     }
+
+    public static List<string> DeriveNecklaceMainStats(IEnumerable<string> usefulStats)
+    {
+        var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
+        var criticalStats = new[] { "暴击率", "暴击伤害" }.Where(useful.Contains).ToList();
+        return criticalStats.Count > 0
+            ? criticalStats
+            : DeriveMainStats(useful, NecklaceMainStats);
+    }
+
+    public static List<string> DeriveBootsMainStats(IEnumerable<string> usefulStats)
+    {
+        var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
+        return useful.Contains("速度")
+            ? new List<string> { "速度" }
+            : DeriveMainStats(useful, BootsMainStats);
+    }
 }
