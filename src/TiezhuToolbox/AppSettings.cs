@@ -5,11 +5,12 @@ namespace TiezhuToolbox;
 /// <summary>软件设置。新增字段必须提供兼容旧文件的默认值。</summary>
 public class AppSettings
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     public int Version { get; set; } = CurrentVersion;
     public decimal LeftThreshold { get; set; } = 24;
     public decimal RightThreshold { get; set; } = 24;
+    public decimal Level88Threshold { get; set; } = 28;
     public string RecognitionHotKey { get; set; } = "F2";
     public bool ContinuousRecognition { get; set; }
     public decimal RecognitionIntervalSeconds { get; set; } = 0.1M;
@@ -22,6 +23,7 @@ public class AppSettings
         Version = CurrentVersion;
         LeftThreshold = Math.Clamp(LeftThreshold, 0, 200);
         RightThreshold = Math.Clamp(RightThreshold, 0, 200);
+        Level88Threshold = Math.Clamp(Level88Threshold, 0, 200);
         RecognitionIntervalSeconds = Math.Clamp(RecognitionIntervalSeconds, 0.1M, 60M);
         if (!Enum.TryParse<Keys>(RecognitionHotKey, out var key) || key is < Keys.F1 or > Keys.F12)
             RecognitionHotKey = "F2";

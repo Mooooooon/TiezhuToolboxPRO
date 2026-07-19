@@ -34,6 +34,8 @@ partial class MainForm
     private AntdUI.InputNumber numLeftThreshold;
     private Label lblThRight;
     private AntdUI.InputNumber numRightThreshold;
+    private Label lblTh88;
+    private AntdUI.InputNumber numLevel88Threshold;
     private FlowLayoutPanel recognitionSettingsPanel;
     private Label lblRecognitionGroup;
     private Label lblRecognitionHotKey;
@@ -109,6 +111,8 @@ partial class MainForm
         this.numLeftThreshold = new AntdUI.InputNumber();
         this.lblThRight = new Label();
         this.numRightThreshold = new AntdUI.InputNumber();
+        this.lblTh88 = new Label();
+        this.numLevel88Threshold = new AntdUI.InputNumber();
         this.recognitionSettingsPanel = new FlowLayoutPanel();
         this.lblRecognitionGroup = new Label();
         this.lblRecognitionHotKey = new Label();
@@ -485,6 +489,8 @@ partial class MainForm
         this.thresholdPanel.Controls.Add(this.numLeftThreshold);
         this.thresholdPanel.Controls.Add(this.lblThRight);
         this.thresholdPanel.Controls.Add(this.numRightThreshold);
+        this.thresholdPanel.Controls.Add(this.lblTh88);
+        this.thresholdPanel.Controls.Add(this.numLevel88Threshold);
         this.thresholdPanel.Dock = DockStyle.Fill;
         this.thresholdPanel.Location = new Point(0, 493);
         this.thresholdPanel.Margin = new Padding(0, 10, 0, 0);
@@ -556,6 +562,32 @@ partial class MainForm
         this.toolTip.SetToolTip(this.numRightThreshold, "分数阈值：强化 +3 前副属性分数需达到此值才建议继续，之后每 3 级要求 +6 分，+15 时 +30 分建议重铸");
         this.numRightThreshold.Value = new decimal(24);
         this.numRightThreshold.ValueChanged += new AntdUI.DecimalEventHandler(this.numThreshold_ValueChanged);
+        //
+        // lblTh88
+        //
+        this.lblTh88.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblTh88.Location = new Point(276, 0);
+        this.lblTh88.Margin = new Padding(12, 0, 6, 0);
+        this.lblTh88.Name = "lblTh88";
+        this.lblTh88.Size = new Size(40, 26);
+        this.lblTh88.TabIndex = 5;
+        this.lblTh88.Text = "88级";
+        this.lblTh88.TextAlign = ContentAlignment.MiddleLeft;
+        this.toolTip.SetToolTip(this.lblTh88, "88级装备独立阈值：默认 28 分起步，之后每强化 3 级要求增加 7 分，且不会建议重铸");
+        //
+        // numLevel88Threshold
+        //
+        this.numLevel88Threshold.Location = new Point(322, 0);
+        this.numLevel88Threshold.Margin = new Padding(0);
+        this.numLevel88Threshold.Maximum = new decimal(200);
+        this.numLevel88Threshold.Minimum = new decimal(0);
+        this.numLevel88Threshold.Name = "numLevel88Threshold";
+        this.numLevel88Threshold.Radius = 6;
+        this.numLevel88Threshold.Size = new Size(54, 26);
+        this.numLevel88Threshold.TabIndex = 6;
+        this.toolTip.SetToolTip(this.numLevel88Threshold, "88级装备独立阈值：默认 28 分起步，之后每强化 3 级要求增加 7 分，且不会建议重铸");
+        this.numLevel88Threshold.Value = new decimal(28);
+        this.numLevel88Threshold.ValueChanged += new AntdUI.DecimalEventHandler(this.numThreshold_ValueChanged);
         //
         // recognitionSettingsPanel
         //

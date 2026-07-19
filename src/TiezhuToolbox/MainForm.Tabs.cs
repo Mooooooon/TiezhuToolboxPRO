@@ -116,15 +116,17 @@ public partial class MainForm
             Dock = DockStyle.Top,
             Height = 48,
         };
-        var scoreTitle = CreateSettingsHeading("强化分数", "控制左三件、右三件在强化各档位的最低副属性分数。", 62);
+        var scoreTitle = CreateSettingsHeading("强化分数", "85级按左/右三件阈值每跳 +6；88级使用独立阈值，每跳 +7。", 62);
         thresholdPanel.Dock = DockStyle.None;
         thresholdPanel.Location = new Point(24, 132);
-        thresholdPanel.Size = new Size(520, 34);
+        // 高 DPI 下 FlowLayoutPanel 会按缩放后的 Margin 排列子控件，预留足够宽度避免最右侧 88 级输入框被裁剪。
+        thresholdPanel.Size = new Size(700, 34);
         thresholdPanel.AutoSize = false;
         thresholdPanel.Margin = Padding.Empty;
         numLeftThreshold.Size = new Size(82, 34);
         numRightThreshold.Size = new Size(82, 34);
-        foreach (var label in new[] { lblThresholdGroup, lblThLeft, lblThRight })
+        numLevel88Threshold.Size = new Size(82, 34);
+        foreach (var label in new[] { lblThresholdGroup, lblThLeft, lblThRight, lblTh88 })
             label.Height = 34;
 
         var recognitionTitle = CreateSettingsHeading("识别控制", "全局快捷键和持续识别只在“装备强化”页生效。", 188);
@@ -175,6 +177,7 @@ public partial class MainForm
         {
             numLeftThreshold.Value = _settings.LeftThreshold;
             numRightThreshold.Value = _settings.RightThreshold;
+            numLevel88Threshold.Value = _settings.Level88Threshold;
             comboRecognitionHotKey.SelectedValue = _settings.RecognitionHotKey;
             chkContinuousRecognition.Checked = _settings.ContinuousRecognition;
             numRecognitionInterval.Value = _settings.RecognitionIntervalSeconds;
@@ -193,6 +196,7 @@ public partial class MainForm
             return;
         _settings.LeftThreshold = numLeftThreshold.Value;
         _settings.RightThreshold = numRightThreshold.Value;
+        _settings.Level88Threshold = numLevel88Threshold.Value;
         _settings.RecognitionHotKey = comboRecognitionHotKey.SelectedValue as string
             ?? comboRecognitionHotKey.Text;
         _settings.ContinuousRecognition = chkContinuousRecognition.Checked;
@@ -219,6 +223,7 @@ public partial class MainForm
         var defaults = AppSettings.CreateDefault();
         _settings.LeftThreshold = defaults.LeftThreshold;
         _settings.RightThreshold = defaults.RightThreshold;
+        _settings.Level88Threshold = defaults.Level88Threshold;
         _settings.RecognitionHotKey = defaults.RecognitionHotKey;
         _settings.ContinuousRecognition = defaults.ContinuousRecognition;
         _settings.RecognitionIntervalSeconds = defaults.RecognitionIntervalSeconds;

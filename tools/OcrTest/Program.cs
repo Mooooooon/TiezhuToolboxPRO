@@ -40,6 +40,12 @@ if (args.Contains("--config-smoke"))
                     var threshold = typeof(TiezhuToolbox.MainForm).GetField("numLeftThreshold",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     threshold.GetType().GetProperty("Value")!.SetValue(threshold, 31M);
+                    var level88Threshold = typeof(TiezhuToolbox.MainForm).GetField("numLevel88Threshold",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    var defaultLevel88Value = (decimal)level88Threshold.GetType().GetProperty("Value")!.GetValue(level88Threshold)!;
+                    if (defaultLevel88Value != 28M)
+                        throw new InvalidOperationException($"88级默认阈值错误：{defaultLevel88Value}");
+                    level88Threshold.GetType().GetProperty("Value")!.SetValue(level88Threshold, 33M);
                     var address = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     address.Text = "127.0.0.1:5555";
@@ -50,9 +56,12 @@ if (args.Contains("--config-smoke"))
                 var loadedThreshold = typeof(TiezhuToolbox.MainForm).GetField("numLeftThreshold",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
                 var value = (decimal)loadedThreshold.GetType().GetProperty("Value")!.GetValue(loadedThreshold)!;
+                var loadedLevel88Threshold = typeof(TiezhuToolbox.MainForm).GetField("numLevel88Threshold",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var level88Value = (decimal)loadedLevel88Threshold.GetType().GetProperty("Value")!.GetValue(loadedLevel88Threshold)!;
                 var loadedAddress = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
-                if (value != 31M || loadedAddress.Text != "127.0.0.1:5555")
+                if (value != 31M || level88Value != 33M || loadedAddress.Text != "127.0.0.1:5555")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
             catch (Exception ex)
@@ -65,7 +74,7 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/127.0.0.1:5555");
+        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/127.0.0.1:5555");
     }
     finally
     {
@@ -191,11 +200,18 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
             selectedIndex.SetValue(tabs, 2);
             Application.DoEvents();
-            var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "comboRecognitionHotKey", "numRecognitionInterval" }
+            var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "numLevel88Threshold", "comboRecognitionHotKey", "numRecognitionInterval" }
                 .Select(name => (Control)typeof(TiezhuToolbox.MainForm).GetField(name,
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!);
             if (settingInputs.Any(control => control.Height < 32 || control.Width < 70))
                 throw new InvalidOperationException("软件设置输入框尺寸不足");
+            var thresholdPanel = (Control)typeof(TiezhuToolbox.MainForm).GetField("thresholdPanel",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var level88Input = (Control)typeof(TiezhuToolbox.MainForm).GetField("numLevel88Threshold",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            if (level88Input.Right > thresholdPanel.ClientSize.Width || level88Input.Bottom > thresholdPanel.ClientSize.Height)
+                throw new InvalidOperationException(
+                    $"88级阈值输入框被裁剪：输入框={level88Input.Bounds}，容器={thresholdPanel.ClientSize}");
             CaptureTab("software-settings");
             selectedIndex.SetValue(tabs, 0);
             Application.DoEvents();
@@ -360,16 +376,16 @@ if (args.Contains("--synthetic"))
         EquipmentRules.DeriveBootsMainStats(new[] { "生命值", "防御力" }), "防御力%", "生命值%");
     Console.WriteLine();
 
-    // 强化建议自检（阈值 24/24）
+    // 强化建议自检（85级阈值 24/24，88级阈值 28）
     void PrintAdvice(string title, EquipmentInfo info, EnhanceAdvice? expected = null)
     {
-        var r = EnhancementAdvisor.Analyze(info, 24, 24);
+        var r = EnhancementAdvisor.Analyze(info, 24, 24, 28);
         Console.WriteLine($"  [强化建议] {title} → {r.Text}（{r.Detail}）");
         if (expected != null && r.Advice != expected)
             throw new InvalidOperationException($"强化建议回归失败：期望 {expected}，实际 {r.Advice}");
     }
 
-    Console.WriteLine("===== 强化建议样例（阈值 24/24） =====");
+    Console.WriteLine("===== 强化建议样例（85级阈值 24/24，88级阈值 28） =====");
     PrintAdvice("传说武器 +0 高分（应：继续强化）", new EquipmentInfo
     {
         Quality = "传说武器",
@@ -518,6 +534,64 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "效果命中", Value = "18%", RollCount = 0 },
         },
     });
+    PrintAdvice("88级传说武器 +3 恰好 35 分（应：按每跳 +7 继续强化）", new EquipmentInfo
+    {
+        Level = 88,
+        Quality = "传说武器",
+        EnhanceLevel = 3,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "6" },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "防御力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    }, EnhanceAdvice.Continue);
+    PrintAdvice("88级传说武器 +3 只有 34 分（应：分数不达 35，仅继续赌速度）", new EquipmentInfo
+    {
+        Level = 88,
+        Quality = "传说武器",
+        EnhanceLevel = 3,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "6" },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "防御力", Value = "7%" },
+            new SubStat { Name = "效果命中", Value = "7%" },
+        },
+    }, EnhanceAdvice.GambleSpeed);
+    PrintAdvice("88级速度鞋 +15 恰好 63 分（应：不可重铸，建议保留）", new EquipmentInfo
+    {
+        Level = 88,
+        Quality = "传说鞋子",
+        SetName = "速度套装",
+        MainStatName = "速度",
+        MainStatValue = "45",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "3" },
+            new SubStat { Name = "生命值", Value = "20%" },
+            new SubStat { Name = "防御力", Value = "20%" },
+            new SubStat { Name = "效果命中", Value = "17%" },
+        },
+    }, EnhanceAdvice.Keep);
+    PrintAdvice("88级速度鞋 +15 只有 62 分（应：不可重铸，建议放弃）", new EquipmentInfo
+    {
+        Level = 88,
+        Quality = "传说鞋子",
+        SetName = "速度套装",
+        MainStatName = "速度",
+        MainStatValue = "45",
+        EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "3" },
+            new SubStat { Name = "生命值", Value = "20%" },
+            new SubStat { Name = "防御力", Value = "19%" },
+            new SubStat { Name = "效果命中", Value = "17%" },
+        },
+    }, EnhanceAdvice.GiveUp);
     PrintAdvice("速度鞋 低分（应：分数过低，建议放弃，鞋子不赌速度）", new EquipmentInfo
     {
         Quality = "传说鞋子",

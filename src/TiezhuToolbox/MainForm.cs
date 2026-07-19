@@ -395,12 +395,14 @@ public partial class MainForm : Form
             return;
 
         var result = Modules.Recommend.EnhancementAdvisor.Analyze(
-            _lastInfo, (double)numLeftThreshold.Value, (double)numRightThreshold.Value);
+            _lastInfo, (double)numLeftThreshold.Value, (double)numRightThreshold.Value,
+            (double)numLevel88Threshold.Value);
 
         lblAdviceBadge.Text = result.Text;
         lblAdviceBadge.BackColor = result.Advice switch
         {
             Modules.Recommend.EnhanceAdvice.Continue => AdviceContinueColor,
+            Modules.Recommend.EnhanceAdvice.Keep => AdviceContinueColor,
             Modules.Recommend.EnhanceAdvice.GambleSpeed => AdviceGambleColor,
             Modules.Recommend.EnhanceAdvice.Reforge => AdviceReforgeColor,
             Modules.Recommend.EnhanceAdvice.GiveUp => AdviceGiveUpColor,
