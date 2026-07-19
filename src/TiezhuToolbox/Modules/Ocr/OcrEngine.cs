@@ -88,6 +88,7 @@ public class OcrEngine : IDisposable
 
             OcrLine? qualityLine = null;
             Rect? iconZone = null;
+            var qualityTextRect = GetQualityTextRect(panelRect);
 
             // 属性行独立定位，不再检测或依赖游戏内的“装备分数”文本。
             var statLines = lines
@@ -148,9 +149,20 @@ public class OcrEngine : IDisposable
                     info.SetName = setMatch.Groups[1].Value + "套装";
             }
 
-            // 品质必须是“品质 + 部位”开头的短行。装备名称即使含“英雄”也不会参与匹配。
+            // 品质文本固定在装备图标右侧。先限制候选框位置，避免图标、等级数字与品质行拼接；
+            // 如果整面板检测仍把图标和文字合成一个大框，则单独裁剪固定文字区重做一次 OCR。
             var firstStatY = statLines.Count > 0 ? statLines[0].Y : int.MaxValue;
             qualityLine = lines
+                .Where(l => l.X >= qualityTextRect.X
+                         && l.Y >= qualityTextRect.Y
+                         && l.Y + l.H <= qualityTextRect.Bottom
+                         && l.Y < firstStatY
+                         && !string.IsNullOrEmpty(ExtractQuality(l.Joined)))
+                .OrderByDescending(l => l.Y)
+                .FirstOrDefault();
+            qualityLine ??= RecognizeQualityInFixedRegion(mat, qualityTextRect, info);
+            // 固定区域偶发检测失败时保留旧路径兜底，避免品质字段拖累其他识别结果。
+            qualityLine ??= lines
                 .Where(l => l.Y < firstStatY && !string.IsNullOrEmpty(ExtractQuality(l.Joined)))
                 .OrderByDescending(l => l.Y)
                 .FirstOrDefault();
@@ -186,7 +198,7 @@ public class OcrEngine : IDisposable
                 }
             }
 
-            SaveDebugImage(imagePath, mat, panelRect, lines, iconZone);
+            SaveDebugImage(imagePath, mat, panelRect, qualityTextRect, lines, iconZone);
         }
         catch (Exception ex)
         {
@@ -494,6 +506,48 @@ public class OcrEngine : IDisposable
         return lines.OrderBy(l => l.Y).ToList();
     }
 
+    /// <summary>品质与装备名称的固定文字区（装备图标右侧）。</summary>
+    private static Rect GetQualityTextRect(Rect panelRect)
+    {
+        var left = panelRect.X + (int)Math.Round(panelRect.Width * 0.335);
+        var top = panelRect.Y + (int)Math.Round(panelRect.Height * 0.035);
+        var bottom = panelRect.Y + (int)Math.Round(panelRect.Height * 0.19);
+        return new Rect(left, top, panelRect.Right - left, Math.Max(1, bottom - top));
+    }
+
+    /// <summary>整面板 OCR 被图标干扰时，只识别固定的品质/名称文字区。</summary>
+    private OcrLine? RecognizeQualityInFixedRegion(Mat mat, Rect region, EquipmentInfo info)
+    {
+        using var crop = ImagePreprocessor.Crop(mat, region);
+        if (crop.Empty())
+            return null;
+
+        try
+        {
+            var words = GetPaddle().Run(crop)
+                .Select(tb => new OcrWord(
+                    tb.Text,
+                    tb.Box.X + region.X,
+                    tb.Box.Y + region.Y,
+                    tb.Box.Width,
+                    tb.Box.Height))
+                .ToList();
+
+            foreach (var word in words)
+                info.RawText += $"{Environment.NewLine}[debug] qualitybox '{word.Text}' ({word.X},{word.Y},{word.W},{word.H})";
+
+            return GroupLines(words)
+                .Where(l => !string.IsNullOrEmpty(ExtractQuality(l.Joined)))
+                .OrderBy(l => l.Y)
+                .FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            info.RawText += $"{Environment.NewLine}[debug] quality-region-failed: {ex.Message}";
+            return null;
+        }
+    }
+
     /// <summary>
     /// 模糊匹配属性关键字：长度≥3 允许错 1 字，长度 2 要求全对。
     /// </summary>
@@ -519,16 +573,25 @@ public class OcrEngine : IDisposable
 
     private static string ExtractQuality(string text)
     {
-        var m = Regex.Match(text, $@"^[^一-龥]{{0,2}}({string.Join("|", QualityWords)})({string.Join("|", TypeWords)})");
+        // 品质行左侧偶尔会把图标边缘误识别成一个汉字（如“公传说戒指”）。
+        // 只容忍行首最多两个噪声字符，仍可避免匹配装备名中的“英雄戒指”等字样。
+        var m = Regex.Match(text, $@"^.{{0,2}}?({string.Join("|", QualityWords)})({string.Join("|", TypeWords)})");
         return m.Success ? m.Groups[1].Value + m.Groups[2].Value : string.Empty;
     }
 
-    private static void SaveDebugImage(string imagePath, Mat mat, Rect panelRect, List<OcrLine> lines, Rect? iconZone)
+    private static void SaveDebugImage(
+        string imagePath,
+        Mat mat,
+        Rect panelRect,
+        Rect qualityTextRect,
+        List<OcrLine> lines,
+        Rect? iconZone)
     {
         try
         {
             using var debug = mat.Clone();
             Cv2.Rectangle(debug, panelRect, new Scalar(0, 255, 255), 2);
+            Cv2.Rectangle(debug, qualityTextRect, new Scalar(255, 0, 255), 2);
             foreach (var l in lines)
                 Cv2.Rectangle(debug, new Rect(l.X, l.Y, l.W, l.H), new Scalar(0, 255, 0), 1);
             if (iconZone is Rect z)
