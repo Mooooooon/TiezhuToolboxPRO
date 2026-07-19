@@ -71,10 +71,12 @@ if (args.Contains("--synthetic"))
     });
 
     // 强化建议自检（阈值 24/24）
-    void PrintAdvice(string title, EquipmentInfo info)
+    void PrintAdvice(string title, EquipmentInfo info, EnhanceAdvice? expected = null)
     {
         var r = EnhancementAdvisor.Analyze(info, 24, 24);
         Console.WriteLine($"  [强化建议] {title} → {r.Text}（{r.Detail}）");
+        if (expected != null && r.Advice != expected)
+            throw new InvalidOperationException($"强化建议回归失败：期望 {expected}，实际 {r.Advice}");
     }
 
     Console.WriteLine("===== 强化建议样例（阈值 24/24） =====");
@@ -90,6 +92,36 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "效果命中", Value = "7%" },
         },
     });
+    PrintAdvice("弱化套效果命中戒指 +0 分数达标但最高匹配度低于 70% 且无速度（应：放弃）", new EquipmentInfo
+    {
+        Quality = "传说戒指",
+        SetName = "弱化套装",
+        MainStatName = "效果命中",
+        MainStatValue = "60%",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "暴击率", Value = "5%" },
+            new SubStat { Name = "暴击伤害", Value = "7%" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "8%" },
+        },
+    }, EnhanceAdvice.GiveUp);
+    PrintAdvice("弱化套效果命中戒指 +0 匹配度低但速度 3（应：按分数继续强化）", new EquipmentInfo
+    {
+        Quality = "传说戒指",
+        SetName = "弱化套装",
+        MainStatName = "效果命中",
+        MainStatValue = "60%",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "暴击率", Value = "5%" },
+            new SubStat { Name = "暴击伤害", Value = "7%" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "速度", Value = "3" },
+        },
+    }, EnhanceAdvice.Continue);
     PrintAdvice("传说戒指 固定防御主属性速度4（应：作为速度散件继续赌）", new EquipmentInfo
     {
         Quality = "传说戒指",

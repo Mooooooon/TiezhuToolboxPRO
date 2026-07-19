@@ -31,12 +31,14 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 /// 强化建议（算法参考社区打铁助手脚本）：
 /// 分数阶梯 —— +3 前分数 ≥ 阈值，之后每 3 级要求 +6 分，+15 时模拟游戏增量且重铸后分数 ≥ 65；
 /// 分数不达标时赌速度 —— 副属性速度 ≥ 3/6/9/12/12（对应 +3/+6/+9/+12/+15 前）可继续，+15 时速度 ≥ 15 建议重铸。
+/// 分数达标时仍会检查用途：没有速度潜质且最高角色匹配度低于 70% 时建议放弃；
 /// 左三件（武器/头盔/铠甲）直接走上述流程；项链/戒指即使是固定值主属性，只要速度达标也可作为速度散件继续赌；
 /// 其余右三件固定值主属性直接淘汰。只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
 /// </summary>
 public static class EnhancementAdvisor
 {
     private const double ReforgeScoreThreshold = 65;
+    private const double MinimumHeroMatchScore = 70;
 
     /// <summary>装备部位。</summary>
     private enum Part
@@ -83,8 +85,12 @@ public static class EnhancementAdvisor
 
         if (part is Part.Weapon or Part.Helm or Part.Armor)
         {
-            return ScoreLadder(score, reforgedScore, enhance, leftThreshold)
-                   ?? SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score, reforgedScore, enhance));
+            var speed = GetSpeed(info);
+            var leftScoreAdvice = ScoreLadder(score, reforgedScore, enhance, leftThreshold);
+            if (leftScoreAdvice != null)
+                return ApplyHeroMatchGate(info, leftScoreAdvice, speed, enhance);
+
+            return SpeedLadder(speed, enhance, GiveUpDetail(score, reforgedScore, enhance));
         }
 
         // 项链/戒指的固定值主属性通常应放弃，但速度达标时仍可作为速度散件继续赌。
@@ -103,7 +109,7 @@ public static class EnhancementAdvisor
 
         var byScore = ScoreLadder(score, reforgedScore, enhance, rightThreshold);
         if (byScore != null)
-            return byScore;
+            return ApplyHeroMatchGate(info, byScore, GetSpeed(info), enhance);
 
         if (part is Part.Necklace or Part.Ring)
             return SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score, reforgedScore, enhance));
@@ -130,6 +136,39 @@ public static class EnhancementAdvisor
             ? new EnhanceAdviceResult(EnhanceAdvice.Reforge,
                 "建议重铸", $"预计重铸分数 {reforgedScore:0.##} ≥ {ReforgeScoreThreshold:0.##}")
             : null;
+    }
+
+    /// <summary>
+    /// 分数达标后再检查装备用途：没有速度潜质且所有角色匹配度都低于 70% 时放弃。
+    /// 角色数据未加载时跳过此门槛，避免数据文件异常导致误判。
+    /// </summary>
+    private static EnhanceAdviceResult ApplyHeroMatchGate(
+        EquipmentInfo info, EnhanceAdviceResult scoreAdvice, int speed, int enhance)
+    {
+        if (HasSpeedPotential(speed, enhance) || !HeroDatabase.Instance.IsLoaded)
+            return scoreAdvice;
+
+        var bestMatch = HeroRecommender.Recommend(info, top: 1).FirstOrDefault();
+        if (bestMatch?.Score >= MinimumHeroMatchScore)
+            return scoreAdvice;
+
+        var matchDetail = bestMatch == null
+            ? "没有匹配到适用角色"
+            : $"最高匹配度 {bestMatch.Score:0.#}% < {MinimumHeroMatchScore:0.#}%";
+        return new EnhanceAdviceResult(EnhanceAdvice.GiveUp,
+            "匹配度过低，建议放弃", $"{matchDetail}，且速度 {speed} 未达当前强化档位要求");
+    }
+
+    /// <summary>副属性速度是否达到当前强化档位的速度潜质要求。</summary>
+    private static bool HasSpeedPotential(int speed, int enhance)
+    {
+        foreach (var (cap, required) in SpeedSteps)
+        {
+            if (enhance < cap)
+                return speed >= required;
+        }
+
+        return enhance == 15 && speed >= 15;
     }
 
     /// <summary>赌速度阶梯：速度达标返回继续赌速度/建议重铸，否则建议放弃。</summary>
