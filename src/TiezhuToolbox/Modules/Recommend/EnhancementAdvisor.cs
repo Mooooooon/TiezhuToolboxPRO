@@ -40,18 +40,6 @@ public static class EnhancementAdvisor
     private const double ReforgeScoreThreshold = 65;
     private const double MinimumHeroMatchScore = 70;
 
-    /// <summary>装备部位。</summary>
-    private enum Part
-    {
-        Unknown,
-        Weapon,
-        Helm,
-        Armor,
-        Necklace,
-        Ring,
-        Boots,
-    }
-
     /// <summary>分数阶梯：强化档位上限（不含）→ 相对阈值的加分。</summary>
     private static readonly (int LevelCap, double Offset)[] ScoreSteps =
         { (3, 0), (6, 6), (9, 12), (12, 18), (15, 24) };
@@ -68,8 +56,8 @@ public static class EnhancementAdvisor
     /// <param name="rightThreshold">右三件分数阈值。</param>
     public static EnhanceAdviceResult Analyze(EquipmentInfo info, double leftThreshold, double rightThreshold)
     {
-        var part = DetectPart(info.Quality);
-        if (part == Part.Unknown)
+        var part = EquipmentRules.DetectPart(info.Quality);
+        if (part == EquipmentPart.Unknown)
             return new EnhanceAdviceResult(EnhanceAdvice.None, "无法判断", "未从品质文本中识别出装备部位");
 
         // 分数用民间算法由副属性现算，不依赖调用方是否已填 info.Score
@@ -83,7 +71,7 @@ public static class EnhancementAdvisor
         if (enhance == 15 && info.Level > 0 && info.Level != 85)
             return new EnhanceAdviceResult(EnhanceAdvice.None, "不支持重铸", $"装备等级 {info.Level} 不能重铸为 90 级");
 
-        if (part is Part.Weapon or Part.Helm or Part.Armor)
+        if (part is EquipmentPart.Weapon or EquipmentPart.Helm or EquipmentPart.Armor)
         {
             var speed = GetSpeed(info);
             var leftScoreAdvice = ScoreLadder(score, reforgedScore, enhance, leftThreshold);
@@ -96,7 +84,7 @@ public static class EnhancementAdvisor
         // 项链/戒指的固定值主属性通常应放弃，但速度达标时仍可作为速度散件继续赌。
         if (IsFixedMainStat(info.MainStatName, info.MainStatValue))
         {
-            if (part is Part.Necklace or Part.Ring)
+            if (part is EquipmentPart.Necklace or EquipmentPart.Ring)
             {
                 var speedOffPiece = SpeedOffPieceLadder(GetSpeed(info), enhance);
                 if (speedOffPiece != null)
@@ -111,7 +99,7 @@ public static class EnhancementAdvisor
         if (byScore != null)
             return ApplyHeroMatchGate(info, byScore, GetSpeed(info), enhance);
 
-        if (part is Part.Necklace or Part.Ring)
+        if (part is EquipmentPart.Necklace or EquipmentPart.Ring)
             return SpeedLadder(GetSpeed(info), enhance, GiveUpDetail(score, reforgedScore, enhance));
 
         return new EnhanceAdviceResult(EnhanceAdvice.GiveUp, "分数过低，建议放弃", GiveUpDetail(score, reforgedScore, enhance));
@@ -209,18 +197,6 @@ public static class EnhancementAdvisor
             ? new EnhanceAdviceResult(EnhanceAdvice.Reforge,
                 "建议重铸", $"固定值主属性仅作速度散件，速度 {speed} ≥ 15，值得重铸")
             : null;
-    }
-
-    /// <summary>从品质文本（如"传说武器"）识别装备部位。</summary>
-    private static Part DetectPart(string quality)
-    {
-        if (quality.Contains("武器")) return Part.Weapon;
-        if (quality.Contains("头盔")) return Part.Helm;
-        if (quality.Contains("铠甲") || quality.Contains("护甲")) return Part.Armor;
-        if (quality.Contains("项链")) return Part.Necklace;
-        if (quality.Contains("戒指")) return Part.Ring;
-        if (quality.Contains("鞋子") || quality.Contains("靴")) return Part.Boots;
-        return Part.Unknown;
     }
 
     /// <summary>右三件固定攻击/防御/生命主属性判定（百分比主属性不算固定值）。</summary>

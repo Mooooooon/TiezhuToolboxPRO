@@ -25,7 +25,23 @@ public static class HeroRecommender
         if (!db.IsLoaded)
             return Array.Empty<HeroRecommendation>();
 
-        var gearSetCode = db.FindSetCode(info.SetName);
+        return Recommend(info, db.Profiles, db.SetCodesByName, top);
+    }
+
+    /// <summary>使用指定英雄配置计算推荐，供配置预览与回归工具使用。</summary>
+    public static IReadOnlyList<HeroRecommendation> Recommend(
+        EquipmentInfo info,
+        IReadOnlyList<HeroProfile> profiles,
+        IReadOnlyDictionary<string, string> setCodesByName,
+        int top = 5)
+    {
+        if (profiles.Count == 0)
+            return Array.Empty<HeroRecommendation>();
+
+        var gearSetCode = !string.IsNullOrWhiteSpace(info.SetName)
+                          && setCodesByName.TryGetValue(info.SetName, out var resolvedSetCode)
+            ? resolvedSetCode
+            : null;
         // 每条副属性的分数权重（未识别/不参算的属性权重为 0）
         var scored = info.SubStats.Select(s => (s.Name, Score: EquipmentScoreCalculator.Calculate(s))).ToList();
         var totalScore = scored.Sum(s => s.Score);
@@ -37,14 +53,17 @@ public static class HeroRecommender
                                   && (info.MainStatValue.Contains('%') || !FixedLeftMainStats.Contains(info.MainStatName));
 
         var results = new List<HeroRecommendation>();
-        foreach (var hero in db.Heroes)
+        var part = EquipmentRules.DetectPart(info.Quality);
+        var normalizedMainStat = EquipmentRules.NormalizeMainStat(info);
+
+        foreach (var hero in profiles)
         {
-            // 硬门槛一：主属性必须属于该角色的有用属性（如暴击项链对 c5154 直接淘汰）
-            if (mainStatInformative && !hero.UsefulStats.Contains(info.MainStatName))
+            // 硬门槛一：右三件按部位配置检查主属性；未知部位保持旧版的宽松回退逻辑。
+            if (!MainStatMatches(hero, part, normalizedMainStat, info, mainStatInformative))
                 continue;
 
             // 硬门槛二：装备套装必须出现在该角色的主流搭配中（套装没识别出来时不过滤）
-            if (gearSetCode != null && !hero.SetCombos.Any(c => c.Sets.Contains(gearSetCode)))
+            if (gearSetCode != null && !hero.AllowedSets.Contains(gearSetCode))
                 continue;
 
             // 匹配度 = 有用属性得分占比（分数权重即民间算法，跳得多的属性权重更大）
@@ -65,5 +84,35 @@ public static class HeroRecommender
         }
 
         return results.OrderByDescending(r => r.Score).ThenBy(r => r.Name).Take(top).ToList();
+    }
+
+    private static bool MainStatMatches(
+        HeroProfile hero,
+        EquipmentPart part,
+        string? normalizedMainStat,
+        EquipmentInfo info,
+        bool mainStatInformative)
+    {
+        if (part is EquipmentPart.Weapon or EquipmentPart.Helm or EquipmentPart.Armor)
+            return true;
+
+        if (part is EquipmentPart.Necklace or EquipmentPart.Ring or EquipmentPart.Boots)
+        {
+            // 主属性完全未识别时不过滤；识别到固定值或未知右侧主属性时不匹配任何角色。
+            if (string.IsNullOrWhiteSpace(info.MainStatName))
+                return true;
+            if (normalizedMainStat == null)
+                return false;
+
+            return part switch
+            {
+                EquipmentPart.Necklace => hero.NecklaceMainStats.Contains(normalizedMainStat),
+                EquipmentPart.Ring => hero.RingMainStats.Contains(normalizedMainStat),
+                EquipmentPart.Boots => hero.BootsMainStats.Contains(normalizedMainStat),
+                _ => true,
+            };
+        }
+
+        return !mainStatInformative || hero.UsefulStats.Contains(info.MainStatName);
     }
 }

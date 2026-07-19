@@ -38,13 +38,14 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        InitializeTabsAndSettings();
         DoubleBuffered = true;
     }
 
     private void MainForm_Load(object sender, EventArgs e)
     {
         RefreshDeviceList();
-        RegisterSelectedRecognitionHotKey(showSuccess: false);
+        ApplyRecognitionAvailability(showHotKeySuccess: false);
     }
 
     private void RefreshDeviceList()
@@ -201,12 +202,17 @@ public partial class MainForm : Form
 
     private void comboRecognitionHotKey_SelectedIndexChanged(object sender, AntdUI.IntEventArgs e)
     {
-        if (IsHandleCreated && !_isUpdatingHotKeySelection)
+        if (_isLoadingSettings || _isUpdatingHotKeySelection)
+            return;
+        SaveSettingsFromControls();
+        if (IsHandleCreated && IsEquipmentTabActive)
             RegisterSelectedRecognitionHotKey(showSuccess: true);
     }
 
     private void RegisterSelectedRecognitionHotKey(bool showSuccess)
     {
+        if (!IsEquipmentTabActive)
+            return;
         // AntdUI.Select 的选中项通过 SelectedValue 读取（Items 里存的就是 "F1"~"F12" 字符串）。
         var selectedText = comboRecognitionHotKey.SelectedValue as string ?? comboRecognitionHotKey.Text;
         if (!Enum.TryParse<Keys>(selectedText, out var selectedKey))
@@ -234,12 +240,17 @@ public partial class MainForm : Form
             : _registeredRecognitionHotKey.ToString();
         _isUpdatingHotKeySelection = false;
 
+        SaveSettingsFromControls();
+
         UpdateStatus($"无法注册快捷键 {selectedKey}，可能已被其他程序占用");
     }
 
     private void chkContinuousRecognition_CheckedChanged(object sender, AntdUI.BoolEventArgs e)
     {
-        continuousRecognitionTimer.Enabled = chkContinuousRecognition.Checked;
+        if (_isLoadingSettings)
+            return;
+        continuousRecognitionTimer.Enabled = IsEquipmentTabActive && chkContinuousRecognition.Checked;
+        SaveSettingsFromControls();
         UpdateStatus(chkContinuousRecognition.Checked
             ? $"持续识别已开启，最短间隔 {numRecognitionInterval.Value:0.0} 秒"
             : "持续识别已关闭");
@@ -248,6 +259,7 @@ public partial class MainForm : Form
     private void numRecognitionInterval_ValueChanged(object sender, AntdUI.DecimalEventArgs e)
     {
         continuousRecognitionTimer.Interval = Math.Max(100, (int)(numRecognitionInterval.Value * 1000));
+        SaveSettingsFromControls();
     }
 
     private async void continuousRecognitionTimer_Tick(object sender, EventArgs e)
@@ -258,7 +270,7 @@ public partial class MainForm : Form
 
     protected override void WndProc(ref Message m)
     {
-        if (m.Msg == WmHotKey && m.WParam.ToInt32() == RecognitionHotKeyId)
+        if (IsEquipmentTabActive && m.Msg == WmHotKey && m.WParam.ToInt32() == RecognitionHotKeyId)
             _ = CaptureAndRecognizeAsync();
 
         base.WndProc(ref m);
@@ -400,6 +412,7 @@ public partial class MainForm : Form
 
     private void numThreshold_ValueChanged(object sender, AntdUI.DecimalEventArgs e)
     {
+        SaveSettingsFromControls();
         UpdateAdvice();
     }
 

@@ -1,115 +1,221 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace TiezhuToolbox.Modules.Recommend;
 
 /// <summary>
-/// 官方战绩角色数据库（传说分段），数据来自 tools/HeroDataCollector 生成的 Assets/HeroData/heroes.json。
+/// 英雄数据库。数据优先级：用户覆盖配置 &gt; 用户更新的官方数据 &gt; 程序内置官方数据。
 /// </summary>
-public class HeroDatabase
+public sealed class HeroDatabase
 {
-    private static readonly Lazy<HeroDatabase> _instance = new(() => new HeroDatabase());
+    private static readonly Lazy<HeroDatabase> LazyInstance = new(() => new HeroDatabase());
+    private readonly object _sync = new();
+    private HeroDataDocument _baseDocument = new();
+    private HeroOverrideDocument _overrides = new();
 
-    public static HeroDatabase Instance => _instance.Value;
+    public static HeroDatabase Instance => LazyInstance.Value;
+    public event EventHandler? Changed;
 
-    /// <summary>是否成功加载 heroes.json。</summary>
-    public bool IsLoaded { get; }
-
-    /// <summary>数据对应的游戏赛季，如 pvp_rta_ss20。</summary>
+    public bool IsLoaded { get; private set; }
     public string SeasonCode { get; private set; } = string.Empty;
-
-    /// <summary>数据生成时间（采集工具写入）。</summary>
     public string UpdatedAt { get; private set; } = string.Empty;
-
-    /// <summary>全部角色（传说分段）。</summary>
+    public bool UsesUserData { get; private set; }
     public IReadOnlyList<HeroInfo> Heroes { get; private set; } = Array.Empty<HeroInfo>();
-
-    /// <summary>套装代码 → 简体套装名（如 set_speed → 速度套装）。</summary>
+    public IReadOnlyList<HeroProfile> Profiles { get; private set; } = Array.Empty<HeroProfile>();
     public IReadOnlyDictionary<string, string> SetNames { get; private set; }
         = new Dictionary<string, string>();
-
-    /// <summary>简体套装名 → 套装代码（如 速度套装 → set_speed），用于匹配 OCR 的 SetName。</summary>
     public IReadOnlyDictionary<string, string> SetCodesByName { get; private set; }
         = new Dictionary<string, string>();
 
-    private HeroDatabase()
+    private HeroDatabase() => Reload(raiseEvent: false);
+
+    public HeroDataDocument GetBaseDocumentSnapshot()
     {
-        try
+        lock (_sync)
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HeroData", "heroes.json");
-            if (!File.Exists(path))
-                return;
-
-            var doc = JsonSerializer.Deserialize<HeroDataDocument>(File.ReadAllText(path));
-            if (doc?.Heroes == null)
-                return;
-
-            SeasonCode = doc.SeasonCode ?? string.Empty;
-            UpdatedAt = doc.UpdatedAt ?? string.Empty;
-            Heroes = doc.Heroes;
-            var names = (doc.Sets ?? new List<HeroSetInfo>())
-                .Where(s => !string.IsNullOrEmpty(s.Code) && !string.IsNullOrEmpty(s.Name))
-                .ToDictionary(s => s.Code!, s => s.Name!);
-            SetNames = names;
-            SetCodesByName = names.ToDictionary(kv => kv.Value, kv => kv.Key);
-            IsLoaded = true;
-        }
-        catch
-        {
-            // 数据文件损坏时视为未加载，不影响识别主流程
+            var json = JsonSerializer.Serialize(_baseDocument, AppPaths.JsonOptions);
+            return JsonSerializer.Deserialize<HeroDataDocument>(json, AppPaths.JsonOptions) ?? new HeroDataDocument();
         }
     }
 
-    /// <summary>按简体套装名（如“速度套装”）查套装代码，查不到返回 null。</summary>
+    public HeroProfile? GetProfile(string code)
+    {
+        lock (_sync)
+            return Profiles.FirstOrDefault(h => h.Code == code)?.Clone();
+    }
+
     public string? FindSetCode(string setName)
         => !string.IsNullOrEmpty(setName) && SetCodesByName.TryGetValue(setName, out var code) ? code : null;
 
-    /// <summary>角色头像文件路径（不存在时返回 null）。</summary>
+    public void SaveOverride(HeroProfile profile)
+    {
+        lock (_sync)
+        {
+            if (!Profiles.Any(h => h.Code == profile.Code))
+                return;
+
+            _overrides.Heroes[profile.Code] = new HeroProfileOverride
+            {
+                UsefulStats = Normalize(profile.UsefulStats, EquipmentRules.UsefulStats),
+                AllowedSets = Normalize(profile.AllowedSets, SetNames.Keys),
+                NecklaceMainStats = Normalize(profile.NecklaceMainStats, EquipmentRules.NecklaceMainStats),
+                RingMainStats = Normalize(profile.RingMainStats, EquipmentRules.RingMainStats),
+                BootsMainStats = Normalize(profile.BootsMainStats, EquipmentRules.BootsMainStats),
+            };
+            AppPaths.WriteJsonAtomic(AppPaths.HeroOverridesPath, _overrides);
+            RebuildProfiles();
+        }
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ResetOverride(string heroCode)
+    {
+        var changed = false;
+        lock (_sync)
+        {
+            changed = _overrides.Heroes.Remove(heroCode);
+            if (changed)
+            {
+                AppPaths.WriteJsonAtomic(AppPaths.HeroOverridesPath, _overrides);
+                RebuildProfiles();
+            }
+        }
+        if (changed)
+            Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ResetAllOverrides()
+    {
+        lock (_sync)
+        {
+            _overrides = new HeroOverrideDocument();
+            AppPaths.WriteJsonAtomic(AppPaths.HeroOverridesPath, _overrides);
+            RebuildProfiles();
+        }
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void Reload() => Reload(raiseEvent: true);
+
+    private void Reload(bool raiseEvent)
+    {
+        lock (_sync)
+        {
+            IsLoaded = false;
+            var bundledPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HeroData", "heroes.json");
+            var userDocument = LoadDocument(AppPaths.UserHeroDataPath);
+            UsesUserData = userDocument?.Heroes.Count > 0;
+            _baseDocument = UsesUserData ? userDocument! : LoadDocument(bundledPath) ?? new HeroDataDocument();
+            if (_baseDocument.Heroes.Count == 0)
+                return;
+
+            _overrides = LoadOverrides();
+            SeasonCode = _baseDocument.SeasonCode;
+            UpdatedAt = _baseDocument.UpdatedAt;
+            Heroes = _baseDocument.Heroes;
+            SetNames = _baseDocument.Sets
+                .Where(s => !string.IsNullOrWhiteSpace(s.Code) && !string.IsNullOrWhiteSpace(s.Name))
+                .GroupBy(s => s.Code)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+            SetCodesByName = SetNames.ToDictionary(kv => kv.Value, kv => kv.Key);
+            RebuildProfiles();
+            IsLoaded = true;
+        }
+
+        if (raiseEvent)
+            Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RebuildProfiles()
+    {
+        Profiles = _baseDocument.Heroes
+            .Where(h => !string.IsNullOrWhiteSpace(h.Code))
+            .Select(CreateProfile)
+            .OrderBy(h => h.Name, StringComparer.CurrentCulture)
+            .ToList();
+    }
+
+    private HeroProfile CreateProfile(HeroInfo hero)
+    {
+        var useful = Normalize(hero.UsefulStats, EquipmentRules.UsefulStats);
+        var profile = new HeroProfile
+        {
+            Code = hero.Code,
+            Name = string.IsNullOrWhiteSpace(hero.Name) ? hero.Code : hero.Name,
+            Attribute = hero.Attribute,
+            Job = hero.Job,
+            Grade = hero.Grade,
+            HasLegendData = hero.HasLegendData || hero.UsefulStats.Count > 0 || hero.SetCombos.Count > 0,
+            SetCombos = hero.SetCombos,
+            UsefulStats = useful,
+            AllowedSets = hero.SetCombos.SelectMany(c => c.Sets).Where(SetNames.ContainsKey)
+                .Distinct(StringComparer.Ordinal).OrderBy(s => s).ToList(),
+            NecklaceMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.NecklaceMainStats),
+            RingMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.RingMainStats),
+            BootsMainStats = EquipmentRules.DeriveMainStats(useful, EquipmentRules.BootsMainStats),
+        };
+
+        if (!_overrides.Heroes.TryGetValue(hero.Code, out var custom))
+            return profile;
+
+        profile.UsefulStats = Normalize(custom.UsefulStats, EquipmentRules.UsefulStats);
+        profile.AllowedSets = Normalize(custom.AllowedSets, SetNames.Keys);
+        profile.NecklaceMainStats = Normalize(custom.NecklaceMainStats, EquipmentRules.NecklaceMainStats);
+        profile.RingMainStats = Normalize(custom.RingMainStats, EquipmentRules.RingMainStats);
+        profile.BootsMainStats = Normalize(custom.BootsMainStats, EquipmentRules.BootsMainStats);
+        return profile;
+    }
+
+    private static List<string> Normalize(IEnumerable<string>? values, IEnumerable<string> allowed)
+    {
+        var allowedSet = allowed.ToHashSet(StringComparer.Ordinal);
+        return (values ?? Array.Empty<string>()).Where(allowedSet.Contains)
+            .Distinct(StringComparer.Ordinal).ToList();
+    }
+
+    private static HeroDataDocument? LoadDocument(string path)
+    {
+        if (!File.Exists(path))
+            return null;
+        try
+        {
+            return JsonSerializer.Deserialize<HeroDataDocument>(File.ReadAllText(path), AppPaths.JsonOptions);
+        }
+        catch
+        {
+            if (string.Equals(path, AppPaths.UserHeroDataPath, StringComparison.OrdinalIgnoreCase))
+                AppPaths.PreserveBrokenFile(path);
+            return null;
+        }
+    }
+
+    private static HeroOverrideDocument LoadOverrides()
+    {
+        if (!File.Exists(AppPaths.HeroOverridesPath))
+            return new HeroOverrideDocument();
+        try
+        {
+            return JsonSerializer.Deserialize<HeroOverrideDocument>(
+                File.ReadAllText(AppPaths.HeroOverridesPath), AppPaths.JsonOptions) ?? new HeroOverrideDocument();
+        }
+        catch
+        {
+            AppPaths.PreserveBrokenFile(AppPaths.HeroOverridesPath);
+            return new HeroOverrideDocument();
+        }
+    }
+
     public static string? GetAvatarPath(string heroCode)
+        => ResolveAssetPath("heroes", heroCode + ".png");
+
+    public static string? GetSetIconPath(string setCode)
+        => ResolveAssetPath("sets", setCode + ".png");
+
+    private static string? ResolveAssetPath(string folder, string fileName)
     {
-        var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HeroData", "heroes", heroCode + ".png");
-        return File.Exists(path) ? path : null;
+        var userPath = Path.Combine(AppPaths.UserHeroDataDirectory, folder, fileName);
+        if (File.Exists(userPath))
+            return userPath;
+        var bundledPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HeroData", folder, fileName);
+        return File.Exists(bundledPath) ? bundledPath : null;
     }
-
-    private class HeroDataDocument
-    {
-        [JsonPropertyName("seasonCode")] public string? SeasonCode { get; set; }
-        [JsonPropertyName("gradeCode")] public string? GradeCode { get; set; }
-        [JsonPropertyName("updatedAt")] public string? UpdatedAt { get; set; }
-        [JsonPropertyName("sets")] public List<HeroSetInfo>? Sets { get; set; }
-        [JsonPropertyName("heroes")] public List<HeroInfo>? Heroes { get; set; }
-    }
-}
-
-/// <summary>套装基础信息。</summary>
-public class HeroSetInfo
-{
-    [JsonPropertyName("code")] public string? Code { get; set; }
-    [JsonPropertyName("name")] public string? Name { get; set; }
-}
-
-/// <summary>角色信息（传说分段统计）。</summary>
-public class HeroInfo
-{
-    [JsonPropertyName("code")] public string Code { get; set; } = string.Empty;
-
-    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
-
-    /// <summary>有用属性（简体中文，如“防御力”）。</summary>
-    [JsonPropertyName("usefulStats")] public List<string> UsefulStats { get; set; } = new();
-
-    /// <summary>主流套装搭配（已过滤低使用率）。</summary>
-    [JsonPropertyName("setCombos")] public List<HeroSetCombo> SetCombos { get; set; } = new();
-}
-
-/// <summary>一套主流套装搭配。</summary>
-public class HeroSetCombo
-{
-    [JsonPropertyName("sets")] public List<string> Sets { get; set; } = new();
-
-    /// <summary>使用率（%）。</summary>
-    [JsonPropertyName("rate")] public double Rate { get; set; }
-
-    /// <summary>胜率（%）。</summary>
-    [JsonPropertyName("winRate")] public double WinRate { get; set; }
 }

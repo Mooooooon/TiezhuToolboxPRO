@@ -8,9 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="assets\TSCharacters.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <Compile Include="..\..\src\TiezhuToolbox\Modules\Recommend\HeroDataModels.cs" Link="Shared\HeroDataModels.cs" />
+    <Compile Include="..\..\src\TiezhuToolbox\Modules\Recommend\HeroDataUpdateService.cs" Link="Shared\HeroDataUpdateService.cs" />
   </ItemGroup>
 
 </Project>
