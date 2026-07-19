@@ -15,15 +15,7 @@ public sealed class HeroDataUpdateService : IDisposable
     private const string MetadataUrl = "https://static-pubcomm.onstove.com/gameRecord/epic7/epic7_hero.json";
     private const string AvatarBase = "https://static-pubcomm.onstove.com/event/live/epic7/guide/images/hero";
     private const string SetIconBase = "https://static-pubcomm.onstove.com/event/live/epic7/guide/wearingStatus/images/sets";
-    private const double UsefulStatLowBucketThreshold = 0.15;
-    private const int UsefulStatPeakBucket = 4;
     private const double MainstreamSetRateThreshold = 10.0;
-
-    private static readonly IReadOnlyDictionary<string, string> StatNames = new Dictionary<string, string>
-    {
-        ["att"] = "攻击力", ["def"] = "防御力", ["max_hp"] = "生命值", ["speed"] = "速度",
-        ["cri"] = "暴击率", ["cri_dmg"] = "暴击伤害", ["acc"] = "效果命中", ["res"] = "效果抗性",
-    };
 
     public static IReadOnlyDictionary<string, string> SetNames { get; } = new Dictionary<string, string>
     {
@@ -221,20 +213,16 @@ public sealed class HeroDataUpdateService : IDisposable
 
         if (body.TryGetProperty("abillity", out var ability) && ability.ValueKind == JsonValueKind.Object)
         {
+            var histograms = new Dictionary<string, double[]>(StringComparer.Ordinal);
             foreach (var property in ability.EnumerateObject())
             {
-                if (!StatNames.TryGetValue(property.Name, out var statName) || property.Value.ValueKind != JsonValueKind.String)
+                if (property.Value.ValueKind != JsonValueKind.String)
                     continue;
-                var buckets = (property.Value.GetString() ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries)
+                histograms[property.Name] = (property.Value.GetString() ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(s => double.TryParse(s, out var value) ? value : 0).ToArray();
-                var total = buckets.Sum();
-                if (total <= 0)
-                    continue;
-                var lowRatio = (buckets.ElementAtOrDefault(0) + buckets.ElementAtOrDefault(1)) / total;
-                var peak = Array.IndexOf(buckets, buckets.Max());
-                if (lowRatio < UsefulStatLowBucketThreshold || peak >= UsefulStatPeakBucket)
-                    hero.UsefulStats.Add(statName);
             }
+            hero.UsefulStats.AddRange(HeroUsefulStatAnalyzer.InferUsefulStats(histograms));
         }
 
         if (body.TryGetProperty("equip", out var equip) && equip.ValueKind == JsonValueKind.Array)

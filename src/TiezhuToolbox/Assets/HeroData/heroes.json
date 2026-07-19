@@ -1,7 +1,7 @@
 {
   "seasonCode": "pvp_rta_ss20",
   "gradeCode": "legend",
-  "updatedAt": "2026-07-19 21:48:18",
+  "updatedAt": "2026-07-19 22:49:33",
   "sets": [
     {
       "code": "set_acc",
@@ -414,7 +414,12 @@
       "job": "ranger",
       "grade": 4,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -587,7 +592,9 @@
       "hasLegendData": true,
       "usefulStats": [
         "攻击力",
-        "暴击率"
+        "速度",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -865,7 +872,11 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -951,7 +962,12 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
       "setCombos": []
     },
     {
@@ -1040,7 +1056,8 @@
       "usefulStats": [
         "防御力",
         "生命值",
-        "速度"
+        "速度",
+        "效果抗性"
       ],
       "setCombos": [
         {
@@ -1123,7 +1140,10 @@
       "job": "mage",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "速度"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1252,7 +1272,11 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "效果命中"
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中",
+        "效果抗性"
       ],
       "setCombos": []
     },
@@ -1263,7 +1287,12 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1327,7 +1356,12 @@
       "job": "warrior",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": []
     },
     {
@@ -1397,7 +1431,10 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1442,7 +1479,12 @@
       "job": "assassin",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1469,7 +1511,12 @@
       "job": "knight",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1562,7 +1609,8 @@
       "usefulStats": [
         "攻击力",
         "速度",
-        "暴击率"
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -1616,7 +1664,11 @@
       "job": "mage",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1704,7 +1756,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
-        "生命值"
+        "生命值",
+        "速度"
       ],
       "setCombos": [
         {
@@ -1783,7 +1836,12 @@
       "job": "mage",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -1959,6 +2017,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "生命值"
       ],
       "setCombos": [
@@ -2016,7 +2075,8 @@
         "攻击力",
         "速度",
         "暴击率",
-        "暴击伤害"
+        "暴击伤害",
+        "效果命中"
       ],
       "setCombos": [
         {
@@ -2045,7 +2105,10 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "生命值"
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -2099,6 +2162,8 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
         "效果抗性"
       ],
       "setCombos": []
@@ -2153,7 +2218,12 @@
       "job": "ranger",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
       "setCombos": []
     },
     {
@@ -2198,7 +2268,11 @@
       "job": "warrior",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -2244,7 +2318,12 @@
       "job": "warrior",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -2288,6 +2367,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
         "效果命中"
       ],
       "setCombos": [
@@ -2315,7 +2397,10 @@
       "job": "assassin",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "生命值",
+        "速度"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -2432,6 +2517,7 @@
       "usefulStats": [
         "防御力",
         "生命值",
+        "暴击率",
         "效果命中"
       ],
       "setCombos": [
@@ -2531,7 +2617,9 @@
       "hasLegendData": true,
       "usefulStats": [
         "攻击力",
-        "暴击率"
+        "速度",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": []
     },
@@ -2614,6 +2702,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "速度"
       ],
       "setCombos": [
@@ -2675,7 +2764,10 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -2712,7 +2804,10 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "速度"
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
       ],
       "setCombos": [
         {
@@ -2939,7 +3034,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "生命值",
-        "暴击率"
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -2959,7 +3055,12 @@
       "job": "ranger",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -2986,7 +3087,11 @@
       "job": "warrior",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "生命值",
+        "速度"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -3014,7 +3119,8 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "攻击力"
+        "攻击力",
+        "速度"
       ],
       "setCombos": [
         {
@@ -3056,7 +3162,10 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "速度",
+        "效果抗性"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -3155,7 +3264,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
-        "生命值"
+        "生命值",
+        "速度"
       ],
       "setCombos": [
         {
@@ -3202,7 +3312,10 @@
       "job": "ranger",
       "grade": 4,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "速度",
+        "效果命中"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -3234,6 +3347,8 @@
       "usefulStats": [
         "攻击力",
         "速度",
+        "暴击率",
+        "暴击伤害",
         "效果命中"
       ],
       "setCombos": []
@@ -3392,6 +3507,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "生命值"
       ],
       "setCombos": [
@@ -3461,7 +3577,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "生命值",
-        "速度"
+        "速度",
+        "效果命中"
       ],
       "setCombos": [
         {
@@ -3498,7 +3615,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
-        "生命值"
+        "生命值",
+        "暴击率"
       ],
       "setCombos": [
         {
@@ -3556,7 +3674,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "生命值",
-        "暴击率"
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -3674,6 +3793,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "生命值",
         "效果抗性"
       ],
@@ -3698,6 +3818,7 @@
       "hasLegendData": true,
       "usefulStats": [
         "速度",
+        "暴击率",
         "效果命中"
       ],
       "setCombos": [
@@ -4021,6 +4142,8 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
+        "速度",
         "效果命中"
       ],
       "setCombos": [
@@ -4041,7 +4164,12 @@
       "job": "manauser",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果抗性"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -4204,6 +4332,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "生命值",
         "速度"
       ],
       "setCombos": [
@@ -4306,6 +4435,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "速度",
         "暴击率",
         "暴击伤害"
@@ -4383,6 +4513,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "生命值",
+        "速度",
+        "暴击伤害",
         "效果命中"
       ],
       "setCombos": [
@@ -4420,6 +4553,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
         "暴击率",
         "暴击伤害"
       ],
@@ -4627,6 +4763,8 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
         "速度",
         "效果命中"
       ],
@@ -4649,7 +4787,10 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "暴击率"
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -4685,7 +4826,13 @@
       "job": "warrior",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -4712,7 +4859,12 @@
       "job": "mage",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "攻击力",
+        "速度",
+        "暴击率",
+        "暴击伤害"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -4771,6 +4923,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "效果命中"
       ],
       "setCombos": [
@@ -4852,7 +5005,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
-        "生命值"
+        "生命值",
+        "速度"
       ],
       "setCombos": [
         {
@@ -4891,6 +5045,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
         "暴击率",
         "暴击伤害"
       ],
@@ -4929,6 +5086,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "速度",
         "效果命中"
       ],
@@ -4957,7 +5115,12 @@
       "job": "mage",
       "grade": 5,
       "hasLegendData": true,
-      "usefulStats": [],
+      "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
+        "效果命中"
+      ],
       "setCombos": [
         {
           "sets": [
@@ -5015,6 +5178,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "生命值",
         "效果抗性"
       ],
@@ -5137,6 +5301,8 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
+        "暴击伤害",
         "效果命中"
       ],
       "setCombos": [
@@ -5167,7 +5333,10 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "暴击率"
+        "攻击力",
+        "生命值",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -5251,6 +5420,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
+        "速度",
         "效果命中"
       ],
       "setCombos": [
@@ -5897,6 +6069,8 @@
       "grade": 3,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
         "效果抗性"
       ],
       "setCombos": []
@@ -6620,6 +6794,7 @@
       "grade": 3,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "效果抗性"
       ],
       "setCombos": [
@@ -6680,6 +6855,7 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
+        "生命值",
         "速度"
       ],
       "setCombos": [
@@ -6764,6 +6940,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "速度"
       ],
       "setCombos": []
@@ -6776,6 +6953,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "速度",
         "效果命中"
       ],
@@ -6920,7 +7098,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "攻击力",
-        "生命值"
+        "生命值",
+        "暴击率"
       ],
       "setCombos": [
         {
@@ -6989,8 +7168,11 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
+        "生命值",
         "速度",
-        "效果命中"
+        "效果命中",
+        "效果抗性"
       ],
       "setCombos": [
         {
@@ -7044,6 +7226,7 @@
       "hasLegendData": true,
       "usefulStats": [
         "攻击力",
+        "速度",
         "暴击伤害"
       ],
       "setCombos": [
@@ -7065,6 +7248,7 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
         "暴击伤害"
       ],
       "setCombos": [
@@ -7156,7 +7340,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
-        "暴击率"
+        "攻击力",
+        "暴击率",
+        "暴击伤害"
       ],
       "setCombos": [
         {
@@ -7279,7 +7465,8 @@
       "hasLegendData": true,
       "usefulStats": [
         "防御力",
-        "生命值"
+        "生命值",
+        "速度"
       ],
       "setCombos": [
         {
@@ -7419,6 +7606,7 @@
       "grade": 4,
       "hasLegendData": true,
       "usefulStats": [
+        "防御力",
         "速度"
       ],
       "setCombos": [
@@ -7477,6 +7665,9 @@
       "grade": 5,
       "hasLegendData": true,
       "usefulStats": [
+        "攻击力",
+        "防御力",
+        "生命值",
         "效果抗性"
       ],
       "setCombos": [
@@ -7506,7 +7697,9 @@
       "grade": 4,
       "hasLegendData": true,
       "usefulStats": [
-        "速度"
+        "生命值",
+        "速度",
+        "效果抗性"
       ],
       "setCombos": [
         {

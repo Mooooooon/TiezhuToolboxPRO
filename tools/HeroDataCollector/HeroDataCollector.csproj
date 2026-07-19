@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="..\..\src\TiezhuToolbox\Modules\Recommend\HeroDataModels.cs" Link="Shared\HeroDataModels.cs" />
     <Compile Include="..\..\src\TiezhuToolbox\Modules\Recommend\HeroDataUpdateService.cs" Link="Shared\HeroDataUpdateService.cs" />
+    <Compile Include="..\..\src\TiezhuToolbox\Modules\Recommend\HeroUsefulStatAnalyzer.cs" Link="Shared\HeroUsefulStatAnalyzer.cs" />
   </ItemGroup>
 
 </Project>

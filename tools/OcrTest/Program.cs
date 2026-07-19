@@ -356,6 +356,41 @@ if (args.Contains("--synthetic"))
     AssertCustom("戒指拒绝固定生命值", CustomGear("传说戒指", "生命值", "500"), false);
     Console.WriteLine();
 
+    Console.WriteLine("===== 官方属性直方图推导 =====");
+    var c1034Histograms = new Dictionary<string, double[]>
+    {
+        ["att"] = [0, 2250, 0, 0, 0, 175, 2358, 180, 18, 1],
+        ["def"] = [2250, 2716, 15, 1, 0, 0, 0, 0, 0, 0],
+        ["max_hp"] = [2982, 1997, 3, 0, 0, 0, 0, 0, 0, 0],
+        ["speed"] = [2250, 0, 2, 3, 24, 4, 46, 214, 1177, 1262],
+        ["cri"] = [2250, 0, 0, 0, 0, 0, 0, 5, 209, 2518],
+        ["cri_dmg"] = [2250, 0, 0, 0, 0, 1, 1413, 868, 349, 101],
+        ["acc"] = [352, 15, 0, 0, 0, 0, 0, 0, 0, 0],
+        ["res"] = [342, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    };
+    var unavailableSamples = HeroUsefulStatAnalyzer.EstimateUnavailableSamples(c1034Histograms);
+    var c1034UsefulStats = HeroUsefulStatAnalyzer.InferUsefulStats(c1034Histograms);
+    Console.WriteLine($"  c1034 不可见样本={unavailableSamples:0}，有效属性={string.Join("、", c1034UsefulStats)}");
+    if (unavailableSamples != 2250 ||
+        !c1034UsefulStats.SequenceEqual(new[] { "攻击力", "速度", "暴击率", "暴击伤害" }))
+        throw new InvalidOperationException("c1034 官方属性直方图推导失败");
+    var c1126Histograms = new Dictionary<string, double[]>
+    {
+        ["att"] = [65, 8, 166, 2, 1, 0, 0, 0, 0, 0],
+        ["def"] = [65, 5, 35, 29, 35, 73, 0, 0, 0, 0],
+        ["max_hp"] = [65, 1, 28, 86, 44, 16, 2, 0, 0, 0],
+        ["speed"] = [0, 65, 0, 0, 0, 0, 0, 0, 0, 177],
+        ["cri"] = [222, 10, 9, 0, 0, 0, 0, 1, 0, 0],
+        ["cri_dmg"] = [223, 4, 0, 15, 0, 0, 0, 0, 0, 0],
+        ["acc"] = [0, 0, 0, 0, 0, 15, 10, 35, 36, 81],
+        ["res"] = [65, 10, 0, 0, 0, 0, 0, 0, 0, 0],
+    };
+    var c1126UsefulStats = HeroUsefulStatAnalyzer.InferUsefulStats(c1126Histograms);
+    Console.WriteLine($"  c1126 有效属性={string.Join("、", c1126UsefulStats)}（不得误加攻击力）");
+    if (!c1126UsefulStats.SequenceEqual(new[] { "防御力", "速度", "效果命中" }))
+        throw new InvalidOperationException("c1126 官方属性直方图推导过宽");
+    Console.WriteLine();
+
     Console.WriteLine("===== 默认主属性推导规则 =====");
     void AssertDerived(string title, IReadOnlyCollection<string> actual, params string[] expected)
     {
