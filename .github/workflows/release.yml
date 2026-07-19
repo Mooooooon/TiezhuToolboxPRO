@@ -34,7 +34,7 @@ jobs:
       - name: 打包发布文件
         shell: pwsh
         run: |
-          $archive = "铁柱工具箱PRO-${{ github.ref_name }}-win-x64.zip"
+          $archive = "TiezhuToolboxPRO-${{ github.ref_name }}-win-x64.zip"
           Compress-Archive -Path "publish\*" -DestinationPath $archive
           "RELEASE_ARCHIVE=$archive" >> $env:GITHUB_ENV
 
