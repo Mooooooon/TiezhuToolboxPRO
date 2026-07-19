@@ -1,9 +1,13 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace TiezhuToolbox;
 
 public partial class MainForm : Form
 {
+    private const int WmHotKey = 0x0312;
+    private const int RecognitionHotKeyId = 0x547A;
+
     private static readonly Color AccentColor = Color.FromArgb(26, 115, 232);
     private static readonly Color TextDarkColor = Color.FromArgb(32, 33, 36);
     private static readonly Font HeroNameFont = new("Microsoft YaHei UI", 9.75F, FontStyle.Bold);
@@ -18,6 +22,16 @@ public partial class MainForm : Form
 
     private string? _lastScreenshotPath;
     private Modules.Ocr.EquipmentInfo? _lastInfo;
+    private Modules.Ocr.OcrEngine? _ocrEngine;
+    private Keys _registeredRecognitionHotKey = Keys.None;
+    private bool _isRecognizing;
+    private bool _isUpdatingHotKeySelection;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     public MainForm()
     {
@@ -28,6 +42,7 @@ public partial class MainForm : Form
     private void MainForm_Load(object sender, EventArgs e)
     {
         RefreshDeviceList();
+        RegisterSelectedRecognitionHotKey(showSuccess: false);
     }
 
     private void RefreshDeviceList()
@@ -100,31 +115,65 @@ public partial class MainForm : Form
     /// </summary>
     private async void btnCaptureRecognize_Click(object sender, EventArgs e)
     {
+        await CaptureAndRecognizeAsync();
+    }
+
+    private async Task CaptureAndRecognizeAsync()
+    {
+        if (_isRecognizing)
+            return;
+
         if (comboDevices.SelectedItem is not AdbDeviceInfo device)
         {
+            if (chkContinuousRecognition.Checked)
+                chkContinuousRecognition.Checked = false;
+
             UpdateStatus("请先选择一个设备");
             return;
         }
 
-        btnCaptureRecognize.Enabled = false;
+        _isRecognizing = true;
+        var isContinuous = chkContinuousRecognition.Checked;
+        if (!isContinuous)
+            btnCaptureRecognize.Enabled = false;
+
+        Bitmap? capturedBitmap = null;
         try
         {
-            UpdateStatus("正在截图...");
-            var bitmap = await Task.Run(() => AdbHelper.ScreenshotPng(device.Serial));
+            if (!isContinuous)
+                UpdateStatus("正在截图...");
 
-            pictureBox.Image?.Dispose();
-            pictureBox.Image = bitmap;
+            capturedBitmap = await Task.Run(() => AdbHelper.ScreenshotPng(device.Serial));
 
             var baseName = "adb_" + string.Join("_", device.Serial.Split(Path.GetInvalidFileNameChars()));
-            _lastScreenshotPath = ScreenshotHelper.SaveBitmap(bitmap, baseName);
+            _lastScreenshotPath = ScreenshotHelper.SaveBitmap(capturedBitmap, baseName);
 
-            UpdateStatus("正在识别...");
+            if (!isContinuous)
+                UpdateStatus("正在识别...");
+
             var templateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Templates");
-            using var engine = new Modules.Ocr.OcrEngine(templateDir);
-            var info = await engine.RecognizeAsync(_lastScreenshotPath);
+            _ocrEngine ??= new Modules.Ocr.OcrEngine(templateDir);
+            var info = await _ocrEngine.RecognizeAsync(_lastScreenshotPath);
 
-            ShowEquipmentInfo(info);
-            UpdateStatus($"识别完成：等级 {info.Level}，民间分数 {info.Score:0.##}");
+            // 强化动画期间面板会短暂消失或只显示部分字段，持续模式下保留上一份有效结果。
+            if (isContinuous && !IsValidEquipmentResult(info))
+                return;
+
+            var resultChanged = !HasSameEquipmentResult(_lastInfo, info);
+
+            if (resultChanged)
+            {
+                pictureBox.Image?.Dispose();
+                pictureBox.Image = capturedBitmap;
+                capturedBitmap = null;
+
+                ShowEquipmentInfo(info);
+                UpdateStatus($"识别完成：等级 {info.Level}，民间分数 {info.Score:0.##}");
+            }
+            else if (!isContinuous)
+            {
+                UpdateStatus($"识别完成：结果未变化，民间分数 {info.Score:0.##}");
+            }
 
             WriteDebugLog($"识别成功\n截图路径: {_lastScreenshotPath}\n原始文本:\n{info.RawText}");
         }
@@ -135,8 +184,85 @@ public partial class MainForm : Form
         }
         finally
         {
-            btnCaptureRecognize.Enabled = true;
+            capturedBitmap?.Dispose();
+            _isRecognizing = false;
+            if (!isContinuous)
+                btnCaptureRecognize.Enabled = true;
         }
+    }
+
+    private void comboRecognitionHotKey_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (IsHandleCreated && !_isUpdatingHotKeySelection)
+            RegisterSelectedRecognitionHotKey(showSuccess: true);
+    }
+
+    private void RegisterSelectedRecognitionHotKey(bool showSuccess)
+    {
+        if (!Enum.TryParse<Keys>(comboRecognitionHotKey.Text, out var selectedKey))
+            return;
+
+        var previousKey = _registeredRecognitionHotKey;
+        if (previousKey != Keys.None)
+            UnregisterHotKey(Handle, RecognitionHotKeyId);
+
+        if (RegisterHotKey(Handle, RecognitionHotKeyId, 0, (uint)selectedKey))
+        {
+            _registeredRecognitionHotKey = selectedKey;
+            if (showSuccess)
+                UpdateStatus($"识别快捷键已设置为 {selectedKey}");
+            return;
+        }
+
+        _registeredRecognitionHotKey = Keys.None;
+        if (previousKey != Keys.None && RegisterHotKey(Handle, RecognitionHotKeyId, 0, (uint)previousKey))
+            _registeredRecognitionHotKey = previousKey;
+
+        _isUpdatingHotKeySelection = true;
+        comboRecognitionHotKey.SelectedItem = _registeredRecognitionHotKey == Keys.None
+            ? "F2"
+            : _registeredRecognitionHotKey.ToString();
+        _isUpdatingHotKeySelection = false;
+
+        UpdateStatus($"无法注册快捷键 {selectedKey}，可能已被其他程序占用");
+    }
+
+    private void chkContinuousRecognition_CheckedChanged(object sender, EventArgs e)
+    {
+        continuousRecognitionTimer.Enabled = chkContinuousRecognition.Checked;
+        UpdateStatus(chkContinuousRecognition.Checked
+            ? $"持续识别已开启，最短间隔 {numRecognitionInterval.Value:0.0} 秒"
+            : "持续识别已关闭");
+    }
+
+    private void numRecognitionInterval_ValueChanged(object sender, EventArgs e)
+    {
+        continuousRecognitionTimer.Interval = Math.Max(100, (int)(numRecognitionInterval.Value * 1000));
+    }
+
+    private async void continuousRecognitionTimer_Tick(object sender, EventArgs e)
+    {
+        if (!_isRecognizing)
+            await CaptureAndRecognizeAsync();
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == WmHotKey && m.WParam.ToInt32() == RecognitionHotKeyId)
+            _ = CaptureAndRecognizeAsync();
+
+        base.WndProc(ref m);
+    }
+
+    protected override void OnHandleDestroyed(EventArgs e)
+    {
+        if (_registeredRecognitionHotKey != Keys.None)
+        {
+            UnregisterHotKey(Handle, RecognitionHotKeyId);
+            _registeredRecognitionHotKey = Keys.None;
+        }
+
+        base.OnHandleDestroyed(e);
     }
 
     private void btnOpenFolder_Click(object sender, EventArgs e)
@@ -191,6 +317,52 @@ public partial class MainForm : Form
 
         UpdateAdvice();
         ShowHeroRecommendations(info);
+    }
+
+    /// <summary>比较会影响界面展示与推荐结果的装备字段，忽略每轮都可能不同的 OCR 调试文本。</summary>
+    private static bool HasSameEquipmentResult(
+        Modules.Ocr.EquipmentInfo? previous,
+        Modules.Ocr.EquipmentInfo current)
+    {
+        if (previous == null ||
+            previous.Level != current.Level ||
+            previous.EnhanceLevel != current.EnhanceLevel ||
+            previous.Quality != current.Quality ||
+            previous.MainStatName != current.MainStatName ||
+            previous.MainStatValue != current.MainStatValue ||
+            previous.SetName != current.SetName ||
+            Math.Abs(previous.Score - current.Score) > 0.001 ||
+            previous.SubStats.Count != current.SubStats.Count)
+        {
+            return false;
+        }
+
+        return previous.SubStats.Zip(current.SubStats).All(pair =>
+            pair.First.Name == pair.Second.Name &&
+            pair.First.Value == pair.Second.Value &&
+            pair.First.EnhanceValue == pair.Second.EnhanceValue);
+    }
+
+    /// <summary>持续识别只接收结构完整的装备数据，避免强化动画中的残缺画面覆盖当前结果。</summary>
+    private static bool IsValidEquipmentResult(Modules.Ocr.EquipmentInfo info)
+    {
+        if (info.Level is <= 0 or > 100 ||
+            (info.EnhanceLevel != 0 && info.EnhanceLevel is not (3 or 6 or 9 or 12 or 15)) ||
+            string.IsNullOrWhiteSpace(info.Quality) ||
+            string.IsNullOrWhiteSpace(info.MainStatName) ||
+            string.IsNullOrWhiteSpace(info.MainStatValue) ||
+            string.IsNullOrWhiteSpace(info.SetName) ||
+            info.SubStats.Count is < 1 or > 4 ||
+            !double.IsFinite(info.Score) ||
+            info.Score <= 0 ||
+            info.RawText.Contains("[OCR 失败:", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return info.SubStats.All(sub =>
+            !string.IsNullOrWhiteSpace(sub.Name) &&
+            !string.IsNullOrWhiteSpace(sub.Value));
     }
 
     /// <summary>按当前阈值计算并展示强化建议（识别完成或阈值变更时调用）。</summary>

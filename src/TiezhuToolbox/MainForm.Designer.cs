@@ -33,6 +33,14 @@ partial class MainForm
     private NumericUpDown numLeftThreshold;
     private Label lblThRight;
     private NumericUpDown numRightThreshold;
+    private FlowLayoutPanel recognitionSettingsPanel;
+    private Label lblRecognitionHotKey;
+    private ComboBox comboRecognitionHotKey;
+    private CheckBox chkContinuousRecognition;
+    private Label lblRecognitionInterval;
+    private NumericUpDown numRecognitionInterval;
+    private Label lblIntervalUnit;
+    private System.Windows.Forms.Timer continuousRecognitionTimer;
     private Panel heroesPanel;
     private FlowLayoutPanel heroesHeader;
     private Label lblHeroesTitle;
@@ -59,6 +67,7 @@ partial class MainForm
         if (disposing)
         {
             pictureBox?.Image?.Dispose();
+            _ocrEngine?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -96,6 +105,14 @@ partial class MainForm
         this.numLeftThreshold = new NumericUpDown();
         this.lblThRight = new Label();
         this.numRightThreshold = new NumericUpDown();
+        this.recognitionSettingsPanel = new FlowLayoutPanel();
+        this.lblRecognitionHotKey = new Label();
+        this.comboRecognitionHotKey = new ComboBox();
+        this.chkContinuousRecognition = new CheckBox();
+        this.lblRecognitionInterval = new Label();
+        this.numRecognitionInterval = new NumericUpDown();
+        this.lblIntervalUnit = new Label();
+        this.continuousRecognitionTimer = new System.Windows.Forms.Timer(this.components);
         this.heroesPanel = new Panel();
         this.heroesHeader = new FlowLayoutPanel();
         this.lblHeroesTitle = new Label();
@@ -123,8 +140,10 @@ partial class MainForm
         this.shotHeader.SuspendLayout();
         this.advicePanel.SuspendLayout();
         this.thresholdPanel.SuspendLayout();
+        this.recognitionSettingsPanel.SuspendLayout();
         ((System.ComponentModel.ISupportInitialize)(this.numLeftThreshold)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRightThreshold)).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numRecognitionInterval)).BeginInit();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
         this.statusStrip.SuspendLayout();
         this.SuspendLayout();
@@ -303,10 +322,11 @@ partial class MainForm
         this.equipTable.Controls.Add(this.listSubStats, 0, 6);
         this.equipTable.Controls.Add(this.lblSet, 0, 7);
         this.equipTable.Controls.Add(this.thresholdPanel, 0, 8);
+        this.equipTable.Controls.Add(this.recognitionSettingsPanel, 0, 9);
         this.equipTable.Dock = DockStyle.Fill;
         this.equipTable.Location = new Point(18, 16);
         this.equipTable.Name = "equipTable";
-        this.equipTable.RowCount = 9;
+        this.equipTable.RowCount = 10;
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 78F));
@@ -314,6 +334,7 @@ partial class MainForm
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+        this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.RowStyles.Add(new RowStyle(SizeType.AutoSize));
         this.equipTable.Size = new Size(318, 498);
@@ -521,6 +542,101 @@ partial class MainForm
         this.numRightThreshold.Value = new decimal(new int[] { 24, 0, 0, 0 });
         this.numRightThreshold.ValueChanged += new EventHandler(this.numThreshold_ValueChanged);
         //
+        // recognitionSettingsPanel
+        //
+        this.recognitionSettingsPanel.AutoSize = true;
+        this.recognitionSettingsPanel.Controls.Add(this.lblRecognitionHotKey);
+        this.recognitionSettingsPanel.Controls.Add(this.comboRecognitionHotKey);
+        this.recognitionSettingsPanel.Controls.Add(this.chkContinuousRecognition);
+        this.recognitionSettingsPanel.Controls.Add(this.lblRecognitionInterval);
+        this.recognitionSettingsPanel.Controls.Add(this.numRecognitionInterval);
+        this.recognitionSettingsPanel.Controls.Add(this.lblIntervalUnit);
+        this.recognitionSettingsPanel.Dock = DockStyle.Fill;
+        this.recognitionSettingsPanel.Location = new Point(0, 504);
+        this.recognitionSettingsPanel.Margin = new Padding(0, 6, 0, 0);
+        this.recognitionSettingsPanel.Name = "recognitionSettingsPanel";
+        this.recognitionSettingsPanel.Size = new Size(318, 25);
+        this.recognitionSettingsPanel.TabIndex = 9;
+        this.recognitionSettingsPanel.WrapContents = false;
+        //
+        // lblRecognitionHotKey
+        //
+        this.lblRecognitionHotKey.AutoSize = true;
+        this.lblRecognitionHotKey.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblRecognitionHotKey.Location = new Point(0, 5);
+        this.lblRecognitionHotKey.Margin = new Padding(0, 5, 4, 0);
+        this.lblRecognitionHotKey.Name = "lblRecognitionHotKey";
+        this.lblRecognitionHotKey.TabIndex = 0;
+        this.lblRecognitionHotKey.Text = "快捷键";
+        this.toolTip.SetToolTip(this.lblRecognitionHotKey, "全局识别快捷键，切换到模拟器窗口后也可使用");
+        //
+        // comboRecognitionHotKey
+        //
+        this.comboRecognitionHotKey.DropDownStyle = ComboBoxStyle.DropDownList;
+        this.comboRecognitionHotKey.FormattingEnabled = true;
+        this.comboRecognitionHotKey.Items.AddRange(new object[] { "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12" });
+        this.comboRecognitionHotKey.Location = new Point(48, 1);
+        this.comboRecognitionHotKey.Margin = new Padding(0, 1, 0, 0);
+        this.comboRecognitionHotKey.Name = "comboRecognitionHotKey";
+        this.comboRecognitionHotKey.Size = new Size(54, 25);
+        this.comboRecognitionHotKey.TabIndex = 1;
+        this.comboRecognitionHotKey.SelectedIndex = 1;
+        this.comboRecognitionHotKey.SelectedIndexChanged += new EventHandler(this.comboRecognitionHotKey_SelectedIndexChanged);
+        this.toolTip.SetToolTip(this.comboRecognitionHotKey, "全局识别快捷键，默认 F2");
+        //
+        // chkContinuousRecognition
+        //
+        this.chkContinuousRecognition.AutoSize = true;
+        this.chkContinuousRecognition.Location = new Point(110, 3);
+        this.chkContinuousRecognition.Margin = new Padding(8, 3, 0, 0);
+        this.chkContinuousRecognition.Name = "chkContinuousRecognition";
+        this.chkContinuousRecognition.Size = new Size(75, 21);
+        this.chkContinuousRecognition.TabIndex = 2;
+        this.chkContinuousRecognition.Text = "持续识别";
+        this.chkContinuousRecognition.UseVisualStyleBackColor = true;
+        this.chkContinuousRecognition.CheckedChanged += new EventHandler(this.chkContinuousRecognition_CheckedChanged);
+        this.toolTip.SetToolTip(this.chkContinuousRecognition, "开启后自动截图识别；上一轮完成前不会重复启动");
+        //
+        // lblRecognitionInterval
+        //
+        this.lblRecognitionInterval.AutoSize = true;
+        this.lblRecognitionInterval.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblRecognitionInterval.Location = new Point(189, 5);
+        this.lblRecognitionInterval.Margin = new Padding(4, 5, 3, 0);
+        this.lblRecognitionInterval.Name = "lblRecognitionInterval";
+        this.lblRecognitionInterval.TabIndex = 3;
+        this.lblRecognitionInterval.Text = "间隔";
+        //
+        // numRecognitionInterval
+        //
+        this.numRecognitionInterval.DecimalPlaces = 1;
+        this.numRecognitionInterval.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
+        this.numRecognitionInterval.Location = new Point(224, 2);
+        this.numRecognitionInterval.Margin = new Padding(0, 2, 0, 0);
+        this.numRecognitionInterval.Maximum = new decimal(new int[] { 60, 0, 0, 0 });
+        this.numRecognitionInterval.Minimum = new decimal(new int[] { 1, 0, 0, 65536 });
+        this.numRecognitionInterval.Name = "numRecognitionInterval";
+        this.numRecognitionInterval.Size = new Size(52, 23);
+        this.numRecognitionInterval.TabIndex = 4;
+        this.numRecognitionInterval.Value = new decimal(new int[] { 1, 0, 0, 65536 });
+        this.numRecognitionInterval.ValueChanged += new EventHandler(this.numRecognitionInterval_ValueChanged);
+        this.toolTip.SetToolTip(this.numRecognitionInterval, "两轮识别的最短间隔；实际速度受截图和 OCR 耗时限制");
+        //
+        // lblIntervalUnit
+        //
+        this.lblIntervalUnit.AutoSize = true;
+        this.lblIntervalUnit.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblIntervalUnit.Location = new Point(279, 5);
+        this.lblIntervalUnit.Margin = new Padding(3, 5, 0, 0);
+        this.lblIntervalUnit.Name = "lblIntervalUnit";
+        this.lblIntervalUnit.TabIndex = 5;
+        this.lblIntervalUnit.Text = "秒";
+        //
+        // continuousRecognitionTimer
+        //
+        this.continuousRecognitionTimer.Interval = 100;
+        this.continuousRecognitionTimer.Tick += new EventHandler(this.continuousRecognitionTimer_Tick);
+        //
         // heroesPanel
         //
         this.heroesPanel.BackColor = Color.White;
@@ -713,8 +829,11 @@ partial class MainForm
         this.advicePanel.PerformLayout();
         this.thresholdPanel.ResumeLayout(false);
         this.thresholdPanel.PerformLayout();
+        this.recognitionSettingsPanel.ResumeLayout(false);
+        this.recognitionSettingsPanel.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)(this.numLeftThreshold)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.numRightThreshold)).EndInit();
+        ((System.ComponentModel.ISupportInitialize)(this.numRecognitionInterval)).EndInit();
         ((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
         this.statusStrip.ResumeLayout(false);
         this.statusStrip.PerformLayout();
