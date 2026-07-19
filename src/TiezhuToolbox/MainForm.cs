@@ -26,6 +26,7 @@ public partial class MainForm : Form
     private Keys _registeredRecognitionHotKey = Keys.None;
     private bool _isRecognizing;
     private bool _isUpdatingHotKeySelection;
+    private Icon? _applicationIcon;
     // AntdUI.Select 不支持 DataSource 绑定，设备列表单独保存，SelectedIndex 对应下标。
     private List<AdbDeviceInfo> _devices = new();
 
@@ -38,6 +39,14 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        using var iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("TiezhuToolbox.AppIcon.ico");
+        if (iconStream is not null)
+        {
+            using var embeddedIcon = new Icon(iconStream);
+            _applicationIcon = (Icon)embeddedIcon.Clone();
+            Icon = _applicationIcon;
+        }
+
         InitializeTabsAndSettings();
         DoubleBuffered = true;
     }

@@ -6,8 +6,11 @@
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>TiezhuToolbox</AssemblyName>
+    <AssemblyName>铁柱工具箱PRO</AssemblyName>
     <RootNamespace>TiezhuToolbox</RootNamespace>
+    <AssemblyTitle>铁柱工具箱PRO</AssemblyTitle>
+    <Product>铁柱工具箱PRO</Product>
+    <ApplicationIcon>Assets\AppIcon.ico</ApplicationIcon>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
     <RuntimeIdentifier Condition="'$(Configuration)' == 'Release'">win-x64</RuntimeIdentifier>
@@ -21,6 +24,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Assets\AppIcon.ico" LogicalName="TiezhuToolbox.AppIcon.ico" />
+
     <PackageReference Include="AntdUI" Version="2.4.3" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.27.1" />
     <PackageReference Include="OpenCvSharp4" Version="4.13.0.20260627" />

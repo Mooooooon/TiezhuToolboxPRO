@@ -73,6 +73,7 @@ partial class MainForm
         {
             pictureBox?.Image?.Dispose();
             _ocrEngine?.Dispose();
+            _applicationIcon?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -867,7 +868,7 @@ partial class MainForm
         this.MinimumSize = new Size(940, 600);
         this.Name = "MainForm";
         this.StartPosition = FormStartPosition.CenterScreen;
-        this.Text = "第七史诗打铁助手";
+        this.Text = "铁柱工具箱PRO";
         this.Load += new EventHandler(this.MainForm_Load);
         this.topPanel.ResumeLayout(false);
         this.topPanel.PerformLayout();
