@@ -782,6 +782,7 @@ partial class MainForm
         // statusStrip
         //
         this.statusStrip.Items.AddRange(new ToolStripItem[] { this.toolStripStatusLabel });
+        this.statusStrip.Font = new Font("Microsoft YaHei UI", 9.75F);
         this.statusStrip.Location = new Point(0, 618);
         this.statusStrip.Name = "statusStrip";
         this.statusStrip.Size = new Size(1000, 22);
@@ -804,7 +805,8 @@ partial class MainForm
         this.Controls.Add(this.pnlScreenshot);
         this.Controls.Add(this.topPanel);
         this.Controls.Add(this.statusStrip);
-        this.Font = new Font("Microsoft YaHei UI", 9F);
+        // 9.75pt 在 96 DPI 下恰好是 13 像素，比 9pt 更适合高分辨率屏幕阅读。
+        this.Font = new Font("Microsoft YaHei UI", 9.75F);
         this.MinimumSize = new Size(940, 600);
         this.Name = "MainForm";
         this.StartPosition = FormStartPosition.CenterScreen;

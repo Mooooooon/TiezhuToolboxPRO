@@ -415,18 +415,19 @@ public partial class MainForm : Form
 
         foreach (var rec in recommendations)
         {
+            // 这些控件是运行时创建的，不会经过 Designer 的自动缩放，需要按当前显示器 DPI 换算。
             var item = new Panel
             {
-                Width = 172,
-                Height = 62,
-                Margin = new Padding(0, 0, 10, 10),
+                Width = ScalePixel(172),
+                Height = ScalePixel(62),
+                Margin = new Padding(0, 0, ScalePixel(10), ScalePixel(10)),
                 BackColor = Color.FromArgb(248, 249, 250),
             };
 
             var avatar = new PictureBox
             {
-                Location = new Point(9, 9),
-                Size = new Size(44, 44),
+                Location = new Point(ScalePixel(9), ScalePixel(9)),
+                Size = new Size(ScalePixel(44), ScalePixel(44)),
                 SizeMode = PictureBoxSizeMode.Zoom,
             };
             if (rec.AvatarPath != null)
@@ -434,8 +435,8 @@ public partial class MainForm : Form
 
             var nameLabel = new Label
             {
-                Location = new Point(62, 11),
-                Size = new Size(104, 20),
+                Location = new Point(ScalePixel(62), ScalePixel(11)),
+                Size = new Size(ScalePixel(104), ScalePixel(20)),
                 Font = HeroNameFont,
                 ForeColor = TextDarkColor,
                 Text = rec.Name,
@@ -444,8 +445,8 @@ public partial class MainForm : Form
 
             var scoreLabel = new Label
             {
-                Location = new Point(62, 33),
-                Size = new Size(104, 20),
+                Location = new Point(ScalePixel(62), ScalePixel(33)),
+                Size = new Size(ScalePixel(104), ScalePixel(20)),
                 Font = HeroScoreFont,
                 ForeColor = AccentColor,
                 Text = $"匹配度 {rec.Score:0.#}%",
@@ -466,6 +467,11 @@ public partial class MainForm : Form
             item.Controls.Add(scoreLabel);
             flowHeroes.Controls.Add(item);
         }
+    }
+
+    private int ScalePixel(int logicalPixel)
+    {
+        return (int)Math.Round(logicalPixel * DeviceDpi / 96D);
     }
 
     /// <summary>读文件加载图片且不占用文件句柄（避免锁住 Assets 下的头像）。</summary>

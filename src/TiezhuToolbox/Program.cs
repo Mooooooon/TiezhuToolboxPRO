@@ -8,9 +8,11 @@ static class Program
     [STAThread]
     static void Main()
     {
-        // 禁用高 DPI 感知以避免 ScaleHelper 初始化异常
+        // 由程序按显示器 DPI 直接绘制，避免 Windows 将整个窗口位图拉伸后文字发糊。
+        Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+        Application.SetDefaultFont(new Font("Microsoft YaHei UI", 9.75F));
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new MainForm());
-    }    
+    }
 }
