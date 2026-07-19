@@ -1,0 +1,49 @@
+name: 发布 Windows 版本
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 构建并发布
+    runs-on: windows-latest
+
+    steps:
+      - name: 获取源码
+        uses: actions/checkout@v6
+
+      - name: 安装 .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: 发布程序
+        run: >
+          dotnet publish
+          src/TiezhuToolbox/TiezhuToolbox.csproj
+          --configuration Release
+          --runtime win-x64
+          --self-contained true
+          --output publish
+
+      - name: 打包发布文件
+        shell: pwsh
+        run: |
+          $archive = "铁柱工具箱PRO-${{ github.ref_name }}-win-x64.zip"
+          Compress-Archive -Path "publish\*" -DestinationPath $archive
+          "RELEASE_ARCHIVE=$archive" >> $env:GITHUB_ENV
+
+      - name: 创建 GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" `
+            "$env:RELEASE_ARCHIVE" `
+            --title "铁柱工具箱PRO ${{ github.ref_name }}" `
+            --generate-notes
