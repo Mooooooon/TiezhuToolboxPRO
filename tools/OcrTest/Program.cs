@@ -163,6 +163,34 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
             var usefulChecks = (System.Collections.IDictionary)heroConfig.GetType().GetField("_usefulStatChecks",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
+            var resistanceCheck = (Control)(usefulChecks["效果抗性"]
+                ?? throw new InvalidOperationException("有效属性缺少效果抗性选项"));
+            var usefulOptions = resistanceCheck.Parent
+                ?? throw new InvalidOperationException("效果抗性选项未加入有效属性区域");
+            void AssertUsefulStatsVisible()
+            {
+                foreach (Control check in usefulChecks.Values)
+                    if (check.Right + check.Margin.Right > usefulOptions.ClientSize.Width
+                        || check.Bottom + check.Margin.Bottom > usefulOptions.ClientSize.Height)
+                        throw new InvalidOperationException(
+                            $"有效属性选项被裁剪：{check.Text}={check.Bounds}，容器={usefulOptions.ClientSize}");
+            }
+
+            var originalClientSize = form.ClientSize;
+            form.ClientSize = new Size(form.MinimumSize.Width, originalClientSize.Height);
+            Application.DoEvents();
+            AssertUsefulStatsVisible();
+            var narrowSectionHeight = usefulOptions.Parent!.Height;
+            form.ClientSize = new Size(1400, originalClientSize.Height);
+            Application.DoEvents();
+            AssertUsefulStatsVisible();
+            var wideSectionHeight = usefulOptions.Parent!.Height;
+            if (narrowSectionHeight <= wideSectionHeight)
+                throw new InvalidOperationException(
+                    $"有效属性区域未随宽度调整高度：窄={narrowSectionHeight}，宽={wideSectionHeight}");
+            form.ClientSize = originalClientSize;
+            Application.DoEvents();
+            AssertUsefulStatsVisible();
             var firstUsefulCheck = usefulChecks.Values.Cast<object>().First();
             var checkedProperty = firstUsefulCheck.GetType().GetProperty("Checked")!;
             var changedValue = !(bool)checkedProperty.GetValue(firstUsefulCheck)!;

@@ -39,6 +39,7 @@ internal sealed class HeroConfigControl : UserControl
     private readonly Dictionary<string, AntdUI.Checkbox> _necklaceChecks = new();
     private readonly Dictionary<string, AntdUI.Checkbox> _ringChecks = new();
     private readonly Dictionary<string, AntdUI.Checkbox> _bootsChecks = new();
+    private readonly List<(Panel Section, FlowLayoutPanel Options)> _checkboxSections = new();
     private readonly Dictionary<string, Image> _avatarCache = new();
     private List<HeroProfile> _visibleProfiles = new();
     private string? _selectedHeroCode;
@@ -267,6 +268,8 @@ internal sealed class HeroConfigControl : UserControl
             target[value] = check;
             options.Controls.Add(check);
         }
+        _checkboxSections.Add((panel, options));
+        panel.SizeChanged += (_, _) => ResizeCheckboxSection(panel, options);
         panel.Controls.Add(options);
         panel.Controls.Add(label);
         return panel;
@@ -511,6 +514,7 @@ internal sealed class HeroConfigControl : UserControl
             - 8);
         foreach (Control child in _editor.Controls)
             child.Width = width;
+        ResizeCheckboxSections();
         ResizeSetSection();
         ResizeComboSection();
         if (_editor.Controls.Count > 0)
@@ -519,6 +523,44 @@ internal sealed class HeroConfigControl : UserControl
             _resetAllButton.Location = new Point(header.Width - _resetAllButton.Width - 4, 4);
             _resetHeroButton.Location = new Point(_resetAllButton.Left - _resetHeroButton.Width - 8, 4);
         }
+    }
+
+    private void ResizeCheckboxSections()
+    {
+        foreach (var (section, options) in _checkboxSections)
+            ResizeCheckboxSection(section, options);
+    }
+
+    private static void ResizeCheckboxSection(Panel section, FlowLayoutPanel options)
+    {
+        const int titleHeight = 28;
+        const int minimumOptionsHeight = 30;
+        var availableWidth = Math.Max(1, section.ClientSize.Width - section.Padding.Horizontal);
+        var rowWidth = options.Padding.Left;
+        var rowHeight = 0;
+        var contentHeight = options.Padding.Top;
+
+        foreach (Control option in options.Controls)
+        {
+            var preferredSize = option.GetPreferredSize(Size.Empty);
+            var itemWidth = preferredSize.Width + option.Margin.Horizontal;
+            var itemHeight = preferredSize.Height + option.Margin.Vertical;
+            if (rowWidth > options.Padding.Left && rowWidth + itemWidth + options.Padding.Right > availableWidth)
+            {
+                contentHeight += rowHeight;
+                rowWidth = options.Padding.Left;
+                rowHeight = 0;
+            }
+
+            rowWidth += itemWidth;
+            rowHeight = Math.Max(rowHeight, itemHeight);
+        }
+
+        contentHeight += rowHeight + options.Padding.Bottom;
+        var requiredHeight = section.Padding.Vertical + titleHeight
+                             + Math.Max(minimumOptionsHeight, contentHeight);
+        if (section.Height != requiredHeight)
+            section.Height = requiredHeight;
     }
 
     private void ResizeSetSection()
