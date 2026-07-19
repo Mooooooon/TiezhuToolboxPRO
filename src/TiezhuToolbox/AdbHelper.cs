@@ -42,12 +42,11 @@ public static class AdbHelper
 
     private static IEnumerable<string> EnumerateCandidates()
     {
-        // 1. 程序同目录（兼容单文件发布）
+        // 1. 程序同目录，方便用户用自备版本覆盖
         var exePath = Environment.ProcessPath ?? Application.ExecutablePath;
         var exeDir = Path.GetDirectoryName(exePath) ?? AppDomain.CurrentDomain.BaseDirectory;
         yield return Path.Combine(exeDir, "adb.exe");
         yield return Path.Combine(exeDir, "adb", "adb.exe");
-        yield return Path.Combine(exeDir, "platform-tools", "adb.exe");
 
         // 2. PATH
         var pathEnv = Environment.GetEnvironmentVariable("PATH");
@@ -68,6 +67,19 @@ public static class AdbHelper
         // 4. Android Studio 默认 SDK 位置
         var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         yield return Path.Combine(localAppData, "Android", "Sdk", "platform-tools", "adb.exe");
+
+        // 5. 随程序发布的精简版 platform-tools，作为系统未安装 ADB 时的兜底。
+        // 单文件发布会将内容解压到 AppContext.BaseDirectory，它可能与 exeDir 不同。
+        yield return Path.Combine(exeDir, "platform-tools", "adb.exe");
+
+        var appBaseDir = AppContext.BaseDirectory;
+        if (!string.Equals(
+                Path.GetFullPath(appBaseDir),
+                Path.GetFullPath(exeDir),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            yield return Path.Combine(appBaseDir, "platform-tools", "adb.exe");
+        }
     }
 
     /// <summary>

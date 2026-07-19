@@ -42,4 +42,24 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 随程序携带精简版 ADB；单文件发布时由 .NET 自动解压后运行。 -->
+    <None Include="..\..\platform-tools\adb.exe" Link="platform-tools\adb.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Include="..\..\platform-tools\AdbWinApi.dll" Link="platform-tools\AdbWinApi.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Include="..\..\platform-tools\AdbWinUsbApi.dll" Link="platform-tools\AdbWinUsbApi.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Include="..\..\platform-tools\NOTICE.txt" Link="platform-tools\NOTICE.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
