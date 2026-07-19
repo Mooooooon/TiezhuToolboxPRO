@@ -169,15 +169,15 @@ public class OcrEngine : IDisposable
             if (qualityLine != null)
                 info.Quality = ExtractQuality(qualityLine.Joined);
 
-            // 传说装备初始即有 4 条副属性，每强化 3 级会在对应属性后增加一次 (n) 计数。
-            // 这个计数比右上角十几像素高的美术字徽章稳定，优先用它推导 +3～+15。
+            // 副属性后的 (n) 计数比右上角十几像素高的美术字徽章稳定，优先用它推导强化等级。
+            // 传说装备初始有 4 条副属性，每次强化都会增加一次计数；英雄装备初始只有 3 条，
+            // +12 时新增第四条不显示强化计数，所以四词条时需要额外补上这一次强化。
             var totalRolls = info.SubStats.Sum(s => s.RollCount);
-            if (info.Quality.StartsWith("传说", StringComparison.Ordinal)
-                && info.SubStats.Count == 4
-                && totalRolls is >= 1 and <= 5)
+            var enhanceByRolls = InferEnhanceLevelByRolls(info.Quality, info.SubStats.Count, totalRolls);
+            if (enhanceByRolls is int inferredLevel)
             {
-                info.EnhanceLevel = totalRolls * 3;
-                info.RawText += $"{Environment.NewLine}[debug] enhance-by-rolls={totalRolls} -> +{info.EnhanceLevel}";
+                info.EnhanceLevel = inferredLevel;
+                info.RawText += $"{Environment.NewLine}[debug] enhance-by-rolls={totalRolls}, substats={info.SubStats.Count} -> +{info.EnhanceLevel}";
             }
 
             // 装备分数仅按副属性的民间算法计算，不读取截图中的游戏分数。
@@ -483,6 +483,33 @@ public class OcrEngine : IDisposable
 
     private static bool IsValidEnhanceLevel(int level)
         => level is 3 or 6 or 9 or 12 or 15;
+
+    /// <summary>
+    /// 根据品质、当前副属性条数和已显示的强化次数推导强化等级。
+    /// 返回 null 表示信息组合不足以可靠推导，应继续识别右上角强化徽章。
+    /// </summary>
+    private static int? InferEnhanceLevelByRolls(string quality, int subStatCount, int totalRolls)
+    {
+        if (quality.StartsWith("传说", StringComparison.Ordinal)
+            && subStatCount == 4
+            && totalRolls is >= 1 and <= 5)
+        {
+            return totalRolls * 3;
+        }
+
+        if (!quality.StartsWith("英雄", StringComparison.Ordinal))
+            return null;
+
+        // 英雄装备 +0～+9 始终只有三条副属性，每 3 级产生一次可见强化计数。
+        if (subStatCount == 3 && totalRolls is >= 1 and <= 3)
+            return totalRolls * 3;
+
+        // +12 新增的第四条没有 (n)；+15 才会再产生一次可见强化计数。
+        if (subStatCount == 4 && totalRolls is >= 3 and <= 4)
+            return (totalRolls + 1) * 3;
+
+        return null;
+    }
 
     private static List<OcrLine> GroupLines(List<OcrWord> words)
     {

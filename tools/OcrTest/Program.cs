@@ -411,6 +411,26 @@ if (args.Contains("--synthetic"))
         EquipmentRules.DeriveBootsMainStats(new[] { "生命值", "防御力" }), "防御力%", "生命值%");
     Console.WriteLine();
 
+    Console.WriteLine("===== 副属性强化次数推导 =====");
+    var inferEnhanceLevel = typeof(OcrEngine).GetMethod(
+        "InferEnhanceLevelByRolls",
+        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("找不到强化等级推导方法");
+    void AssertInferredEnhanceLevel(string title, string quality, int subStatCount, int totalRolls, int? expected)
+    {
+        var actual = (int?)inferEnhanceLevel.Invoke(null, new object[] { quality, subStatCount, totalRolls });
+        Console.WriteLine($"  {title} → {(actual is int level ? $"+{level}" : "不推导")}");
+        if (actual != expected)
+            throw new InvalidOperationException($"强化等级推导失败：{title}，期望 {expected?.ToString() ?? "null"}，实际 {actual?.ToString() ?? "null"}");
+    }
+    AssertInferredEnhanceLevel("英雄三词条、累计强化 2 次", "英雄铠甲", 3, 2, 6);
+    AssertInferredEnhanceLevel("英雄三词条、累计强化 3 次", "英雄铠甲", 3, 3, 9);
+    AssertInferredEnhanceLevel("英雄四词条、第四条刚解锁", "英雄铠甲", 4, 3, 12);
+    AssertInferredEnhanceLevel("英雄四词条、累计强化 4 次", "英雄铠甲", 4, 4, 15);
+    AssertInferredEnhanceLevel("英雄四词条但计数不足", "英雄铠甲", 4, 2, null);
+    AssertInferredEnhanceLevel("传说四词条、累计强化 2 次", "传说铠甲", 4, 2, 6);
+    Console.WriteLine();
+
     // 强化建议自检（85级阈值 24/24，88级阈值 28）
     void PrintAdvice(string title, EquipmentInfo info, EnhanceAdvice? expected = null)
     {
