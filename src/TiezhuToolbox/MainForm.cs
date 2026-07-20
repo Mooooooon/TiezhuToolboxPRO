@@ -489,7 +489,7 @@ public partial class MainForm : Form
 
             if (rec.MatchedStats.Count > 0)
             {
-                var tip = $"匹配副属性：{string.Join("、", rec.MatchedStats)}";
+                var tip = $"命中属性：{string.Join("、", rec.MatchedStats)}";
                 toolTip.SetToolTip(item, tip);
                 toolTip.SetToolTip(avatar, tip);
                 toolTip.SetToolTip(nameLabel, tip);
