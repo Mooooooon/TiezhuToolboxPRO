@@ -428,7 +428,7 @@ public partial class MainForm : Form
     }
 
     /// <summary>
-    /// 根据识别出的装备信息，展示官方战绩（传说分段）匹配出的适用角色（头像 + 名字 + 匹配度）。
+    /// 根据识别出的装备信息，展示官方战绩（前排分段）匹配出的适用角色（头像 + 名字 + 匹配度）。
     /// </summary>
     private void ShowHeroRecommendations(Modules.Ocr.EquipmentInfo info)
     {

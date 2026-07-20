@@ -381,7 +381,22 @@ if (args.Contains("--ui-smoke"))
             if (level88Input.Right > thresholdPanel.ClientSize.Width || level88Input.Bottom > thresholdPanel.ClientSize.Height)
                 throw new InvalidOperationException(
                     $"88级阈值输入框被裁剪：输入框={level88Input.Bounds}，容器={thresholdPanel.ClientSize}");
+            var settingsRulesLabel = (Label)typeof(TiezhuToolbox.MainForm).GetField("_settingsRulesLabel",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var requiredRuleTexts = new[] { "速度硬门槛", "速度鞋默认", "双爆项链默认", "速度套补全" };
+            if (requiredRuleTexts.Any(text => !settingsRulesLabel.Text.Contains(text)))
+                throw new InvalidOperationException("软件设置页缺少自动规则说明");
+            var preferredRulesHeight = settingsRulesLabel.GetPreferredSize(
+                new Size(settingsRulesLabel.ClientSize.Width, 0)).Height;
+            if (preferredRulesHeight > settingsRulesLabel.ClientSize.Height)
+                throw new InvalidOperationException(
+                    $"自动规则说明被裁剪：需要 {preferredRulesHeight}，实际 {settingsRulesLabel.ClientSize.Height}");
             CaptureTab("software-settings");
+            var settingsHost = settingsRulesLabel.Parent?.Parent?.Parent as ScrollableControl
+                ?? throw new InvalidOperationException("找不到软件设置滚动容器");
+            settingsHost.AutoScrollPosition = new Point(0, settingsHost.VerticalScroll.Maximum);
+            Application.DoEvents();
+            CaptureTab("software-settings-rules");
             selectedIndex.SetValue(tabs, 0);
             Application.DoEvents();
             if (!timer.Enabled)
@@ -426,22 +441,23 @@ var imageNames = args.Length > 0
     : new[] { "MuMuNxDevice_20260717_031029.png", "MuMuNxDevice_20260717_041111.png" };
 
 // 合成样例自检（无需截图）：
-// 样例一：速度套 + 速度主属性鞋 + 副属性{防御,生命,速度,命中} → 调香师维波里丝(c5154) 应为 100%
+// 样例一：速度套 + 速度主属性鞋 + 副属性{防御,生命,命中,抗性} → 调香师维波里丝(c5154) 应为 100%
 // 样例二：暴击套 + 暴击率主属性项链 + 同样副属性 → c5154 主属性/套装均不符，不得出现
-// 样例三：速度套速度鞋，副属性{生命,防御,速度,暴击率}但强化全跳暴击率 → c5154 应出现但匹配度大降（<50%）
+// 样例三：速度套速度鞋，副属性{生命,防御,命中,暴击率}但强化全跳暴击率 → c5154 应出现但匹配度大降（<50%）
 if (args.Contains("--synthetic"))
 {
-    void Print(string title, EquipmentInfo info)
+    IReadOnlyList<HeroRecommendation> Print(string title, EquipmentInfo info)
     {
         Console.WriteLine($"===== 合成样例: {title} =====");
-        var recs = HeroRecommender.Recommend(info);
-        foreach (var rec in recs)
+        var recs = HeroRecommender.Recommend(info, top: int.MaxValue);
+        foreach (var rec in recs.Take(5))
             Console.WriteLine($"  {rec.Name}({rec.Code}) 匹配度 {rec.Score}%");
         Console.WriteLine(recs.Any(r => r.Code == "c5154") ? "  → 含 c5154" : "  → 不含 c5154");
         Console.WriteLine();
+        return recs;
     }
 
-    Print("速度套速度鞋 副属性{防御,生命,速度,命中}", new EquipmentInfo
+    var perfectRightGear = new EquipmentInfo
     {
         Level = 88,
         Quality = "传说鞋子",
@@ -452,12 +468,17 @@ if (args.Contains("--synthetic"))
         {
             new SubStat { Name = "防御力", Value = "10%" },
             new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "速度", Value = "8" },
             new SubStat { Name = "效果命中", Value = "7%" },
+            new SubStat { Name = "效果抗性", Value = "7%" },
         },
-    });
+    };
+    var perfectRightRecommendations = Print("速度套速度鞋 副属性{防御,生命,命中,抗性}", perfectRightGear);
+    var c5154Perfect = perfectRightRecommendations.SingleOrDefault(r => r.Code == "c5154");
+    if (c5154Perfect?.Score != 100)
+        throw new InvalidOperationException(
+            $"右三件主属性占用需求回归失败：c5154 期望 100%，实际 {c5154Perfect?.Score.ToString() ?? "未推荐"}%");
 
-    Print("暴击套暴击项链 副属性{防御,生命,速度,命中}", new EquipmentInfo
+    var rejectedRightGear = new EquipmentInfo
     {
         Level = 88,
         Quality = "传说项链",
@@ -471,9 +492,13 @@ if (args.Contains("--synthetic"))
             new SubStat { Name = "速度", Value = "8" },
             new SubStat { Name = "效果命中", Value = "7%" },
         },
-    });
+    };
+    var rejectedRightRecommendations = Print(
+        "暴击套暴击项链 副属性{防御,生命,速度,命中}", rejectedRightGear);
+    if (rejectedRightRecommendations.Any(r => r.Code == "c5154"))
+        throw new InvalidOperationException("右三件主属性/套装硬门槛回归失败：不应推荐 c5154");
 
-    Print("速度套速度鞋 副属性{生命,防御,速度,暴击率}强化全跳暴击", new EquipmentInfo
+    var wastedRollGear = new EquipmentInfo
     {
         Level = 88,
         Quality = "传说鞋子",
@@ -484,10 +509,43 @@ if (args.Contains("--synthetic"))
         {
             new SubStat { Name = "生命值", Value = "6%" },
             new SubStat { Name = "防御力", Value = "6%" },
-            new SubStat { Name = "速度", Value = "4" },
-            new SubStat { Name = "暴击率", Value = "20%" },
+            new SubStat { Name = "效果命中", Value = "6%" },
+            new SubStat { Name = "暴击率", Value = "24%", RollCount = 5 },
         },
-    });
+    };
+    var wastedRollRecommendations = Print(
+        "速度套速度鞋 副属性{生命,防御,命中,暴击率}强化全跳暴击", wastedRollGear);
+    var c5154WastedRolls = wastedRollRecommendations.SingleOrDefault(r => r.Code == "c5154");
+    if (c5154WastedRolls == null || c5154WastedRolls.Score >= 50)
+        throw new InvalidOperationException(
+            $"无用属性强化惩罚回归失败：c5154 应低于 50%，实际 {c5154WastedRolls?.Score.ToString() ?? "未推荐"}%");
+
+    var noSpeedTankGear = new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "传说头盔",
+        MainStatName = "生命值",
+        MainStatValue = "540",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "7%" },
+            new SubStat { Name = "效果抗性", Value = "7%" },
+            new SubStat { Name = "防御力", Value = "7%" },
+            new SubStat { Name = "效果命中", Value = "6%" },
+        },
+    };
+    var speedRequiredTankCodes = new[] { "c1137", "c2022", "c3094", "c4004", "c4044" };
+    var leakedSpeedRequiredTanks = HeroRecommender.Recommend(noSpeedTankGear, top: int.MaxValue)
+        .Where(r => speedRequiredTankCodes.Contains(r.Code))
+        .Select(r => r.Name)
+        .ToList();
+    Console.WriteLine("===== 无速度坦克装硬门槛样例 =====");
+    Console.WriteLine(leakedSpeedRequiredTanks.Count == 0
+        ? "  需要速度的五名角色均已淘汰"
+        : $"  错误推荐：{string.Join("、", leakedSpeedRequiredTanks)}");
+    if (leakedSpeedRequiredTanks.Count > 0)
+        throw new InvalidOperationException("缺少速度的坦克装备错误推荐给需要速度的角色");
+    Console.WriteLine();
 
     Console.WriteLine("===== 自定义英雄主属性配置样例 =====");
     var customProfiles = new List<HeroProfile>
@@ -504,14 +562,24 @@ if (args.Contains("--synthetic"))
         },
     };
     var customSetNames = new Dictionary<string, string> { ["速度套装"] = "set_speed" };
-    EquipmentInfo CustomGear(string quality, string mainName, string mainValue) => new()
+    EquipmentInfo CustomGear(string quality, string mainName, string mainValue)
     {
-        Quality = quality,
-        SetName = "速度套装",
-        MainStatName = mainName,
-        MainStatValue = mainValue,
-        SubStats = { new SubStat { Name = "生命值", Value = "8%" }, new SubStat { Name = "速度", Value = "8" } },
-    };
+        var info = new EquipmentInfo
+        {
+            Quality = quality,
+            SetName = "速度套装",
+            MainStatName = mainName,
+            MainStatValue = mainValue,
+        };
+        // 主属性占用角色需求时，用另一个需求作为有效副属性，避免制造游戏中不可能出现的重复属性。
+        info.SubStats.Add(mainName == "生命值" && mainValue.Contains('%')
+            ? new SubStat { Name = "速度", Value = "4" }
+            : new SubStat { Name = "生命值", Value = "8%" });
+        info.SubStats.Add(new SubStat { Name = "防御力", Value = "8%" });
+        info.SubStats.Add(new SubStat { Name = "效果命中", Value = "8%" });
+        info.SubStats.Add(new SubStat { Name = "效果抗性", Value = "8%" });
+        return info;
+    }
     void AssertCustom(string title, EquipmentInfo gear, bool shouldMatch)
     {
         var matched = HeroRecommender.Recommend(gear, customProfiles, customSetNames).Any();
@@ -523,6 +591,102 @@ if (args.Contains("--synthetic"))
     AssertCustom("项链拒绝速度主属性", CustomGear("传说项链", "速度", "45"), false);
     AssertCustom("项链接受生命值百分比", CustomGear("传说项链", "生命值", "65%"), true);
     AssertCustom("戒指拒绝固定生命值", CustomGear("传说戒指", "生命值", "500"), false);
+    AssertCustom("角色需求速度但装备没有速度", new EquipmentInfo
+    {
+        Quality = "传说装备",
+        SetName = "速度套装",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "防御力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "8%" },
+        },
+    }, false);
+
+    void AssertCustomScore(string title, EquipmentInfo gear, double expectedScore)
+    {
+        var recommendation = HeroRecommender.Recommend(gear, customProfiles, customSetNames).SingleOrDefault()
+            ?? throw new InvalidOperationException($"推荐匹配度回归失败：{title}，未推荐测试英雄");
+        Console.WriteLine($"  {title} → {recommendation.Score}%");
+        if (Math.Abs(recommendation.Score - expectedScore) > 0.1)
+            throw new InvalidOperationException(
+                $"推荐匹配度回归失败：{title}，期望 {expectedScore}%，实际 {recommendation.Score}%");
+    }
+
+    AssertCustomScore("两种需求配两种有效副属性，其余为必然填充", new EquipmentInfo
+    {
+        Quality = "传说装备",
+        SetName = "速度套装",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "4" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "8%" },
+        },
+    }, 100);
+    AssertCustomScore("只覆盖两种需求中的一种", new EquipmentInfo
+    {
+        Quality = "传说装备",
+        SetName = "速度套装",
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "4" },
+            new SubStat { Name = "防御力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "8%" },
+        },
+    }, 50);
+    AssertCustomScore("速度主属性鞋只需覆盖剩余的生命值需求",
+        CustomGear("传说鞋子", "速度", "45"), 100);
+    AssertCustomScore("无用属性吃到强化仍会降低匹配度", new EquipmentInfo
+    {
+        Quality = "传说装备",
+        SetName = "速度套装",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "4" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "24%", RollCount = 5 },
+        },
+    }, 44.4);
+
+    var singleStatProfiles = new List<HeroProfile>
+    {
+        new()
+        {
+            Code = "test002",
+            Name = "单属性测试英雄",
+            UsefulStats = new List<string> { "生命值" },
+            AllowedSets = new List<string> { "set_speed" },
+        },
+    };
+    var singleStatGear = new EquipmentInfo
+    {
+        Level = 85,
+        EnhanceLevel = 15,
+        Quality = "传说头盔",
+        SetName = "速度套装",
+        MainStatName = "生命值",
+        MainStatValue = "700",
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "2" },
+            new SubStat { Name = "攻击力", Value = "16%", RollCount = 1 },
+            new SubStat { Name = "生命值", Value = "19%", RollCount = 2 },
+            new SubStat { Name = "暴击伤害", Value = "14%", RollCount = 2 },
+        },
+    };
+    var singleStatRecommendation = HeroRecommender
+        .Recommend(singleStatGear, singleStatProfiles, customSetNames)
+        .SingleOrDefault()
+        ?? throw new InvalidOperationException("单属性角色强化分配回归失败：未推荐测试英雄");
+    Console.WriteLine($"  单属性角色仅两跳生命 → {singleStatRecommendation.Score}%");
+    if (Math.Abs(singleStatRecommendation.Score - 50.7) > 0.1)
+        throw new InvalidOperationException(
+            $"单属性角色强化分配回归失败：期望 50.7%，实际 {singleStatRecommendation.Score}%");
     Console.WriteLine();
 
     Console.WriteLine("===== 官方属性直方图推导 =====");
@@ -558,6 +722,15 @@ if (args.Contains("--synthetic"))
     Console.WriteLine($"  c1126 有效属性={string.Join("、", c1126UsefulStats)}（不得误加攻击力）");
     if (!c1126UsefulStats.SequenceEqual(new[] { "防御力", "速度", "效果命中" }))
         throw new InvalidOperationException("c1126 官方属性直方图推导过宽");
+
+    var setImpliedStats = new List<string> { "防御力", "生命值", "效果抗性" };
+    HeroUsefulStatAnalyzer.ApplySetImplications(setImpliedStats,
+    [
+        new HeroSetCombo { Sets = new List<string> { "set_res", "set_speed" }, Rate = 12.5 },
+    ]);
+    Console.WriteLine($"  主流速度套补足有效属性={string.Join("、", setImpliedStats)}");
+    if (!setImpliedStats.Contains("速度"))
+        throw new InvalidOperationException("主流速度套未补足速度有效属性");
     Console.WriteLine();
 
     Console.WriteLine("===== 默认主属性推导规则 =====");
@@ -866,7 +1039,7 @@ foreach (var name in imageNames)
     var advice = EnhancementAdvisor.Analyze(info, 24, 24);
     Console.WriteLine($"  强化建议: {advice.Text}（{advice.Detail}）");
 
-    // 装备 → 适用角色推荐（官方战绩传说分段数据）
+    // 装备 → 适用角色推荐（官方战绩前排分段数据）
     var recommendations = HeroRecommender.Recommend(info);
     Console.WriteLine("  适用角色:");
     foreach (var rec in recommendations)

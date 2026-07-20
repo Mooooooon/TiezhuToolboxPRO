@@ -10,6 +10,7 @@ public partial class MainForm
     private HeroConfigControl _heroConfigControl = null!;
     private CancellationTokenSource? _heroUpdateCancellation;
     private bool _isLoadingSettings;
+    private Label _settingsRulesLabel = null!;
 
     private bool IsEquipmentTabActive => _mainTabs.SelectedTab == _equipmentTab;
 
@@ -107,7 +108,7 @@ public partial class MainForm
         {
             BackColor = Color.White,
             Location = new Point(24, 24),
-            Size = new Size(720, 575),
+            Size = new Size(720, 760),
             Padding = new Padding(24),
         };
         host.Resize += (_, _) => card.Width = Math.Min(760, Math.Max(560, host.ClientSize.Width - 48));
@@ -246,16 +247,41 @@ public partial class MainForm
         };
         _chkAutoStopOnValuableEquipment.CheckedChanged += (_, _) => SaveSettingsFromControls();
 
+        var rulesTitle = CreateSettingsHeading(
+            "自动规则说明",
+            "推荐匹配与角色默认配置会自动应用以下规则。",
+            478);
+        var rulesPanel = new Panel
+        {
+            BackColor = Color.FromArgb(247, 249, 252),
+            Location = new Point(24, 538),
+            Size = new Size(690, 126),
+            Padding = new Padding(12, 9, 12, 9),
+        };
+        _settingsRulesLabel = new Label
+        {
+            Dock = DockStyle.Fill,
+            Font = new Font("Microsoft YaHei UI", 9.2F),
+            ForeColor = Color.FromArgb(66, 70, 77),
+            Text = "• 速度硬门槛：角色需要速度时，装备必须带速度（速度鞋主属性也算），否则不推荐。\r\n"
+                   + "• 速度鞋默认：采集数据包含速度时，鞋子主属性默认只勾选速度。\r\n"
+                   + "• 双爆项链默认：角色同时需要暴击率和暴击伤害时，项链默认勾选双爆。\r\n"
+                   + "• 速度套补全：主流搭配包含速度套时，自动把速度加入角色有效属性。",
+        };
+        rulesPanel.Controls.Add(_settingsRulesLabel);
+
         var reset = new AntdUI.Button
         {
             Text = "恢复默认设置",
-            Location = new Point(24, 509),
+            Location = new Point(24, 690),
             Size = new Size(120, 34),
             Radius = 6,
         };
         reset.Click += (_, _) => ResetSettings();
 
         card.Controls.Add(reset);
+        card.Controls.Add(rulesPanel);
+        card.Controls.Add(rulesTitle);
         card.Controls.Add(_chkAutoStopOnValuableEquipment);
         card.Controls.Add(automationPanel);
         card.Controls.Add(automationTitle);

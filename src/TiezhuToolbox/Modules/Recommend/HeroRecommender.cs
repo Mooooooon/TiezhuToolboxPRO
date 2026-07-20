@@ -4,11 +4,12 @@ namespace TiezhuToolbox.Modules.Recommend;
 
 /// <summary>
 /// 装备 → 适用角色推荐算法。
-/// 主属性与套装是硬门槛：不符合该角色的有用属性/主流搭配就直接不推荐；
-/// 通过门槛后，匹配度按副属性的装备分数加权：
-/// 有用属性的得分之和 ÷ 装备副属性总分 × 100（民间算法权重，见 <see cref="EquipmentScoreCalculator"/>）。
-/// 因此强化全跳到无用属性上的装备，匹配度会显著降低。
-/// 数据为官方战绩传说分段（见 <see cref="HeroDatabase"/>）。
+/// 主属性、套装与速度需求是硬门槛：不符合该角色的有用属性/主流搭配，
+/// 或角色需要速度但装备没有速度时直接不推荐；
+/// 通过门槛后，匹配度同时考虑可用属性覆盖率和强化分配质量：
+/// 角色需求少于四种，或右三件主属性占用一种需求时，只要求覆盖实际可出现在副属性中的需求；
+/// 再按装备分数权重检查有用属性是否吃到足够强化，因此强化全跳到无用属性仍会显著降分。
+/// 数据为官方战绩前排分段（见 <see cref="HeroDatabase"/>）。
 /// </summary>
 public static class HeroRecommender
 {
@@ -43,9 +44,13 @@ public static class HeroRecommender
             ? resolvedSetCode
             : null;
         // 每条副属性的分数权重（未识别/不参算的属性权重为 0）
-        var scored = info.SubStats.Select(s => (s.Name, Score: EquipmentScoreCalculator.Calculate(s))).ToList();
+        var scored = info.SubStats
+            .Select(s => (Stat: s, s.Name, Score: EquipmentScoreCalculator.Calculate(s)))
+            .Where(s => s.Score > 0)
+            .ToList();
+        var subStatSlotCount = info.SubStats.Count(s => !string.IsNullOrWhiteSpace(s.Name));
         var totalScore = scored.Sum(s => s.Score);
-        if (totalScore <= 0)
+        if (totalScore <= 0 || subStatSlotCount == 0)
             return Array.Empty<HeroRecommendation>();
 
         // 主属性没识别出来 → 不过滤；固定值攻击/防御/生命 → 左三件，主属性固定无信息量 → 不过滤
@@ -55,6 +60,8 @@ public static class HeroRecommender
         var results = new List<HeroRecommendation>();
         var part = EquipmentRules.DetectPart(info.Quality);
         var normalizedMainStat = EquipmentRules.NormalizeMainStat(info);
+        var gearHasSpeed = normalizedMainStat == "速度"
+                           || info.SubStats.Any(s => s.Name == "速度");
 
         foreach (var hero in profiles)
         {
@@ -66,24 +73,89 @@ public static class HeroRecommender
             if (gearSetCode != null && !hero.AllowedSets.Contains(gearSetCode))
                 continue;
 
-            // 匹配度 = 有用属性得分占比（分数权重即民间算法，跳得多的属性权重更大）
-            var usefulScore = scored.Where(s => hero.UsefulStats.Contains(s.Name)).Sum(s => s.Score);
-            if (usefulScore <= 0)
+            // 硬门槛三：需要速度的角色，装备主/副属性中必须实际带有速度。
+            if (hero.UsefulStats.Contains("速度") && !gearHasSpeed)
                 continue;
+
+            var matchableStats = GetMatchableUsefulStats(hero, part, normalizedMainStat);
+            var matched = scored.Where(s => matchableStats.Contains(s.Name)).ToList();
+            var matchedStatCount = matched.Select(s => s.Name).Distinct().Count();
+            var targetStatCount = Math.Min(subStatSlotCount, matchableStats.Count);
+            if (matchedStatCount == 0 || targetStatCount == 0)
+                continue;
+
+            // 属性覆盖率只要求命中该部位实际可能出现的角色需求。
+            // 无用词条的初始分数属于必然填充，不纳入惩罚；一旦强化跳到无用词条，
+            // 则按该词条的强化次数估算强化分数并降低分配质量。
+            var usefulScore = matched.Sum(s => s.Score);
+            var coverage = (double)matchedStatCount / targetStatCount;
+            var totalRollCount = info.SubStats.Sum(s => Math.Clamp(s.RollCount, 0, 5));
+            double allocationQuality;
+            if (totalRollCount > 0)
+            {
+                var wastedEnhancementScore = scored
+                    .Where(s => !matchableStats.Contains(s.Name))
+                    .Sum(s => EstimateEnhancementScore(s.Score, s.Stat.RollCount));
+                allocationQuality = usefulScore / (usefulScore + wastedEnhancementScore);
+            }
+            else if (info.EnhanceLevel > 0)
+            {
+                // 强化等级已识别但词条次数缺失时，退回按分数占比校正，避免错误给出满匹配。
+                var neutralUsefulShare = (double)matchedStatCount / scored.Count;
+                var actualUsefulShare = usefulScore / totalScore;
+                allocationQuality = Math.Min(1.0, actualUsefulShare / neutralUsefulShare);
+            }
+            else
+            {
+                allocationQuality = 1.0;
+            }
 
             results.Add(new HeroRecommendation
             {
                 Code = hero.Code,
                 Name = hero.Name,
-                Score = Math.Round(100.0 * usefulScore / totalScore, 1),
-                MatchedStats = scored.Where(s => s.Score > 0 && hero.UsefulStats.Contains(s.Name))
-                    .Select(s => s.Name).ToList(),
+                Score = Math.Round(100.0 * coverage * allocationQuality, 1),
+                MatchedStats = matched.Select(s => s.Name).Distinct().ToList(),
                 SetMatched = true,
                 AvatarPath = HeroDatabase.GetAvatarPath(hero.Code),
             });
         }
 
-        return results.OrderByDescending(r => r.Score).ThenBy(r => r.Name).Take(top).ToList();
+        return results
+            .OrderByDescending(r => r.Score)
+            .ThenByDescending(r => r.MatchedStats.Count)
+            .ThenBy(r => r.Name)
+            .Take(top)
+            .ToList();
+    }
+
+    /// <summary>
+    /// 根据词条总分和强化次数估算由强化产生的分数。
+    /// 缺少逐跳数值时，将当前总分按“初始一次 + 强化次数”平均拆分。
+    /// </summary>
+    private static double EstimateEnhancementScore(double totalScore, int rollCount)
+    {
+        var rolls = Math.Clamp(rollCount, 0, 5);
+        return rolls == 0 ? 0 : totalScore * rolls / (rolls + 1.0);
+    }
+
+    /// <summary>
+    /// 返回当前部位实际可能出现在副属性中的角色需求。
+    /// 右三件的主属性不会同时成为副属性，因此需要从匹配目标中移除。
+    /// </summary>
+    private static HashSet<string> GetMatchableUsefulStats(
+        HeroProfile hero,
+        EquipmentPart part,
+        string? normalizedMainStat)
+    {
+        var matchable = hero.UsefulStats.ToHashSet(StringComparer.Ordinal);
+        if (part is EquipmentPart.Necklace or EquipmentPart.Ring or EquipmentPart.Boots
+            && normalizedMainStat != null)
+        {
+            matchable.Remove(normalizedMainStat.TrimEnd('%'));
+        }
+
+        return matchable;
     }
 
     private static bool MainStatMatches(

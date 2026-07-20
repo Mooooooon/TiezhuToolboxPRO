@@ -1,7 +1,7 @@
 using System.Text.Json;
 using TiezhuToolbox.Modules.Recommend;
 
-// 第七史诗官方英雄数据采集工具：官方英雄元数据 + 当前赛季传说分段统计。
+// 第七史诗官方英雄数据采集工具：官方英雄元数据 + 当前赛季前排分段统计。
 // 用法：dotnet run [--out <输出目录>]
 
 var outputDirectory = GetOutputDirectory(args);

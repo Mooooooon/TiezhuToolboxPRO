@@ -144,7 +144,7 @@ public sealed class HeroDatabase
             Attribute = hero.Attribute,
             Job = hero.Job,
             Grade = hero.Grade,
-            HasLegendData = hero.HasLegendData || hero.UsefulStats.Count > 0 || hero.SetCombos.Count > 0,
+            HasGradeData = hero.HasGradeData || hero.UsefulStats.Count > 0 || hero.SetCombos.Count > 0,
             SetCombos = hero.SetCombos,
             UsefulStats = useful,
             AllowedSets = hero.SetCombos.SelectMany(c => c.Sets).Where(SetNames.ContainsKey)

@@ -361,7 +361,7 @@ internal sealed class HeroConfigControl : UserControl
         {
             _heroTitle.Text = profile.Name;
             _heroMeta.Text = $"{GetName(AttributeNames, profile.Attribute)} · {GetName(JobNames, profile.Job)} · {profile.Grade}星"
-                + (profile.HasLegendData ? " · 传说分段默认数据" : " · 暂无默认战绩数据");
+                + (profile.HasGradeData ? " · 前排分段默认数据" : " · 暂无默认战绩数据");
             SetChecks(_usefulStatChecks, profile.UsefulStats);
             SetChecks(_setChecks, profile.AllowedSets);
             SetChecks(_necklaceChecks, profile.NecklaceMainStats);
@@ -475,7 +475,7 @@ internal sealed class HeroConfigControl : UserControl
         using var nameFont = new Font(Font, FontStyle.Bold);
         e.Graphics.DrawString(hero.Name, nameFont, nameBrush, e.Bounds.Left + 58, e.Bounds.Top + 9);
         var meta = $"{GetName(AttributeNames, hero.Attribute)} · {GetName(JobNames, hero.Job)}"
-            + (hero.HasLegendData ? string.Empty : " · 无战绩默认");
+            + (hero.HasGradeData ? string.Empty : " · 无战绩默认");
         e.Graphics.DrawString(meta, Font, metaBrush, e.Bounds.Left + 58, e.Bounds.Top + 32);
     }
 

@@ -743,7 +743,7 @@ partial class MainForm
         this.lblHeroesHint.Margin = new Padding(0, 9, 0, 0);
         this.lblHeroesHint.Name = "lblHeroesHint";
         this.lblHeroesHint.TabIndex = 1;
-        this.lblHeroesHint.Text = "官方战绩 · 传说分段";
+        this.lblHeroesHint.Text = "官方战绩 · 前排分段";
         //
         // flowHeroes
         //

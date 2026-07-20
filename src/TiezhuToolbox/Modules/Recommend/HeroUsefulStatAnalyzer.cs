@@ -59,6 +59,19 @@ public static class HeroUsefulStatAnalyzer
         return result;
     }
 
+    /// <summary>
+    /// 用主流套装补足直方图可能漏掉的有效属性。
+    /// 速度套进入使用率 ≥10% 的主流组合，说明玩家明确需要速度，应将速度视为有效属性。
+    /// </summary>
+    public static void ApplySetImplications(List<string> usefulStats, IEnumerable<HeroSetCombo> setCombos)
+    {
+        if (setCombos.Any(combo => combo.Sets.Contains("set_speed", StringComparer.Ordinal))
+            && !usefulStats.Contains("速度", StringComparer.Ordinal))
+        {
+            usefulStats.Add("速度");
+        }
+    }
+
     public static double EstimateUnavailableSamples(IReadOnlyDictionary<string, double[]> histograms)
     {
         var referenceTotal = CoreStats

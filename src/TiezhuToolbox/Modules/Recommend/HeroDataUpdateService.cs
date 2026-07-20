@@ -8,9 +8,10 @@ namespace TiezhuToolbox.Modules.Recommend;
 public record HeroDataUpdateProgress(string Stage, int Current, int Total, string Message);
 public record HeroDataUpdateResult(HeroDataDocument Document, IReadOnlyList<string> Warnings);
 
-/// <summary>STOVE 官方英雄元数据与传说分段统计采集服务，供主程序和命令行采集工具共用。</summary>
+/// <summary>STOVE 官方英雄元数据与前排分段统计采集服务，供主程序和命令行采集工具共用。</summary>
 public sealed class HeroDataUpdateService : IDisposable
 {
+    private const string TargetGradeCode = "emperor";
     private const string ApiBase = "https://e7api.onstove.com/gameApi";
     private const string MetadataUrl = "https://static-pubcomm.onstove.com/gameRecord/epic7/epic7_hero.json";
     private const string AvatarBase = "https://static-pubcomm.onstove.com/event/live/epic7/guide/images/hero";
@@ -48,7 +49,10 @@ public sealed class HeroDataUpdateService : IDisposable
         var metadata = await GetMetadataAsync(cancellationToken);
         var seasonCode = await GetCurrentSeasonCodeAsync(cancellationToken);
         var popularCodes = await GetPopularHeroCodesAsync(seasonCode, cancellationToken);
-        var existingByCode = (existing?.Heroes ?? new()).ToDictionary(h => h.Code, StringComparer.Ordinal);
+        // 只允许沿用同一分段的旧统计，避免切换采集分段时混入上一分段数据。
+        var existingByCode = string.Equals(existing?.GradeCode, TargetGradeCode, StringComparison.Ordinal)
+            ? existing!.Heroes.ToDictionary(h => h.Code, StringComparer.Ordinal)
+            : new Dictionary<string, HeroInfo>(StringComparer.Ordinal);
         var results = new ConcurrentDictionary<string, HeroInfo>(StringComparer.Ordinal);
         var warnings = new ConcurrentBag<string>();
         var targets = metadata.Where(h => popularCodes.Contains(h.Code)).ToList();
@@ -91,14 +95,14 @@ public sealed class HeroDataUpdateService : IDisposable
                 progress?.Report(new("analysis", current, targets.Count, $"正在采集 {hero.Name}"));
             });
 
-        // 没有传说分段数据的官方英雄仍进入配置列表，默认配置为空。
+        // 没有前排分段数据的官方英雄仍进入配置列表，默认配置为空。
         foreach (var hero in metadata)
             results.TryAdd(hero.Code, hero);
 
         var document = new HeroDataDocument
         {
             SeasonCode = seasonCode,
-            GradeCode = "legend",
+            GradeCode = TargetGradeCode,
             UpdatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             Sets = SetNames.Select(kv => new HeroSetInfo { Code = kv.Key, Name = kv.Value })
                 .OrderBy(s => s.Code).ToList(),
@@ -193,7 +197,7 @@ public sealed class HeroDataUpdateService : IDisposable
     private async Task<HashSet<string>> GetPopularHeroCodesAsync(string seasonCode, CancellationToken cancellationToken)
     {
         using var doc = await PostApiAsync("getPopularHero",
-            $"lang=zh-CN&season_code={Uri.EscapeDataString(seasonCode)}&grade_code=legend", cancellationToken);
+            $"lang=zh-CN&season_code={Uri.EscapeDataString(seasonCode)}&grade_code={TargetGradeCode}", cancellationToken);
         var body = doc.RootElement.GetProperty("value").GetProperty("result_body");
         return body.EnumerateArray().Select(h => GetString(h, "hero_code"))
             .Where(code => !string.IsNullOrWhiteSpace(code) && !code.StartsWith('m'))
@@ -203,12 +207,12 @@ public sealed class HeroDataUpdateService : IDisposable
     private async Task<HeroInfo> FetchHeroAnalysisAsync(HeroInfo metadata, string seasonCode, CancellationToken cancellationToken)
     {
         using var doc = await PostApiAsync("getHeroAnalysis",
-            $"lang=zh-CN&hero_code={Uri.EscapeDataString(metadata.Code)}&season_code={Uri.EscapeDataString(seasonCode)}&grade_code=legend",
+            $"lang=zh-CN&hero_code={Uri.EscapeDataString(metadata.Code)}&season_code={Uri.EscapeDataString(seasonCode)}&grade_code={TargetGradeCode}",
             cancellationToken);
         var body = doc.RootElement.GetProperty("value").GetProperty("result_body");
         var hero = MergeMetadata(metadata, null);
-        hero.HasLegendData = body.ValueKind == JsonValueKind.Object;
-        if (!hero.HasLegendData)
+        hero.HasGradeData = body.ValueKind == JsonValueKind.Object;
+        if (!hero.HasGradeData)
             return hero;
 
         if (body.TryGetProperty("abillity", out var ability) && ability.ValueKind == JsonValueKind.Object)
@@ -241,6 +245,7 @@ public sealed class HeroDataUpdateService : IDisposable
                 });
             }
         }
+        HeroUsefulStatAnalyzer.ApplySetImplications(hero.UsefulStats, hero.SetCombos);
         return hero;
     }
 
@@ -266,7 +271,7 @@ public sealed class HeroDataUpdateService : IDisposable
         Attribute = metadata.Attribute,
         Job = metadata.Job,
         Grade = metadata.Grade,
-        HasLegendData = stats != null && (stats.HasLegendData || stats.UsefulStats.Count > 0 || stats.SetCombos.Count > 0),
+        HasGradeData = stats != null && (stats.HasGradeData || stats.UsefulStats.Count > 0 || stats.SetCombos.Count > 0),
         UsefulStats = stats?.UsefulStats.ToList() ?? new List<string>(),
         SetCombos = stats?.SetCombos.Select(c => new HeroSetCombo
         {

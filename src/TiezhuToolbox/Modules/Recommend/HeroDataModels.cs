@@ -5,7 +5,7 @@ namespace TiezhuToolbox.Modules.Recommend;
 public class HeroDataDocument
 {
     [JsonPropertyName("seasonCode")] public string SeasonCode { get; set; } = string.Empty;
-    [JsonPropertyName("gradeCode")] public string GradeCode { get; set; } = "legend";
+    [JsonPropertyName("gradeCode")] public string GradeCode { get; set; } = "emperor";
     [JsonPropertyName("updatedAt")] public string UpdatedAt { get; set; } = string.Empty;
     [JsonPropertyName("sets")] public List<HeroSetInfo> Sets { get; set; } = new();
     [JsonPropertyName("heroes")] public List<HeroInfo> Heroes { get; set; } = new();
@@ -18,7 +18,7 @@ public class HeroSetInfo
     [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
 }
 
-/// <summary>官方英雄基础数据与传说分段统计。</summary>
+/// <summary>官方英雄基础数据与前排分段统计。</summary>
 public class HeroInfo
 {
     [JsonPropertyName("code")] public string Code { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ public class HeroInfo
     [JsonPropertyName("attribute")] public string Attribute { get; set; } = string.Empty;
     [JsonPropertyName("job")] public string Job { get; set; } = string.Empty;
     [JsonPropertyName("grade")] public int Grade { get; set; }
-    [JsonPropertyName("hasLegendData")] public bool HasLegendData { get; set; }
+    [JsonPropertyName("hasGradeData")] public bool HasGradeData { get; set; }
     [JsonPropertyName("usefulStats")] public List<string> UsefulStats { get; set; } = new();
     [JsonPropertyName("setCombos")] public List<HeroSetCombo> SetCombos { get; set; } = new();
 }
@@ -47,7 +47,7 @@ public class HeroProfile
     public string Attribute { get; init; } = string.Empty;
     public string Job { get; init; } = string.Empty;
     public int Grade { get; init; }
-    public bool HasLegendData { get; init; }
+    public bool HasGradeData { get; init; }
     public IReadOnlyList<HeroSetCombo> SetCombos { get; init; } = Array.Empty<HeroSetCombo>();
     public List<string> UsefulStats { get; set; } = new();
     public List<string> AllowedSets { get; set; } = new();
@@ -62,7 +62,7 @@ public class HeroProfile
         Attribute = Attribute,
         Job = Job,
         Grade = Grade,
-        HasLegendData = HasLegendData,
+        HasGradeData = HasGradeData,
         SetCombos = SetCombos,
         UsefulStats = UsefulStats.ToList(),
         AllowedSets = AllowedSets.ToList(),
