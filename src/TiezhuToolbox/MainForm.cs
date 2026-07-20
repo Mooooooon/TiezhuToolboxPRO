@@ -405,7 +405,7 @@ public partial class MainForm : Form
 
         var result = Modules.Recommend.EnhancementAdvisor.Analyze(
             _lastInfo, (double)numLeftThreshold.Value, (double)numRightThreshold.Value,
-            (double)numLevel88Threshold.Value);
+            (double)numLevel88Threshold.Value, (double)_numHeroMatchThreshold.Value);
 
         lblAdviceBadge.Text = result.Text;
         lblAdviceBadge.BackColor = result.Advice switch

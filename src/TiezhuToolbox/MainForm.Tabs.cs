@@ -35,6 +35,7 @@ public partial class MainForm
             Padding = new Padding(0),
         };
         _equipmentTab = new AntdUI.TabPage { Text = "装备强化", BackColor = Color.White };
+        _autoEnhanceTab = new AntdUI.TabPage { Text = "自动强化", BackColor = Color.FromArgb(245, 246, 248) };
         var heroTab = new AntdUI.TabPage { Text = "英雄配置", BackColor = Color.White };
         var settingsTab = new AntdUI.TabPage { Text = "软件设置", BackColor = Color.FromArgb(245, 246, 248) };
 
@@ -53,9 +54,11 @@ public partial class MainForm
         _heroConfigControl.UpdateRequested += async (_, _) => await UpdateHeroDataAsync();
         _heroConfigControl.CancelUpdateRequested += (_, _) => _heroUpdateCancellation?.Cancel();
         heroTab.Controls.Add(_heroConfigControl);
+        _autoEnhanceTab.Controls.Add(CreateAutoEnhanceContent());
         settingsTab.Controls.Add(CreateSettingsContent());
 
         _mainTabs.Pages.Add(_equipmentTab);
+        _mainTabs.Pages.Add(_autoEnhanceTab);
         _mainTabs.Pages.Add(heroTab);
         _mainTabs.Pages.Add(settingsTab);
         _mainTabs.SelectedIndex = 0;
@@ -104,7 +107,7 @@ public partial class MainForm
         {
             BackColor = Color.White,
             Location = new Point(24, 24),
-            Size = new Size(720, 390),
+            Size = new Size(720, 575),
             Padding = new Padding(24),
         };
         host.Resize += (_, _) => card.Width = Math.Min(760, Math.Max(560, host.ClientSize.Width - 48));
@@ -141,16 +144,121 @@ public partial class MainForm
         foreach (var label in new[] { lblRecognitionGroup, lblRecognitionHotKey, lblRecognitionInterval, lblIntervalUnit })
             label.Height = 34;
 
+        var automationTitle = CreateSettingsHeading(
+            "自动强化",
+            "设置淘汰装备的处理方式、单次处理上限、最低角色匹配度，以及保留装备后的行为。",
+            314);
+        var automationPanel = new FlowLayoutPanel
+        {
+            Location = new Point(24, 384),
+            Size = new Size(690, 34),
+            AutoSize = false,
+            WrapContents = false,
+            Margin = Padding.Empty,
+        };
+        var disposalLabel = new Label
+        {
+            Text = "装备处理方式",
+            ForeColor = TextDarkColor,
+            Size = new Size(96, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = Padding.Empty,
+        };
+        _comboAutoDisposalMethod = new AntdUI.Select
+        {
+            List = true,
+            ReadOnly = false,
+            Size = new Size(86, 34),
+            Radius = 6,
+            Margin = new Padding(0, 0, 18, 0),
+        };
+        _comboAutoDisposalMethod.Items.AddRange(new object[] { "出售", "分解" });
+        _comboAutoDisposalMethod.SelectedIndexChanged += (_, _) => SaveSettingsFromControls();
+
+        var maxLabel = new Label
+        {
+            Text = "最多处理",
+            ForeColor = TextDarkColor,
+            Size = new Size(65, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = Padding.Empty,
+        };
+        _numAutoMaxEquipment = new AntdUI.InputNumber
+        {
+            Size = new Size(76, 34),
+            Minimum = 1,
+            Maximum = 999,
+            Value = 50,
+            Radius = 6,
+            Margin = Padding.Empty,
+        };
+        _numAutoMaxEquipment.ValueChanged += (_, _) => SaveSettingsFromControls();
+        var maxUnit = new Label
+        {
+            Text = "件",
+            ForeColor = TextDarkColor,
+            Size = new Size(32, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = new Padding(4, 0, 14, 0),
+        };
+        var matchLabel = new Label
+        {
+            Text = "最低匹配度",
+            ForeColor = TextDarkColor,
+            Size = new Size(78, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = Padding.Empty,
+        };
+        _numHeroMatchThreshold = new AntdUI.InputNumber
+        {
+            Size = new Size(76, 34),
+            Minimum = 0,
+            Maximum = 100,
+            Value = 70,
+            Radius = 6,
+            Margin = Padding.Empty,
+        };
+        _numHeroMatchThreshold.ValueChanged += (_, _) =>
+        {
+            SaveSettingsFromControls();
+            UpdateAdvice();
+        };
+        var matchUnit = new Label
+        {
+            Text = "%",
+            ForeColor = TextDarkColor,
+            Size = new Size(26, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            Margin = new Padding(4, 0, 0, 0),
+        };
+        automationPanel.Controls.AddRange(new Control[]
+        {
+            disposalLabel, _comboAutoDisposalMethod, maxLabel, _numAutoMaxEquipment,
+            maxUnit, matchLabel, _numHeroMatchThreshold, matchUnit,
+        });
+
+        _chkAutoStopOnValuableEquipment = new AntdUI.Checkbox
+        {
+            Text = "遇到符合保留条件的装备后停止（关闭后将返回背包并继续下一件）",
+            Checked = true,
+            Location = new Point(24, 430),
+            Size = new Size(520, 34),
+        };
+        _chkAutoStopOnValuableEquipment.CheckedChanged += (_, _) => SaveSettingsFromControls();
+
         var reset = new AntdUI.Button
         {
             Text = "恢复默认设置",
-            Location = new Point(24, 324),
+            Location = new Point(24, 509),
             Size = new Size(120, 34),
             Radius = 6,
         };
         reset.Click += (_, _) => ResetSettings();
 
         card.Controls.Add(reset);
+        card.Controls.Add(_chkAutoStopOnValuableEquipment);
+        card.Controls.Add(automationPanel);
+        card.Controls.Add(automationTitle);
         card.Controls.Add(recognitionSettingsPanel);
         card.Controls.Add(recognitionTitle);
         card.Controls.Add(thresholdPanel);
@@ -183,6 +291,10 @@ public partial class MainForm
             numRecognitionInterval.Value = _settings.RecognitionIntervalSeconds;
             continuousRecognitionTimer.Interval = Math.Max(100, (int)(_settings.RecognitionIntervalSeconds * 1000));
             txtAddress.Text = _settings.AdbAddress;
+            _numAutoMaxEquipment.Value = _settings.AutoEnhanceMaxEquipment;
+            _comboAutoDisposalMethod.SelectedValue = _settings.AutoEnhanceDisposalMethod;
+            _numHeroMatchThreshold.Value = _settings.MinimumHeroMatchScore;
+            _chkAutoStopOnValuableEquipment.Checked = _settings.AutoEnhanceStopOnValuableEquipment;
         }
         finally
         {
@@ -202,6 +314,11 @@ public partial class MainForm
         _settings.ContinuousRecognition = chkContinuousRecognition.Checked;
         _settings.RecognitionIntervalSeconds = numRecognitionInterval.Value;
         _settings.AdbAddress = txtAddress.Text.Trim();
+        _settings.AutoEnhanceMaxEquipment = (int)_numAutoMaxEquipment.Value;
+        _settings.AutoEnhanceDisposalMethod = _comboAutoDisposalMethod.SelectedValue as string
+            ?? _comboAutoDisposalMethod.Text;
+        _settings.MinimumHeroMatchScore = _numHeroMatchThreshold.Value;
+        _settings.AutoEnhanceStopOnValuableEquipment = _chkAutoStopOnValuableEquipment.Checked;
         try
         {
             AppSettingsStore.Save(_settings);
@@ -228,6 +345,10 @@ public partial class MainForm
         _settings.ContinuousRecognition = defaults.ContinuousRecognition;
         _settings.RecognitionIntervalSeconds = defaults.RecognitionIntervalSeconds;
         _settings.AdbAddress = defaults.AdbAddress;
+        _settings.AutoEnhanceMaxEquipment = defaults.AutoEnhanceMaxEquipment;
+        _settings.AutoEnhanceDisposalMethod = defaults.AutoEnhanceDisposalMethod;
+        _settings.MinimumHeroMatchScore = defaults.MinimumHeroMatchScore;
+        _settings.AutoEnhanceStopOnValuableEquipment = defaults.AutoEnhanceStopOnValuableEquipment;
         LoadSettingsIntoControls();
         SaveSettingsFromControls();
         ApplyRecognitionAvailability(showHotKeySuccess: false);
@@ -247,8 +368,10 @@ public partial class MainForm
 
     private void ApplyRecognitionAvailability(bool showHotKeySuccess)
     {
-        continuousRecognitionTimer.Enabled = IsEquipmentTabActive && chkContinuousRecognition.Checked;
-        if (!IsEquipmentTabActive)
+        continuousRecognitionTimer.Enabled = IsEquipmentTabActive
+                                             && !IsAutoEnhancing
+                                             && chkContinuousRecognition.Checked;
+        if (!IsEquipmentTabActive || IsAutoEnhancing)
         {
             if (_registeredRecognitionHotKey != Keys.None)
             {
@@ -352,6 +475,7 @@ public partial class MainForm
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        _autoEnhanceCancellation?.Cancel();
         _heroUpdateCancellation?.Cancel();
         HeroDatabase.Instance.Changed -= HeroDatabase_Changed;
         base.OnFormClosing(e);

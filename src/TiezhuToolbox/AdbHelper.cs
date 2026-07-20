@@ -143,6 +143,42 @@ public static class AdbHelper
         return new Bitmap(new MemoryStream(pngBytes));
     }
 
+    /// <summary>
+    /// 使用 Android 自带的 input 命令点击屏幕坐标，不依赖第三方触控组件。
+    /// </summary>
+    public static void Tap(string serial, int x, int y)
+    {
+        if (string.IsNullOrWhiteSpace(serial))
+            throw new ArgumentException("ADB 设备序列号不能为空", nameof(serial));
+        if (x < 0 || y < 0)
+            throw new ArgumentOutOfRangeException(nameof(x), "点击坐标不能为负数");
+
+        var adb = FindAdbPath() ?? throw new FileNotFoundException("未找到 adb.exe");
+        var output = RunAdb(adb, $"-s {serial} shell input tap {x} {y}", timeoutMs: 10_000).Trim();
+        if (output.Contains("error", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("failed", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"ADB 点击失败：{output}");
+        }
+    }
+
+    /// <summary>向安卓设备发送返回键。</summary>
+    public static void PressBack(string serial)
+    {
+        if (string.IsNullOrWhiteSpace(serial))
+            throw new ArgumentException("ADB 设备序列号不能为空", nameof(serial));
+
+        var adb = FindAdbPath() ?? throw new FileNotFoundException("未找到 adb.exe");
+        var output = RunAdb(adb, $"-s {serial} shell input keyevent 4", timeoutMs: 10_000).Trim();
+        if (output.Contains("error", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("failed", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"ADB 返回键发送失败：{output}");
+        }
+    }
+
     private static ProcessStartInfo CreateStartInfo(string adb, string arguments) => new()
     {
         FileName = adb,

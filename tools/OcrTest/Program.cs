@@ -1,5 +1,6 @@
 using TiezhuToolbox.Modules.Ocr;
 using TiezhuToolbox.Modules.Recommend;
+using TiezhuToolbox.Modules.Automation;
 using System.Windows.Forms;
 
 if (args.Contains("--config-smoke"))
@@ -49,6 +50,18 @@ if (args.Contains("--config-smoke"))
                     var address = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     address.Text = "127.0.0.1:5555";
+                    var maxAutoEquipment = typeof(TiezhuToolbox.MainForm).GetField("_numAutoMaxEquipment",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    maxAutoEquipment.GetType().GetProperty("Value")!.SetValue(maxAutoEquipment, 17M);
+                    var disposalMethod = typeof(TiezhuToolbox.MainForm).GetField("_comboAutoDisposalMethod",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    disposalMethod.GetType().GetProperty("SelectedValue")!.SetValue(disposalMethod, "分解");
+                    var matchThreshold = typeof(TiezhuToolbox.MainForm).GetField("_numHeroMatchThreshold",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    matchThreshold.GetType().GetProperty("Value")!.SetValue(matchThreshold, 82M);
+                    var stopOnValuable = typeof(TiezhuToolbox.MainForm).GetField("_chkAutoStopOnValuableEquipment",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    stopOnValuable.GetType().GetProperty("Checked")!.SetValue(stopOnValuable, false);
                     typeof(TiezhuToolbox.MainForm).GetMethod("SaveSettingsFromControls",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(firstForm, null);
                 }
@@ -61,7 +74,21 @@ if (args.Contains("--config-smoke"))
                 var level88Value = (decimal)loadedLevel88Threshold.GetType().GetProperty("Value")!.GetValue(loadedLevel88Threshold)!;
                 var loadedAddress = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
-                if (value != 31M || level88Value != 33M || loadedAddress.Text != "127.0.0.1:5555")
+                var loadedMaxAutoEquipment = typeof(TiezhuToolbox.MainForm).GetField("_numAutoMaxEquipment",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var maxAutoValue = (decimal)loadedMaxAutoEquipment.GetType().GetProperty("Value")!.GetValue(loadedMaxAutoEquipment)!;
+                var loadedDisposalMethod = typeof(TiezhuToolbox.MainForm).GetField("_comboAutoDisposalMethod",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var disposalValue = loadedDisposalMethod.GetType().GetProperty("SelectedValue")!.GetValue(loadedDisposalMethod) as string;
+                var loadedMatchThreshold = typeof(TiezhuToolbox.MainForm).GetField("_numHeroMatchThreshold",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var matchValue = (decimal)loadedMatchThreshold.GetType().GetProperty("Value")!.GetValue(loadedMatchThreshold)!;
+                var loadedStopOnValuable = typeof(TiezhuToolbox.MainForm).GetField("_chkAutoStopOnValuableEquipment",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var stopOnValuableValue = (bool)loadedStopOnValuable.GetType().GetProperty("Checked")!.GetValue(loadedStopOnValuable)!;
+                if (value != 31M || level88Value != 33M || maxAutoValue != 17M
+                    || disposalValue != "分解" || matchValue != 82M || stopOnValuableValue
+                    || loadedAddress.Text != "127.0.0.1:5555")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
             catch (Exception ex)
@@ -74,13 +101,114 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/127.0.0.1:5555");
+        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/17/分解/82%/符合后继续/127.0.0.1:5555");
     }
     finally
     {
         if (Directory.Exists(testRoot))
             Directory.Delete(testRoot, recursive: true);
     }
+    return;
+}
+
+if (args.Contains("--automation-smoke"))
+{
+    var imagePaths = args.Where(arg => arg != "--automation-smoke").ToArray();
+    if (imagePaths.Length != 7 || imagePaths.Any(path => !File.Exists(path)))
+        throw new ArgumentException("--automation-smoke 后需依次提供背包、强化、等级弹窗、已登记材料、出售确认、分解确认、经验溢出奖励截图");
+
+    using var matcher = new AutomationScreenMatcher();
+    using var backpack = new Bitmap(imagePaths[0]);
+    using var enhance = new Bitmap(imagePaths[1]);
+    using var popup = new Bitmap(imagePaths[2]);
+    using var registered = new Bitmap(imagePaths[3]);
+    using var sellConfirmation = new Bitmap(imagePaths[4]);
+    using var extractConfirmation = new Bitmap(imagePaths[5]);
+    using var rewardPopup = new Bitmap(imagePaths[6]);
+
+    void AssertScreen(Bitmap image, AutomationGameScreen expected)
+    {
+        var actual = matcher.DetectScreen(image, out var confidence);
+        Console.WriteLine($"  界面：期望 {expected}，实际 {actual}，置信度 {confidence:P1}");
+        if (actual != expected)
+            throw new InvalidOperationException($"自动强化界面识别失败：期望 {expected}，实际 {actual}（{confidence:P1}）");
+    }
+
+    AssertScreen(backpack, AutomationGameScreen.Backpack);
+    AssertScreen(enhance, AutomationGameScreen.EnhanceEquipment);
+    AssertScreen(popup, AutomationGameScreen.AutoRegisterPopup);
+    AssertScreen(registered, AutomationGameScreen.EnhanceEquipment);
+    AssertScreen(sellConfirmation, AutomationGameScreen.SellConfirmation);
+    AssertScreen(extractConfirmation, AutomationGameScreen.ExtractConfirmation);
+    AssertScreen(rewardPopup, AutomationGameScreen.EnhancementRewardPopup);
+
+    var expectedButtons = new[]
+    {
+        (backpack, AutomationTemplate.BackpackEnhance),
+        (enhance, AutomationTemplate.AutoRegister),
+        (enhance, AutomationTemplate.Sell),
+        (enhance, AutomationTemplate.Extract),
+        (popup, AutomationTemplate.Target3),
+        (popup, AutomationTemplate.Target6),
+        (popup, AutomationTemplate.Target9),
+        (popup, AutomationTemplate.Target12),
+        (popup, AutomationTemplate.Target15),
+        (registered, AutomationTemplate.ReadyEnhance),
+        (sellConfirmation, AutomationTemplate.SellConfirmButton),
+        (extractConfirmation, AutomationTemplate.ExtractConfirmButton),
+        (rewardPopup, AutomationTemplate.RewardClose),
+    };
+    foreach (var (image, template) in expectedButtons)
+    {
+        var match = matcher.Find(image, template);
+        Console.WriteLine($"  按钮：{template} {match.Confidence:P1} @ {match.Center}");
+        if (!match.IsMatch())
+            throw new InvalidOperationException($"自动强化按钮识别失败：{template}（{match.Confidence:P1}）");
+    }
+
+    var targetRows = new[]
+    {
+        AutomationTemplate.Target15,
+        AutomationTemplate.Target12,
+        AutomationTemplate.Target9,
+        AutomationTemplate.Target6,
+        AutomationTemplate.Target3,
+    }.Select(template => matcher.Find(popup, template).Center.Y).ToArray();
+    if (!targetRows.Zip(targetRows.Skip(1), (upper, lower) => lower - upper)
+            .All(gap => gap is >= 55 and <= 90))
+    {
+        throw new InvalidOperationException(
+            $"强化等级按钮行定位异常：{string.Join("/", targetRows)}");
+    }
+
+    if (matcher.HasRegisteredMaterials(enhance) || matcher.HasRegisteredMaterials(popup))
+        throw new InvalidOperationException("空材料槽被误判为已登记材料");
+    if (!matcher.HasRegisteredMaterials(registered))
+        throw new InvalidOperationException("已登记的强化材料未被识别");
+
+    var targets = new[] { 0, 3, 6, 9, 12 }.Select(level => AutomationScreenMatcher.NextTargetLevel(level)).ToArray();
+    if (!targets.SequenceEqual(new int?[] { 3, 6, 9, 12, 15 })
+        || AutomationScreenMatcher.NextTargetLevel(15) != null)
+        throw new InvalidOperationException("下一强化档位计算错误");
+
+    using var resized = new Bitmap(1280, 720);
+    using (var graphics = Graphics.FromImage(resized))
+        graphics.DrawImage(backpack, new Rectangle(0, 0, resized.Width, resized.Height));
+    AssertScreen(resized, AutomationGameScreen.Backpack);
+
+    var automationTemplateDir = Path.GetFullPath(Path.Combine(
+        AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TiezhuToolbox", "Assets", "Templates"));
+    using (var ocr = new OcrEngine(automationTemplateDir))
+    {
+        var info = await ocr.RecognizeAsync(imagePaths[1]);
+        var advice = EnhancementAdvisor.Analyze(info, 24, 24, 28);
+        Console.WriteLine($"  OCR：{info.Level}级 {info.Quality}，+{info.EnhanceLevel}，{info.Score:0.##}分，建议={advice.Advice}");
+        if (info.Level != 85 || info.Quality != "英雄鞋子" || info.EnhanceLevel != 0
+            || advice.Advice != EnhanceAdvice.GiveUp)
+            throw new InvalidOperationException("自动强化样例的 OCR 或强化建议结果不符合预期");
+    }
+
+    Console.WriteLine("自动强化测试通过：7 个界面、13 个按钮、材料槽、分辨率缩放、OCR 与强化建议均正常");
     return;
 }
 
@@ -104,7 +232,7 @@ if (args.Contains("--ui-smoke"))
                 ?? throw new InvalidOperationException("未找到主页签");
             var tabs = tabsField.GetValue(form) ?? throw new InvalidOperationException("主页签未初始化");
             var pages = tabs.GetType().GetProperty("Pages")?.GetValue(tabs) as System.Collections.ICollection;
-            if (pages?.Count != 3)
+            if (pages?.Count != 4)
                 throw new InvalidOperationException($"页签数量错误：{pages?.Count}");
 
             var selectedIndex = tabs.GetType().GetProperty("SelectedIndex")!;
@@ -155,6 +283,19 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException("装备页未恢复持续识别");
 
             selectedIndex.SetValue(tabs, 1);
+            Application.DoEvents();
+            CaptureTab("auto-enhance");
+            var autoStart = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnAutoStart",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var autoLog = (RichTextBox)typeof(TiezhuToolbox.MainForm).GetField("_autoLog",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            if (!autoStart.Enabled || !autoLog.ReadOnly || timer.Enabled)
+                throw new InvalidOperationException("自动强化页初始状态不正确");
+            if (autoLog.Right < autoLog.Parent!.ClientSize.Width - autoLog.Parent.Padding.Right - 2)
+                throw new InvalidOperationException(
+                    $"自动强化日志未填满内容区：日志={autoLog.Bounds}，父容器={autoLog.Parent.ClientSize}");
+
+            selectedIndex.SetValue(tabs, 2);
             Application.DoEvents();
             CaptureTab("hero-config");
             var heroConfig = typeof(TiezhuToolbox.MainForm).GetField("_heroConfigControl",
@@ -226,7 +367,7 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException($"官方组合内容仍被截断：{comboInfo.PreferredHeight}/{comboInfo.ClientSize.Height}");
             if (timer.Enabled)
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
-            selectedIndex.SetValue(tabs, 2);
+            selectedIndex.SetValue(tabs, 3);
             Application.DoEvents();
             var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "numLevel88Threshold", "comboRecognitionHotKey", "numRecognitionInterval" }
                 .Select(name => (Control)typeof(TiezhuToolbox.MainForm).GetField(name,
@@ -272,7 +413,7 @@ if (args.Contains("--ui-smoke"))
         throw new TimeoutException("界面冒烟测试超时");
     if (uiError != null)
         throw new InvalidOperationException("界面冒烟测试失败", uiError);
-    Console.WriteLine($"界面冒烟测试通过：3 个页签，{HeroDatabase.Instance.Profiles.Count} 个英雄");
+    Console.WriteLine($"界面冒烟测试通过：4 个页签，{HeroDatabase.Instance.Profiles.Count} 个英雄");
     return;
 }
 
