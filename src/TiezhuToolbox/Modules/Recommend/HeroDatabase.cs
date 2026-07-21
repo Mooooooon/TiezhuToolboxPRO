@@ -55,12 +55,54 @@ public sealed class HeroDatabase
 
             _overrides.Heroes[profile.Code] = new HeroProfileOverride
             {
+                IsExcluded = profile.IsExcluded,
                 UsefulStats = Normalize(profile.UsefulStats, EquipmentRules.UsefulStats),
                 AllowedSets = Normalize(profile.AllowedSets, SetNames.Keys),
                 NecklaceMainStats = Normalize(profile.NecklaceMainStats, EquipmentRules.NecklaceMainStats),
                 RingMainStats = Normalize(profile.RingMainStats, EquipmentRules.RingMainStats),
                 BootsMainStats = Normalize(profile.BootsMainStats, EquipmentRules.BootsMainStats),
             };
+            _overrides.Version = HeroOverrideDocument.CurrentVersion;
+            AppPaths.WriteJsonAtomic(AppPaths.HeroOverridesPath, _overrides);
+            RebuildProfiles();
+        }
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>导出全部英雄自定义配置，包含装备需求和匹配屏蔽状态。</summary>
+    public void ExportOverrides(string path)
+    {
+        lock (_sync)
+            AppPaths.WriteJsonAtomic(path, _overrides);
+    }
+
+    /// <summary>从存档替换全部英雄自定义配置。</summary>
+    public void ImportOverrides(string path)
+    {
+        HeroOverrideDocument imported;
+        try
+        {
+            imported = JsonSerializer.Deserialize<HeroOverrideDocument>(
+                           File.ReadAllText(path), AppPaths.JsonOptions)
+                       ?? throw new InvalidDataException("配置存档内容为空");
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException("配置存档格式不正确", ex);
+        }
+
+        if (imported.Version <= 0 || imported.Version > HeroOverrideDocument.CurrentVersion)
+            throw new InvalidDataException($"不支持的配置存档版本：{imported.Version}");
+
+        imported.Heroes ??= new Dictionary<string, HeroProfileOverride>();
+        imported.Heroes = imported.Heroes
+            .Where(item => !string.IsNullOrWhiteSpace(item.Key) && item.Value != null)
+            .ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
+        imported.Version = HeroOverrideDocument.CurrentVersion;
+
+        lock (_sync)
+        {
+            _overrides = imported;
             AppPaths.WriteJsonAtomic(AppPaths.HeroOverridesPath, _overrides);
             RebuildProfiles();
         }
@@ -157,6 +199,7 @@ public sealed class HeroDatabase
         if (!_overrides.Heroes.TryGetValue(hero.Code, out var custom))
             return profile;
 
+        profile.IsExcluded = custom.IsExcluded;
         profile.UsefulStats = Normalize(custom.UsefulStats, EquipmentRules.UsefulStats);
         profile.AllowedSets = Normalize(custom.AllowedSets, SetNames.Keys);
         profile.NecklaceMainStats = Normalize(custom.NecklaceMainStats, EquipmentRules.NecklaceMainStats);
@@ -194,8 +237,14 @@ public sealed class HeroDatabase
             return new HeroOverrideDocument();
         try
         {
-            return JsonSerializer.Deserialize<HeroOverrideDocument>(
-                File.ReadAllText(AppPaths.HeroOverridesPath), AppPaths.JsonOptions) ?? new HeroOverrideDocument();
+            var document = JsonSerializer.Deserialize<HeroOverrideDocument>(
+                               File.ReadAllText(AppPaths.HeroOverridesPath), AppPaths.JsonOptions)
+                           ?? new HeroOverrideDocument();
+            document.Heroes ??= new Dictionary<string, HeroProfileOverride>();
+            document.Heroes = document.Heroes
+                .Where(item => !string.IsNullOrWhiteSpace(item.Key) && item.Value != null)
+                .ToDictionary(item => item.Key, item => item.Value, StringComparer.Ordinal);
+            return document;
         }
         catch
         {

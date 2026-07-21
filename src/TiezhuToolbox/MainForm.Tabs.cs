@@ -449,8 +449,8 @@ public partial class MainForm
             HeroDatabase.Instance.Reload();
             _heroConfigControl.RefreshData();
             UpdateStatus(updateResult.Warnings.Count == 0
-                ? $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}"
-                : $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}，{updateResult.Warnings.Count} 个英雄沿用旧配置或为空");
+                ? $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}，自定义配置已保留"
+                : $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}，自定义配置已保留；{updateResult.Warnings.Count} 个英雄沿用旧配置或为空");
         }
         catch (OperationCanceledException)
         {

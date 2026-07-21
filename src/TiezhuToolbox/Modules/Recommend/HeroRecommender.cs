@@ -65,6 +65,9 @@ public static class HeroRecommender
 
         foreach (var hero in profiles)
         {
+            if (hero.IsExcluded)
+                continue;
+
             // 硬门槛一：右三件按部位配置检查主属性；未知部位保持旧版的宽松回退逻辑。
             if (!MainStatMatches(hero, part, normalizedMainStat, info, mainStatInformative))
                 continue;

@@ -29,9 +29,12 @@ internal sealed class HeroConfigControl : UserControl
     private Panel _comboSection = null!;
     private readonly AntdUI.Button _updateButton = new();
     private readonly AntdUI.Button _cancelUpdateButton = new();
+    private readonly AntdUI.Button _exportButton = new();
+    private readonly AntdUI.Button _importButton = new();
     private readonly ProgressBar _updateProgress = new();
     private readonly AntdUI.Button _resetHeroButton = new();
     private readonly AntdUI.Button _resetAllButton = new();
+    private readonly AntdUI.Checkbox _participatesInMatchingCheck = new();
     private readonly Dictionary<string, AntdUI.Checkbox> _attributeFilterChecks = new();
     private readonly Dictionary<string, AntdUI.Checkbox> _jobFilterChecks = new();
     private readonly Dictionary<string, AntdUI.Checkbox> _usefulStatChecks = new();
@@ -74,17 +77,21 @@ internal sealed class HeroConfigControl : UserControl
             FlowDirection = FlowDirection.LeftToRight,
         };
         _searchInput.PlaceholderText = "搜索英雄名称";
-        _searchInput.Size = new Size(310, 34);
+        _searchInput.Size = new Size(220, 34);
         _searchInput.Margin = new Padding(0, 0, 10, 0);
         _searchInput.TextChanged += (_, _) => ApplyFilters();
 
         _sourceInfo.AutoSize = false;
-        _sourceInfo.Size = new Size(400, 34);
+        _sourceInfo.Size = new Size(220, 34);
         _sourceInfo.TextAlign = ContentAlignment.MiddleLeft;
         _sourceInfo.ForeColor = Color.FromArgb(95, 99, 104);
 
         ConfigureButton(_updateButton, "更新官方数据", 112);
         _updateButton.Click += (_, _) => UpdateRequested?.Invoke(this, EventArgs.Empty);
+        ConfigureButton(_exportButton, "导出配置", 84);
+        _exportButton.Click += (_, _) => ExportConfiguration();
+        ConfigureButton(_importButton, "导入配置", 84);
+        _importButton.Click += (_, _) => ImportConfiguration();
         ConfigureButton(_cancelUpdateButton, "取消更新", 88);
         _cancelUpdateButton.Visible = false;
         _cancelUpdateButton.Click += (_, _) => CancelUpdateRequested?.Invoke(this, EventArgs.Empty);
@@ -95,6 +102,8 @@ internal sealed class HeroConfigControl : UserControl
         firstRow.Controls.Add(_searchInput);
         firstRow.Controls.Add(_sourceInfo);
         firstRow.Controls.Add(_updateButton);
+        firstRow.Controls.Add(_exportButton);
+        firstRow.Controls.Add(_importButton);
         firstRow.Controls.Add(_cancelUpdateButton);
         firstRow.Controls.Add(_updateProgress);
 
@@ -143,6 +152,9 @@ internal sealed class HeroConfigControl : UserControl
         _heroMeta.Location = new Point(6, 42);
         _heroMeta.AutoSize = true;
         _heroMeta.ForeColor = Color.FromArgb(95, 99, 104);
+        _participatesInMatchingCheck.Text = "参与装备匹配";
+        _participatesInMatchingCheck.Size = new Size(132, 34);
+        _participatesInMatchingCheck.CheckedChanged += (_, _) => SaveEditor();
         ConfigureButton(_resetHeroButton, "恢复当前英雄", 112);
         _resetHeroButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         _resetHeroButton.Click += (_, _) => ResetSelectedHero();
@@ -151,6 +163,7 @@ internal sealed class HeroConfigControl : UserControl
         _resetAllButton.Click += (_, _) => ResetAllHeroes();
         header.Controls.Add(_heroTitle);
         header.Controls.Add(_heroMeta);
+        header.Controls.Add(_participatesInMatchingCheck);
         header.Controls.Add(_resetHeroButton);
         header.Controls.Add(_resetAllButton);
         _editor.Controls.Add(header);
@@ -361,7 +374,9 @@ internal sealed class HeroConfigControl : UserControl
         {
             _heroTitle.Text = profile.Name;
             _heroMeta.Text = $"{GetName(AttributeNames, profile.Attribute)} · {GetName(JobNames, profile.Job)} · {profile.Grade}星"
-                + (profile.HasGradeData ? " · 前排分段默认数据" : " · 暂无默认战绩数据");
+                + (profile.HasGradeData ? " · 前排分段默认数据" : " · 暂无默认战绩数据")
+                + (profile.IsExcluded ? " · 已屏蔽匹配" : string.Empty);
+            _participatesInMatchingCheck.Checked = !profile.IsExcluded;
             SetChecks(_usefulStatChecks, profile.UsefulStats);
             SetChecks(_setChecks, profile.AllowedSets);
             SetChecks(_necklaceChecks, profile.NecklaceMainStats);
@@ -387,6 +402,7 @@ internal sealed class HeroConfigControl : UserControl
         var profile = HeroDatabase.Instance.GetProfile(_selectedHeroCode);
         if (profile == null)
             return;
+        profile.IsExcluded = !_participatesInMatchingCheck.Checked;
         profile.UsefulStats = CheckedKeys(_usefulStatChecks);
         profile.AllowedSets = CheckedKeys(_setChecks);
         profile.NecklaceMainStats = CheckedKeys(_necklaceChecks);
@@ -400,12 +416,69 @@ internal sealed class HeroConfigControl : UserControl
         var visible = _visibleProfiles.FirstOrDefault(item => item.Code == profile.Code);
         if (saved != null && visible != null)
         {
+            visible.IsExcluded = saved.IsExcluded;
             visible.UsefulStats = saved.UsefulStats.ToList();
             visible.AllowedSets = saved.AllowedSets.ToList();
             visible.NecklaceMainStats = saved.NecklaceMainStats.ToList();
             visible.RingMainStats = saved.RingMainStats.ToList();
             visible.BootsMainStats = saved.BootsMainStats.ToList();
             _heroList.Invalidate();
+            _heroMeta.Text = _heroMeta.Text.Replace(" · 已屏蔽匹配", string.Empty)
+                + (saved.IsExcluded ? " · 已屏蔽匹配" : string.Empty);
+        }
+    }
+
+    private void ExportConfiguration()
+    {
+        using var dialog = new SaveFileDialog
+        {
+            Title = "导出英雄装备需求",
+            Filter = "英雄配置存档 (*.json)|*.json",
+            FileName = $"铁柱工具箱-英雄配置-{DateTime.Now:yyyyMMdd}.json",
+            AddExtension = true,
+            DefaultExt = "json",
+        };
+        if (dialog.ShowDialog() != DialogResult.OK)
+            return;
+
+        try
+        {
+            HeroDatabase.Instance.ExportOverrides(dialog.FileName);
+            MessageBox.Show("英雄装备需求和屏蔽状态已导出。", "导出完成",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"导出失败：{ex.Message}", "导出配置",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+    }
+
+    private void ImportConfiguration()
+    {
+        using var dialog = new OpenFileDialog
+        {
+            Title = "导入英雄装备需求",
+            Filter = "英雄配置存档 (*.json)|*.json|所有文件 (*.*)|*.*",
+            CheckFileExists = true,
+        };
+        if (dialog.ShowDialog() != DialogResult.OK)
+            return;
+        if (MessageBox.Show("导入会替换当前全部英雄配置，是否继续？", "导入配置",
+                MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
+            return;
+
+        try
+        {
+            HeroDatabase.Instance.ImportOverrides(dialog.FileName);
+            RefreshData();
+            MessageBox.Show("英雄配置已恢复，装备需求和屏蔽状态立即生效。", "导入完成",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"导入失败：{ex.Message}", "导入配置",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 
@@ -430,6 +503,8 @@ internal sealed class HeroConfigControl : UserControl
     public void BeginUpdate()
     {
         _updateButton.Enabled = false;
+        _exportButton.Enabled = false;
+        _importButton.Enabled = false;
         _cancelUpdateButton.Visible = true;
         _updateProgress.Visible = true;
         _updateProgress.Style = ProgressBarStyle.Marquee;
@@ -450,6 +525,8 @@ internal sealed class HeroConfigControl : UserControl
     public void EndUpdate()
     {
         _updateButton.Enabled = true;
+        _exportButton.Enabled = true;
+        _importButton.Enabled = true;
         _cancelUpdateButton.Visible = false;
         _updateProgress.Visible = false;
         RefreshData();
@@ -475,7 +552,8 @@ internal sealed class HeroConfigControl : UserControl
         using var nameFont = new Font(Font, FontStyle.Bold);
         e.Graphics.DrawString(hero.Name, nameFont, nameBrush, e.Bounds.Left + 58, e.Bounds.Top + 9);
         var meta = $"{GetName(AttributeNames, hero.Attribute)} · {GetName(JobNames, hero.Job)}"
-            + (hero.HasGradeData ? string.Empty : " · 无战绩默认");
+            + (hero.HasGradeData ? string.Empty : " · 无战绩默认")
+            + (hero.IsExcluded ? " · 已屏蔽" : string.Empty);
         e.Graphics.DrawString(meta, Font, metaBrush, e.Bounds.Left + 58, e.Bounds.Top + 32);
     }
 
@@ -522,6 +600,7 @@ internal sealed class HeroConfigControl : UserControl
             var header = _editor.Controls[0];
             _resetAllButton.Location = new Point(header.Width - _resetAllButton.Width - 4, 4);
             _resetHeroButton.Location = new Point(_resetAllButton.Left - _resetHeroButton.Width - 8, 4);
+            _participatesInMatchingCheck.Location = new Point(Math.Max(210, _resetHeroButton.Left), 38);
         }
     }
 
@@ -589,6 +668,7 @@ internal sealed class HeroConfigControl : UserControl
         _selectedHeroCode = null;
         _heroTitle.Text = "未选择英雄";
         _heroMeta.Text = string.Empty;
+        _participatesInMatchingCheck.Checked = false;
         _comboInfo.Text = string.Empty;
         _loadingEditor = true;
         foreach (var dictionary in new[] { _usefulStatChecks, _setChecks, _necklaceChecks, _ringChecks, _bootsChecks })

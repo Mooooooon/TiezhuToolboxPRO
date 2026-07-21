@@ -48,6 +48,8 @@ public class HeroProfile
     public string Job { get; init; } = string.Empty;
     public int Grade { get; init; }
     public bool HasGradeData { get; init; }
+    /// <summary>用户是否将该英雄排除在装备匹配之外。</summary>
+    public bool IsExcluded { get; set; }
     public IReadOnlyList<HeroSetCombo> SetCombos { get; init; } = Array.Empty<HeroSetCombo>();
     public List<string> UsefulStats { get; set; } = new();
     public List<string> AllowedSets { get; set; } = new();
@@ -63,6 +65,7 @@ public class HeroProfile
         Job = Job,
         Grade = Grade,
         HasGradeData = HasGradeData,
+        IsExcluded = IsExcluded,
         SetCombos = SetCombos,
         UsefulStats = UsefulStats.ToList(),
         AllowedSets = AllowedSets.ToList(),
@@ -74,13 +77,14 @@ public class HeroProfile
 
 public class HeroOverrideDocument
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
     public int Version { get; set; } = CurrentVersion;
     public Dictionary<string, HeroProfileOverride> Heroes { get; set; } = new();
 }
 
 public class HeroProfileOverride
 {
+    public bool IsExcluded { get; set; }
     public List<string> UsefulStats { get; set; } = new();
     public List<string> AllowedSets { get; set; } = new();
     public List<string> NecklaceMainStats { get; set; } = new();

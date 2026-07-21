@@ -10,13 +10,30 @@ if (args.Contains("--config-smoke"))
     try
     {
         var database = HeroDatabase.Instance;
-        var original = database.Profiles.First(profile => profile.AllowedSets.Count > 0);
+        var original = database.Profiles.First(profile => profile.AllowedSets.Count > 0 && profile.UsefulStats.Count > 0);
+        var matchingGear = new EquipmentInfo
+        {
+            Quality = "传说武器",
+            SubStats =
+            [
+                new SubStat
+                {
+                    Name = original.UsefulStats[0],
+                    Value = original.UsefulStats[0] == "速度" ? "4" : "8%",
+                },
+            ],
+        };
+        var excludedProfile = original.Clone();
+        excludedProfile.IsExcluded = true;
+        if (HeroRecommender.Recommend(matchingGear, [excludedProfile], database.SetCodesByName).Count != 0)
+            throw new InvalidOperationException("已屏蔽英雄仍参与装备推荐");
         var custom = original.Clone();
         custom.UsefulStats.Clear();
         custom.AllowedSets.Clear();
         custom.NecklaceMainStats.Clear();
         custom.RingMainStats.Clear();
         custom.BootsMainStats.Clear();
+        custom.IsExcluded = true;
         database.SaveOverride(custom);
 
         var overridePath = Path.Combine(testRoot, "hero-overrides.json");
@@ -24,12 +41,22 @@ if (args.Contains("--config-smoke"))
             throw new InvalidOperationException("英雄覆盖文件未保存");
         database.Reload();
         var reloaded = database.GetProfile(original.Code)!;
-        if (reloaded.UsefulStats.Count != 0 || reloaded.AllowedSets.Count != 0)
+        if (reloaded.UsefulStats.Count != 0 || reloaded.AllowedSets.Count != 0 || !reloaded.IsExcluded)
             throw new InvalidOperationException("英雄覆盖配置未在重载后生效");
+
+        var archivePath = Path.Combine(testRoot, "hero-config-archive.json");
+        database.ExportOverrides(archivePath);
+        if (!File.Exists(archivePath))
+            throw new InvalidOperationException("英雄配置存档未导出");
         database.ResetOverride(original.Code);
         var reset = database.GetProfile(original.Code)!;
-        if (reset.AllowedSets.Count == 0)
+        if (reset.AllowedSets.Count == 0 || reset.IsExcluded)
             throw new InvalidOperationException("恢复英雄默认配置失败");
+        database.ImportOverrides(archivePath);
+        var imported = database.GetProfile(original.Code)!;
+        if (!imported.IsExcluded || imported.AllowedSets.Count != 0)
+            throw new InvalidOperationException("英雄配置存档导入失败");
+        database.ResetOverride(original.Code);
 
         Exception? settingsError = null;
         var settingsThread = new Thread(() =>
@@ -342,6 +369,16 @@ if (args.Contains("--ui-smoke"))
             Application.DoEvents();
             if ((bool)checkedProperty.GetValue(firstUsefulCheck)! != changedValue)
                 throw new InvalidOperationException("英雄配置在切换角色后恢复为旧状态");
+            var participatesCheck = heroConfig.GetType().GetField("_participatesInMatchingCheck",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
+            var participatesProperty = participatesCheck.GetType().GetProperty("Checked")!;
+            participatesProperty.SetValue(participatesCheck, false);
+            Application.DoEvents();
+            heroList.SelectedIndex = 1;
+            heroList.SelectedIndex = 0;
+            Application.DoEvents();
+            if ((bool)participatesProperty.GetValue(participatesCheck)!)
+                throw new InvalidOperationException("英雄屏蔽状态在切换角色后丢失");
             heroList.TopIndex = 0;
             heroList.GetType().GetMethod("OnMouseWheel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
