@@ -9,55 +9,6 @@ if (args.Contains("--config-smoke"))
     Environment.SetEnvironmentVariable("TIEZHU_TOOLBOX_USER_ROOT", testRoot);
     try
     {
-        var database = HeroDatabase.Instance;
-        var original = database.Profiles.First(profile => profile.AllowedSets.Count > 0 && profile.UsefulStats.Count > 0);
-        var matchingGear = new EquipmentInfo
-        {
-            Quality = "传说武器",
-            SubStats =
-            [
-                new SubStat
-                {
-                    Name = original.UsefulStats[0],
-                    Value = original.UsefulStats[0] == "速度" ? "4" : "8%",
-                },
-            ],
-        };
-        var excludedProfile = original.Clone();
-        excludedProfile.IsExcluded = true;
-        if (HeroRecommender.Recommend(matchingGear, [excludedProfile], database.SetCodesByName).Count != 0)
-            throw new InvalidOperationException("已屏蔽英雄仍参与装备推荐");
-        var custom = original.Clone();
-        custom.UsefulStats.Clear();
-        custom.AllowedSets.Clear();
-        custom.NecklaceMainStats.Clear();
-        custom.RingMainStats.Clear();
-        custom.BootsMainStats.Clear();
-        custom.IsExcluded = true;
-        database.SaveOverride(custom);
-
-        var overridePath = Path.Combine(testRoot, "hero-overrides.json");
-        if (!File.Exists(overridePath))
-            throw new InvalidOperationException("英雄覆盖文件未保存");
-        database.Reload();
-        var reloaded = database.GetProfile(original.Code)!;
-        if (reloaded.UsefulStats.Count != 0 || reloaded.AllowedSets.Count != 0 || !reloaded.IsExcluded)
-            throw new InvalidOperationException("英雄覆盖配置未在重载后生效");
-
-        var archivePath = Path.Combine(testRoot, "hero-config-archive.json");
-        database.ExportOverrides(archivePath);
-        if (!File.Exists(archivePath))
-            throw new InvalidOperationException("英雄配置存档未导出");
-        database.ResetOverride(original.Code);
-        var reset = database.GetProfile(original.Code)!;
-        if (reset.AllowedSets.Count == 0 || reset.IsExcluded)
-            throw new InvalidOperationException("恢复英雄默认配置失败");
-        database.ImportOverrides(archivePath);
-        var imported = database.GetProfile(original.Code)!;
-        if (!imported.IsExcluded || imported.AllowedSets.Count != 0)
-            throw new InvalidOperationException("英雄配置存档导入失败");
-        database.ResetOverride(original.Code);
-
         Exception? settingsError = null;
         var settingsThread = new Thread(() =>
         {
@@ -136,7 +87,7 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/17/分解/82%/紫装只赌速度/符合后继续/127.0.0.1:5555");
+        Console.WriteLine("配置持久化测试通过：软件设置 31/33/17/分解/82%/紫装只赌速度/符合后继续/127.0.0.1:5555");
     }
     finally
     {
@@ -304,6 +255,42 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             if (addressInput.Width < DpiPixel(200))
                 throw new InvalidOperationException($"ADB 地址输入框宽度不足：{addressInput.Width}");
+            var showDemand = typeof(TiezhuToolbox.MainForm).GetMethod("ShowDemandRecommendations",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                ?? throw new InvalidOperationException("找不到套装需求展示方法");
+            showDemand.Invoke(form,
+            [
+                new EquipmentInfo
+                {
+                    Level = 88,
+                    Quality = "传说鞋子",
+                    SetName = "速度套装",
+                    MainStatName = "速度",
+                    MainStatValue = "1",
+                    SubStats =
+                    {
+                        new SubStat { Name = "生命值", Value = "8%" },
+                        new SubStat { Name = "防御力", Value = "8%" },
+                        new SubStat { Name = "效果命中", Value = "8%" },
+                        new SubStat { Name = "效果抗性", Value = "8%" },
+                    },
+                },
+            ]);
+            Application.DoEvents();
+            var demandResults = (FlowLayoutPanel)typeof(TiezhuToolbox.MainForm).GetField("flowHeroes",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            if (demandResults.Controls.Count == 0 || demandResults.Controls.Count > 5)
+                throw new InvalidOperationException($"装备页需求子类卡片数量错误：{demandResults.Controls.Count}");
+            var firstCard = demandResults.Controls[0];
+            var collapsedHeight = firstCard.Height;
+            var header = firstCard.Controls.Cast<Control>().OfType<Panel>()
+                .First(panel => panel.Cursor == Cursors.Hand);
+            typeof(Control).GetMethod("OnClick",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(header, new object[] { EventArgs.Empty });
+            Application.DoEvents();
+            if (firstCard.Height <= collapsedHeight)
+                throw new InvalidOperationException("装备页需求子类卡片无法展开英雄配装");
             CaptureTab("equipment");
             var timer = (System.Windows.Forms.Timer)(typeof(TiezhuToolbox.MainForm)
                 .GetField("continuousRecognitionTimer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
@@ -336,84 +323,24 @@ if (args.Contains("--ui-smoke"))
 
             selectedIndex.SetValue(tabs, 2);
             Application.DoEvents();
-            CaptureTab("hero-config");
-            var heroConfig = typeof(TiezhuToolbox.MainForm).GetField("_heroConfigControl",
+            CaptureTab("demand-analysis");
+            var demandBrowser = typeof(TiezhuToolbox.MainForm).GetField("_demandBrowserControl",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
-            var heroList = (ListBox)heroConfig.GetType().GetField("_heroList",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
-            var usefulChecks = (System.Collections.IDictionary)heroConfig.GetType().GetField("_usefulStatChecks",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
-            var resistanceCheck = (Control)(usefulChecks["效果抗性"]
-                ?? throw new InvalidOperationException("有效属性缺少效果抗性选项"));
-            var usefulOptions = resistanceCheck.Parent
-                ?? throw new InvalidOperationException("效果抗性选项未加入有效属性区域");
-            void AssertUsefulStatsVisible()
-            {
-                foreach (Control check in usefulChecks.Values)
-                    if (check.Right + check.Margin.Right > usefulOptions.ClientSize.Width
-                        || check.Bottom + check.Margin.Bottom > usefulOptions.ClientSize.Height)
-                        throw new InvalidOperationException(
-                            $"有效属性选项被裁剪：{check.Text}={check.Bounds}，容器={usefulOptions.ClientSize}");
-            }
-
-            var originalClientSize = form.ClientSize;
-            form.ClientSize = new Size(form.MinimumSize.Width, originalClientSize.Height);
+            var setList = (ListBox)demandBrowser.GetType().GetField("_setList",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(demandBrowser)!;
+            var profilesPanel = (FlowLayoutPanel)demandBrowser.GetType().GetField("_profiles",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(demandBrowser)!;
+            if (setList.Items.Count != 23)
+                throw new InvalidOperationException($"需求分析套装数量错误：{setList.Items.Count}");
+            var populatedIndex = Enumerable.Range(0, setList.Items.Count)
+                .First(index => ((DemandSet)setList.Items[index]!).Profiles.Count > 0);
+            setList.SelectedIndex = populatedIndex;
             Application.DoEvents();
-            AssertUsefulStatsVisible();
-            var narrowSectionHeight = usefulOptions.Parent!.Height;
-            form.ClientSize = new Size(1400, originalClientSize.Height);
-            Application.DoEvents();
-            AssertUsefulStatsVisible();
-            var wideSectionHeight = usefulOptions.Parent!.Height;
-            if (narrowSectionHeight <= wideSectionHeight)
-                throw new InvalidOperationException(
-                    $"有效属性区域未随宽度调整高度：窄={narrowSectionHeight}，宽={wideSectionHeight}");
-            form.ClientSize = originalClientSize;
-            Application.DoEvents();
-            AssertUsefulStatsVisible();
-            var firstUsefulCheck = usefulChecks.Values.Cast<object>().First();
-            var checkedProperty = firstUsefulCheck.GetType().GetProperty("Checked")!;
-            var changedValue = !(bool)checkedProperty.GetValue(firstUsefulCheck)!;
-            checkedProperty.SetValue(firstUsefulCheck, changedValue);
-            Application.DoEvents();
-            heroList.SelectedIndex = 1;
-            heroList.SelectedIndex = 0;
-            Application.DoEvents();
-            if ((bool)checkedProperty.GetValue(firstUsefulCheck)! != changedValue)
-                throw new InvalidOperationException("英雄配置在切换角色后恢复为旧状态");
-            var participatesCheck = heroConfig.GetType().GetField("_participatesInMatchingCheck",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
-            var participatesProperty = participatesCheck.GetType().GetProperty("Checked")!;
-            participatesProperty.SetValue(participatesCheck, false);
-            Application.DoEvents();
-            heroList.SelectedIndex = 1;
-            heroList.SelectedIndex = 0;
-            Application.DoEvents();
-            if ((bool)participatesProperty.GetValue(participatesCheck)!)
-                throw new InvalidOperationException("英雄屏蔽状态在切换角色后丢失");
-            heroList.TopIndex = 0;
-            heroList.GetType().GetMethod("OnMouseWheel",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
-                .Invoke(heroList, new object[] { new MouseEventArgs(MouseButtons.None, 0, 0, 0, -120) });
-            if (heroList.TopIndex == 0)
-                throw new InvalidOperationException("隐藏滚动条后英雄列表无法使用滚轮滚动");
-            var heroWithMostCombos = HeroDatabase.Instance.Profiles.OrderByDescending(profile => profile.SetCombos.Count).First();
-            heroConfig.GetType().GetMethod("RefreshData")!.Invoke(heroConfig, new object?[] { heroWithMostCombos.Code });
-            Application.DoEvents();
-            var editor = (FlowLayoutPanel)(heroConfig.GetType().GetField("_editor",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)
-                ?? throw new InvalidOperationException("英雄编辑区未初始化"));
-            editor.AutoScrollPosition = new Point(0, editor.VerticalScroll.Maximum);
-            Application.DoEvents();
-            CaptureTab("hero-config-bottom");
-            var lastContentSection = editor.Controls.Cast<Control>().Reverse().Skip(1).First();
-            var visibleEditorHeight = editor.Parent?.ClientSize.Height ?? editor.ClientSize.Height;
-            if (lastContentSection.Bottom > visibleEditorHeight)
-                throw new InvalidOperationException($"英雄编辑区滚动到底后内容仍被截断：{lastContentSection.Bottom}/{visibleEditorHeight}");
-            var comboInfo = (Label)heroConfig.GetType().GetField("_comboInfo",
-                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(heroConfig)!;
-            if (comboInfo.PreferredHeight > comboInfo.ClientSize.Height)
-                throw new InvalidOperationException($"官方组合内容仍被截断：{comboInfo.PreferredHeight}/{comboInfo.ClientSize.Height}");
+            if (profilesPanel.Controls.Count == 0)
+                throw new InvalidOperationException("需求分析页未显示属性子类");
+            if (profilesPanel.Controls.Cast<Control>().Any(control =>
+                    control.Controls.Cast<Control>().OfType<AntdUI.Checkbox>().Any()))
+                throw new InvalidOperationException("只读需求分析页仍包含可编辑复选框");
             if (timer.Enabled)
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
             selectedIndex.SetValue(tabs, 3);
@@ -438,7 +365,7 @@ if (args.Contains("--ui-smoke"))
             if (heroicOnlySpeedCheck.Width < DpiPixel(400) || heroicOnlySpeedCheck.Height < DpiPixel(32))
                 throw new InvalidOperationException("紫装只赌速度设置项尺寸不足");
             var requiredRuleTexts = new[]
-                { "红装赌速度", "紫装只赌速度", "速度硬门槛", "速度鞋默认", "双爆项链默认", "速度套补全" };
+                { "红装赌速度", "紫装只赌速度", "套装子类", "右三主属性", "强化分数", "固定主属性" };
             if (requiredRuleTexts.Any(text => !settingsRulesLabel.Text.Contains(text)))
                 throw new InvalidOperationException("软件设置页缺少自动规则说明");
             var preferredRulesHeight = settingsRulesLabel.GetPreferredSize(
@@ -462,8 +389,8 @@ if (args.Contains("--ui-smoke"))
             typeof(TiezhuToolbox.MainForm).GetMethod("ApplyRecognitionAvailability",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(form, new object[] { false });
 
-            if (HeroDatabase.Instance.Profiles.Count < 300)
-                throw new InvalidOperationException($"全部英雄数据未加载：{HeroDatabase.Instance.Profiles.Count}");
+            if (!DemandDatabase.Instance.IsLoaded || DemandDatabase.Instance.Sets.Count != 23)
+                throw new InvalidOperationException("静态需求数据未加载");
             var topPanel = (Control)typeof(TiezhuToolbox.MainForm).GetField("topPanel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             Console.WriteLine($"  布局尺寸：窗体={form.ClientSize.Width}，页签={((Control)tabs).ClientSize.Width}，工具栏={topPanel.ClientSize.Width}，DPI={form.DeviceDpi}");
@@ -483,7 +410,7 @@ if (args.Contains("--ui-smoke"))
         throw new TimeoutException("界面冒烟测试超时");
     if (uiError != null)
         throw new InvalidOperationException("界面冒烟测试失败", uiError);
-    Console.WriteLine($"界面冒烟测试通过：4 个页签，{HeroDatabase.Instance.Profiles.Count} 个英雄");
+    Console.WriteLine("界面冒烟测试通过：4 个页签，23 个套装需求");
     return;
 }
 
@@ -499,617 +426,345 @@ var imageNames = args.Length > 0
 // 样例一：速度套 + 速度主属性鞋 + 副属性{防御,生命,命中,抗性} → 调香师维波里丝(c5154) 应为 100%
 // 样例二：暴击套 + 暴击率主属性项链 + 同样副属性 → c5154 主属性/套装均不符，不得出现
 // 样例三：速度套速度鞋，副属性{生命,防御,命中,暴击率}但强化全跳暴击率 → c5154 应出现但匹配度大降（<50%）
+if (args.Contains("--demand-data"))
+{
+    var database = DemandDatabase.Instance;
+    if (!database.IsLoaded)
+        throw new InvalidOperationException($"静态需求数据未加载：{database.ErrorMessage}");
+    var profiles = database.Sets.SelectMany(set => set.Profiles).ToList();
+    var builds = profiles.SelectMany(profile => profile.Heroes).ToList();
+    var uniqueHeroes = builds.Select(hero => hero.Code).Distinct(StringComparer.Ordinal).Count();
+    if (database.Sets.Count != 23 || database.Sets.Count(set => set.Profiles.Count > 0) != 21
+        || profiles.Count != 171 || builds.Count != 644 || uniqueHeroes != 100)
+    {
+        throw new InvalidOperationException(
+            $"需求数据规模错误：套装 {database.Sets.Count}/有数据 {database.Sets.Count(set => set.Profiles.Count > 0)}/子类 {profiles.Count}/配装 {builds.Count}/英雄 {uniqueHeroes}");
+    }
+    var duplicateBuildPreserved = profiles.Any(profile => profile.Heroes
+        .GroupBy(hero => hero.Code, StringComparer.Ordinal)
+        .Any(group => group.Select(hero => hero.ComboName).Distinct(StringComparer.Ordinal).Count() > 1));
+    if (!duplicateBuildPreserved)
+        throw new InvalidOperationException("同英雄不同完整套装组合未保留");
+    var missingSetIcons = database.Sets
+        .Where(set => DemandDatabase.GetSetIconPath(set.Code) == null)
+        .Select(set => set.Code)
+        .ToList();
+    var missingAvatars = builds.Select(hero => hero.Code)
+        .Distinct(StringComparer.Ordinal)
+        .Where(code => DemandDatabase.GetAvatarPath(code) == null)
+        .ToList();
+    if (missingSetIcons.Count > 0 || missingAvatars.Count > 0)
+        throw new InvalidOperationException(
+            $"静态图片缺失：套装[{string.Join(",", missingSetIcons)}] 英雄[{string.Join(",", missingAvatars)}]");
+    var invalidDocument = new DemandDataDocument
+    {
+        SchemaVersion = DemandDatabase.CurrentSchemaVersion,
+        UpdatedAt = "test",
+        Sets =
+        {
+            new DemandSet
+            {
+                Code = "invalid",
+                Name = "无效套装",
+                Profiles =
+                {
+                    new DemandProfile
+                    {
+                        Id = "bad",
+                        Name = "错误权重",
+                        Stats = { "速度" },
+                        Weights = new Dictionary<string, double> { ["速度"] = 11 },
+                    },
+                },
+            },
+        },
+    };
+    if (DemandDatabase.Validate(invalidDocument).Count == 0)
+        throw new InvalidOperationException("非法需求权重未被数据校验拒绝");
+    var dataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "HeroData", "demand-profiles.json");
+    var json = File.ReadAllText(dataPath);
+    var forbidden = new[] { "gear_path", "supply_pieces", "inventory", "C:\\Users\\" };
+    if (forbidden.Any(json.Contains))
+        throw new InvalidOperationException("静态需求数据仍包含个人库存或供给字段");
+    Console.WriteLine("需求数据校验通过：23 套装 / 21 有数据 / 171 子类 / 644 配装 / 100 英雄");
+    return;
+}
+
+// 合成样例自检（无需截图）：验证套装子类权重、右三满值、固定主属性与强化规则。
 if (args.Contains("--synthetic"))
 {
-    IReadOnlyList<HeroRecommendation> Print(string title, EquipmentInfo info)
-    {
-        Console.WriteLine($"===== 合成样例: {title} =====");
-        var recs = HeroRecommender.Recommend(info, top: int.MaxValue);
-        foreach (var rec in recs.Take(5))
-            Console.WriteLine($"  {rec.Name}({rec.Code}) 匹配度 {rec.Score}%");
-        Console.WriteLine(recs.Any(r => r.Code == "c5154") ? "  → 含 c5154" : "  → 不含 c5154");
-        Console.WriteLine();
-        return recs;
-    }
+    Dictionary<string, double> Weights(
+        double speed = 0,
+        double hp = 0,
+        double crit = 0,
+        double critDamage = 0,
+        double attack = 0,
+        double defense = 0,
+        double effectHit = 0,
+        double effectResistance = 0)
+        => new()
+        {
+            ["攻击力"] = attack, ["生命值"] = hp, ["防御力"] = defense, ["速度"] = speed,
+            ["暴击率"] = crit, ["暴击伤害"] = critDamage,
+            ["效果命中"] = effectHit, ["效果抗性"] = effectResistance,
+        };
 
-    var perfectRightGear = new EquipmentInfo
+    var weightedSet = new DemandSet
     {
-        Level = 88,
+        Code = "set_speed",
+        Name = "速度套装",
+        Profiles =
+        {
+            new DemandProfile
+            {
+                Id = "hp-spd",
+                Name = "生命值·速度",
+                Stats = { "生命值", "速度" },
+                Weights = Weights(speed: 4, hp: 2),
+                DemandWeight = 10,
+                Heroes =
+                {
+                    new DemandHeroBuild
+                    {
+                        Code = "c5154", Name = "调香师维波里丝", ComboName = "速度+生命值",
+                        SampleShare = 0.4, DemandContribution = 2, Weights = Weights(speed: 4, hp: 2),
+                    },
+                    new DemandHeroBuild
+                    {
+                        Code = "c5154", Name = "调香师维波里丝", ComboName = "速度+免疫",
+                        SampleShare = 0.2, DemandContribution = 1, Weights = Weights(speed: 3.5, hp: 2.5),
+                    },
+                },
+            },
+        },
+    };
+
+    EquipmentInfo RightGear(string mainName, string mainValue, int level = 88) => new()
+    {
+        Level = level,
         Quality = "传说鞋子",
         SetName = "速度套装",
-        MainStatName = "速度",
-        MainStatValue = "45",
+        MainStatName = mainName,
+        MainStatValue = mainValue,
         SubStats =
         {
-            new SubStat { Name = "防御力", Value = "10%" },
             new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-            new SubStat { Name = "效果抗性", Value = "7%" },
+            new SubStat { Name = "防御力", Value = "8%" },
+            new SubStat { Name = "效果命中", Value = "8%" },
+            new SubStat { Name = "效果抗性", Value = "8%" },
         },
     };
-    var perfectRightRecommendations = Print("速度套速度鞋 副属性{防御,生命,命中,抗性}", perfectRightGear);
-    var c5154Perfect = perfectRightRecommendations.SingleOrDefault(r => r.Code == "c5154");
-    if (c5154Perfect?.Score != 100)
-        throw new InvalidOperationException(
-            $"右三件主属性占用需求回归失败：c5154 期望 100%，实际 {c5154Perfect?.Score.ToString() ?? "未推荐"}%");
 
-    var rejectedRightGear = new EquipmentInfo
-    {
-        Level = 88,
-        Quality = "传说项链",
-        SetName = "暴击套装",
-        MainStatName = "暴击率",
-        MainStatValue = "55%",
-        SubStats =
-        {
-            new SubStat { Name = "防御力", Value = "10%" },
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "速度", Value = "8" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-        },
-    };
-    var rejectedRightRecommendations = Print(
-        "暴击套暴击项链 副属性{防御,生命,速度,命中}", rejectedRightGear);
-    if (rejectedRightRecommendations.Any(r => r.Code == "c5154"))
-        throw new InvalidOperationException("右三件主属性/套装硬门槛回归失败：不应推荐 c5154");
+    var speedShoe = SetProfileMatcher.Match(RightGear("速度", "1"), weightedSet, int.MaxValue).Single();
+    var hpShoe = SetProfileMatcher.Match(RightGear("生命值", "1%"), weightedSet, int.MaxValue).Single();
+    Console.WriteLine($"  速度鞋匹配 {speedShoe.Score}% / 生命鞋匹配 {hpShoe.Score}%");
+    if (speedShoe.Score <= hpShoe.Score)
+        throw new InvalidOperationException("高速度权重子类未优先推荐速度鞋");
+    if (speedShoe.Heroes.Count != 2 || speedShoe.Heroes.Select(hero => hero.ComboName).Distinct().Count() != 2)
+        throw new InvalidOperationException("同英雄不同完整套装组合未分别返回");
 
-    var wastedRollGear = new EquipmentInfo
+    string MainContribution(string mainName, string mainValue, string stat, double weight)
     {
-        Level = 88,
-        Quality = "传说鞋子",
-        SetName = "速度套装",
-        MainStatName = "速度",
-        MainStatValue = "45",
-        SubStats =
+        var set = new DemandSet
         {
-            new SubStat { Name = "生命值", Value = "6%" },
-            new SubStat { Name = "防御力", Value = "6%" },
-            new SubStat { Name = "效果命中", Value = "6%" },
-            new SubStat { Name = "暴击率", Value = "24%", RollCount = 5 },
-        },
-    };
-    var wastedRollRecommendations = Print(
-        "速度套速度鞋 副属性{生命,防御,命中,暴击率}强化全跳暴击", wastedRollGear);
-    var c5154WastedRolls = wastedRollRecommendations.SingleOrDefault(r => r.Code == "c5154");
-    if (c5154WastedRolls == null || c5154WastedRolls.Score >= 50)
-        throw new InvalidOperationException(
-            $"无用属性强化惩罚回归失败：c5154 应低于 50%，实际 {c5154WastedRolls?.Score.ToString() ?? "未推荐"}%");
-
-    var noSpeedTankGear = new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说头盔",
-        MainStatName = "生命值",
-        MainStatValue = "540",
-        SubStats =
-        {
-            new SubStat { Name = "生命值", Value = "7%" },
-            new SubStat { Name = "效果抗性", Value = "7%" },
-            new SubStat { Name = "防御力", Value = "7%" },
-            new SubStat { Name = "效果命中", Value = "6%" },
-        },
-    };
-    var speedRequiredTankCodes = new[] { "c1137", "c2022", "c3094", "c4004", "c4044" };
-    var leakedSpeedRequiredTanks = HeroRecommender.Recommend(noSpeedTankGear, top: int.MaxValue)
-        .Where(r => speedRequiredTankCodes.Contains(r.Code))
-        .Select(r => r.Name)
-        .ToList();
-    Console.WriteLine("===== 无速度坦克装硬门槛样例 =====");
-    Console.WriteLine(leakedSpeedRequiredTanks.Count == 0
-        ? "  需要速度的五名角色均已淘汰"
-        : $"  错误推荐：{string.Join("、", leakedSpeedRequiredTanks)}");
-    if (leakedSpeedRequiredTanks.Count > 0)
-        throw new InvalidOperationException("缺少速度的坦克装备错误推荐给需要速度的角色");
-    Console.WriteLine();
-
-    Console.WriteLine("===== 自定义英雄主属性配置样例 =====");
-    var customProfiles = new List<HeroProfile>
-    {
-        new()
-        {
-            Code = "test001",
-            Name = "测试英雄",
-            UsefulStats = new List<string> { "速度", "生命值" },
-            AllowedSets = new List<string> { "set_speed" },
-            NecklaceMainStats = new List<string> { "生命值%" },
-            RingMainStats = new List<string> { "生命值%" },
-            BootsMainStats = new List<string> { "速度" },
-        },
-    };
-    var customSetNames = new Dictionary<string, string> { ["速度套装"] = "set_speed" };
-    EquipmentInfo CustomGear(string quality, string mainName, string mainValue)
-    {
+            Code = "test", Name = "测试套装",
+            Profiles =
+            {
+                new DemandProfile
+                {
+                    Id = stat, Name = stat, Stats = { stat }, Weights = Weights(
+                        speed: stat == "速度" ? weight : 0,
+                        hp: stat == "生命值" ? weight : 0,
+                        crit: stat == "暴击率" ? weight : 0,
+                        critDamage: stat == "暴击伤害" ? weight : 0),
+                },
+            },
+        };
+        var part = stat is "暴击率" or "暴击伤害" ? "项链" : "鞋子";
         var info = new EquipmentInfo
         {
-            Quality = quality,
-            SetName = "速度套装",
-            MainStatName = mainName,
-            MainStatValue = mainValue,
+            Level = 88, Quality = "传说" + part, MainStatName = mainName, MainStatValue = mainValue,
+            SubStats = { new SubStat { Name = "效果命中", Value = "8%" } },
         };
-        // 主属性占用角色需求时，用另一个需求作为有效副属性，避免制造游戏中不可能出现的重复属性。
-        info.SubStats.Add(mainName == "生命值" && mainValue.Contains('%')
-            ? new SubStat { Name = "速度", Value = "4" }
-            : new SubStat { Name = "生命值", Value = "8%" });
-        info.SubStats.Add(new SubStat { Name = "防御力", Value = "8%" });
-        info.SubStats.Add(new SubStat { Name = "效果命中", Value = "8%" });
-        info.SubStats.Add(new SubStat { Name = "效果抗性", Value = "8%" });
-        return info;
+        return SetProfileMatcher.Match(info, set, 1).Single().MainStatContribution;
     }
-    void AssertCustom(string title, EquipmentInfo gear, bool shouldMatch)
-    {
-        var matched = HeroRecommender.Recommend(gear, customProfiles, customSetNames).Any();
-        Console.WriteLine($"  {title} → {(matched ? "匹配" : "淘汰")}");
-        if (matched != shouldMatch)
-            throw new InvalidOperationException($"自定义英雄配置回归失败：{title}");
-    }
-    AssertCustom("速度鞋允许速度主属性", CustomGear("传说鞋子", "速度", "45"), true);
-    AssertCustom("项链拒绝速度主属性", CustomGear("传说项链", "速度", "45"), false);
-    AssertCustom("项链接受生命值百分比", CustomGear("传说项链", "生命值", "65%"), true);
-    AssertCustom("戒指拒绝固定生命值", CustomGear("传说戒指", "生命值", "500"), false);
-    AssertCustom("角色需求速度但装备没有速度", new EquipmentInfo
-    {
-        Quality = "传说装备",
-        SetName = "速度套装",
-        SubStats =
+    if (!MainContribution("暴击率", "1%", "暴击率", 1).Contains("价值 90")
+        || !MainContribution("暴击伤害", "1%", "暴击伤害", 1).Contains("价值 78.75")
+        || !MainContribution("生命值", "1%", "生命值", 1).Contains("价值 65"))
+        throw new InvalidOperationException("右三满值换算错误");
+
+    var score85 = SetProfileMatcher.Match(RightGear("速度", "1", 85), weightedSet, 1).Single().Score;
+    var score88 = SetProfileMatcher.Match(RightGear("速度", "1", 88), weightedSet, 1).Single().Score;
+    var score90 = SetProfileMatcher.Match(RightGear("速度", "1", 90), weightedSet, 1).Single().Score;
+    if (score85 != score88 || score88 != score90)
+        throw new InvalidOperationException("85→90预估与88/90满值结果不一致");
+    if (SetProfileMatcher.Match(RightGear("生命值", "500", 88), weightedSet, 1).Count != 0)
+        throw new InvalidOperationException("固定值右三仍匹配需求子类");
+    if (SetProfileMatcher.Match(RightGear("速度", "1", 75), weightedSet, 1).Count != 0
+        || SetProfileMatcher.Match(RightGear(string.Empty, string.Empty, 88), weightedSet, 1).Count != 0)
+        throw new InvalidOperationException("不支持等级或未识别右三主属性仍返回完整匹配");
+    if (SetProfileMatcher.Match(RightGear("速度", "1"), new DemandSet
         {
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "防御力", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "8%" },
-            new SubStat { Name = "效果抗性", Value = "8%" },
-        },
-    }, false);
+            Code = "empty", Name = "空套装",
+        }, 1).Count != 0)
+        throw new InvalidOperationException("无数据套装错误回退到旧算法");
 
-    void AssertCustomScore(string title, EquipmentInfo gear, double expectedScore)
+    EquipmentInfo LeftGear(string mainValue) => new()
     {
-        var recommendation = HeroRecommender.Recommend(gear, customProfiles, customSetNames).SingleOrDefault()
-            ?? throw new InvalidOperationException($"推荐匹配度回归失败：{title}，未推荐测试英雄");
-        Console.WriteLine($"  {title} → {recommendation.Score}%");
-        if (Math.Abs(recommendation.Score - expectedScore) > 0.1)
-            throw new InvalidOperationException(
-                $"推荐匹配度回归失败：{title}，期望 {expectedScore}%，实际 {recommendation.Score}%");
-    }
-
-    AssertCustomScore("两种需求配两种有效副属性，其余为必然填充", new EquipmentInfo
-    {
-        Quality = "传说装备",
-        SetName = "速度套装",
+        Level = 88, Quality = "传说武器", MainStatName = "攻击力", MainStatValue = mainValue,
         SubStats =
         {
             new SubStat { Name = "生命值", Value = "8%" },
             new SubStat { Name = "速度", Value = "4" },
             new SubStat { Name = "效果命中", Value = "8%" },
             new SubStat { Name = "效果抗性", Value = "8%" },
-        },
-    }, 100);
-    AssertCustomScore("只覆盖两种需求中的一种", new EquipmentInfo
-    {
-        Quality = "传说装备",
-        SetName = "速度套装",
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "4" },
-            new SubStat { Name = "防御力", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "8%" },
-            new SubStat { Name = "效果抗性", Value = "8%" },
-        },
-    }, 50);
-    AssertCustomScore("速度主属性鞋只需覆盖剩余的生命值需求",
-        CustomGear("传说鞋子", "速度", "45"), 100);
-    AssertCustomScore("无用属性吃到强化仍会降低匹配度", new EquipmentInfo
-    {
-        Quality = "传说装备",
-        SetName = "速度套装",
-        SubStats =
-        {
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "速度", Value = "4" },
-            new SubStat { Name = "效果命中", Value = "8%" },
-            new SubStat { Name = "效果抗性", Value = "24%", RollCount = 5 },
-        },
-    }, 44.4);
-
-    var singleStatProfiles = new List<HeroProfile>
-    {
-        new()
-        {
-            Code = "test002",
-            Name = "单属性测试英雄",
-            UsefulStats = new List<string> { "生命值" },
-            AllowedSets = new List<string> { "set_speed" },
         },
     };
-    var singleStatGear = new EquipmentInfo
+    var leftA = SetProfileMatcher.Match(LeftGear("100"), weightedSet, 1).Single().Score;
+    var leftB = SetProfileMatcher.Match(LeftGear("999"), weightedSet, 1).Single().Score;
+    if (leftA != leftB)
+        throw new InvalidOperationException("左三固定主属性改变了匹配度");
+
+    var subScoreA = EquipmentScoreCalculator.Calculate(RightGear("速度", "1").SubStats);
+    var subScoreB = EquipmentScoreCalculator.Calculate(RightGear("生命值", "1%").SubStats);
+    if (subScoreA != subScoreB)
+        throw new InvalidOperationException("主属性错误加入副属性装备分");
+
+    EquipmentInfo WeightedWeapon(bool includeEnhanceText = true) => new()
     {
-        Level = 85,
+        Level = 88,
         EnhanceLevel = 15,
-        Quality = "传说头盔",
+        Quality = "传说武器",
         SetName = "速度套装",
-        MainStatName = "生命值",
-        MainStatValue = "700",
+        MainStatName = "攻击力",
+        MainStatValue = "515",
         SubStats =
         {
-            new SubStat { Name = "速度", Value = "2" },
-            new SubStat { Name = "攻击力", Value = "16%", RollCount = 1 },
-            new SubStat { Name = "生命值", Value = "19%", RollCount = 2 },
-            new SubStat { Name = "暴击伤害", Value = "14%", RollCount = 2 },
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat
+            {
+                Name = "速度", Value = "13", RollCount = 2,
+                EnhanceValue = includeEnhanceText ? "+8" : null,
+            },
+            new SubStat { Name = "效果抗性", Value = "8%" },
+            new SubStat
+            {
+                Name = "效果命中", Value = "31%", RollCount = 3,
+                EnhanceValue = includeEnhanceText ? "+23%" : null,
+            },
         },
     };
-    var singleStatRecommendation = HeroRecommender
-        .Recommend(singleStatGear, singleStatProfiles, customSetNames)
-        .SingleOrDefault()
-        ?? throw new InvalidOperationException("单属性角色强化分配回归失败：未推荐测试英雄");
-    Console.WriteLine($"  单属性角色仅两跳生命 → {singleStatRecommendation.Score}%");
-    if (Math.Abs(singleStatRecommendation.Score - 50.7) > 0.1)
-        throw new InvalidOperationException(
-            $"单属性角色强化分配回归失败：期望 50.7%，实际 {singleStatRecommendation.Score}%");
-    Console.WriteLine();
-
-    Console.WriteLine("===== 官方属性直方图推导 =====");
-    var c1034Histograms = new Dictionary<string, double[]>
+    var allocationSet = new DemandSet
     {
-        ["att"] = [0, 2250, 0, 0, 0, 175, 2358, 180, 18, 1],
-        ["def"] = [2250, 2716, 15, 1, 0, 0, 0, 0, 0, 0],
-        ["max_hp"] = [2982, 1997, 3, 0, 0, 0, 0, 0, 0, 0],
-        ["speed"] = [2250, 0, 2, 3, 24, 4, 46, 214, 1177, 1262],
-        ["cri"] = [2250, 0, 0, 0, 0, 0, 0, 5, 209, 2518],
-        ["cri_dmg"] = [2250, 0, 0, 0, 0, 1, 1413, 868, 349, 101],
-        ["acc"] = [352, 15, 0, 0, 0, 0, 0, 0, 0, 0],
-        ["res"] = [342, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+        Code = "set_speed",
+        Name = "速度套装",
+        Profiles =
+        {
+            new DemandProfile
+            {
+                Id = "hp-spd-hit-res",
+                Name = "生命值·速度·效果命中·效果抗性",
+                Stats = { "生命值", "速度", "效果命中", "效果抗性" },
+                Weights = Weights(speed: 3.1, hp: 2.2, effectHit: 1.2, effectResistance: 2.3),
+            },
+            new DemandProfile
+            {
+                Id = "atk-hp-def-spd-hit",
+                Name = "攻击力·生命值·防御力·速度·效果命中",
+                Stats = { "攻击力", "生命值", "防御力", "速度", "效果命中" },
+                Weights = Weights(
+                    speed: 2.6, hp: 2, attack: 1.7, defense: 1.2, effectHit: 2.5),
+            },
+            new DemandProfile
+            {
+                Id = "spd-hit",
+                Name = "速度·效果命中",
+                Stats = { "速度", "效果命中" },
+                Weights = Weights(speed: 4.1, effectHit: 1.8),
+            },
+            new DemandProfile
+            {
+                Id = "hp-spd",
+                Name = "生命值·速度",
+                Stats = { "生命值", "速度" },
+                Weights = Weights(speed: 4, hp: 2),
+            },
+        },
     };
-    var unavailableSamples = HeroUsefulStatAnalyzer.EstimateUnavailableSamples(c1034Histograms);
-    var c1034UsefulStats = HeroUsefulStatAnalyzer.InferUsefulStats(c1034Histograms);
-    Console.WriteLine($"  c1034 不可见样本={unavailableSamples:0}，有效属性={string.Join("、", c1034UsefulStats)}");
-    if (unavailableSamples != 2250 ||
-        !c1034UsefulStats.SequenceEqual(new[] { "攻击力", "速度", "暴击率", "暴击伤害" }))
-        throw new InvalidOperationException("c1034 官方属性直方图推导失败");
-    var c1126Histograms = new Dictionary<string, double[]>
-    {
-        ["att"] = [65, 8, 166, 2, 1, 0, 0, 0, 0, 0],
-        ["def"] = [65, 5, 35, 29, 35, 73, 0, 0, 0, 0],
-        ["max_hp"] = [65, 1, 28, 86, 44, 16, 2, 0, 0, 0],
-        ["speed"] = [0, 65, 0, 0, 0, 0, 0, 0, 0, 177],
-        ["cri"] = [222, 10, 9, 0, 0, 0, 0, 1, 0, 0],
-        ["cri_dmg"] = [223, 4, 0, 15, 0, 0, 0, 0, 0, 0],
-        ["acc"] = [0, 0, 0, 0, 0, 15, 10, 35, 36, 81],
-        ["res"] = [65, 10, 0, 0, 0, 0, 0, 0, 0, 0],
-    };
-    var c1126UsefulStats = HeroUsefulStatAnalyzer.InferUsefulStats(c1126Histograms);
-    Console.WriteLine($"  c1126 有效属性={string.Join("、", c1126UsefulStats)}（不得误加攻击力）");
-    if (!c1126UsefulStats.SequenceEqual(new[] { "防御力", "速度", "效果命中" }))
-        throw new InvalidOperationException("c1126 官方属性直方图推导过宽");
+    var allocationResults = SetProfileMatcher.Match(
+            WeightedWeapon(), allocationSet, int.MaxValue)
+        .ToDictionary(result => result.ProfileId, StringComparer.Ordinal);
+    var fourStatScore = allocationResults["hp-spd-hit-res"].Score;
+    var fiveStatScore = allocationResults["atk-hp-def-spd-hit"].Score;
+    var speedHitScore = allocationResults["spd-hit"].Score;
+    var speedHpScore = allocationResults["hp-spd"].Score;
+    Console.WriteLine(
+        $"  新需求匹配：四项全中 {fourStatScore}% / 五项缺攻防 {fiveStatScore}% / "
+        + $"速度命中 {speedHitScore}% / 速度生命 {speedHpScore}%");
+    if (Math.Abs(fourStatScore - 90.1) > 0.1 || fourStatScore <= fiveStatScore)
+        throw new InvalidOperationException("四项完全命中子类未按权重分布得到高匹配");
+    if (speedHitScore < 85 || speedHpScore >= 65 || speedHitScore - speedHpScore < 25)
+        throw new InvalidOperationException("双属性子类未区分初始歪词条与歪强化");
 
-    var setImpliedStats = new List<string> { "防御力", "生命值", "效果抗性" };
-    HeroUsefulStatAnalyzer.ApplySetImplications(setImpliedStats,
-    [
-        new HeroSetCombo { Sets = new List<string> { "set_res", "set_speed" }, Rate = 12.5 },
-    ]);
-    Console.WriteLine($"  主流速度套补足有效属性={string.Join("、", setImpliedStats)}");
-    if (!setImpliedStats.Contains("速度"))
-        throw new InvalidOperationException("主流速度套未补足速度有效属性");
-    Console.WriteLine();
+    var estimatedResults = SetProfileMatcher.Match(
+            WeightedWeapon(includeEnhanceText: false), allocationSet, int.MaxValue)
+        .ToDictionary(result => result.ProfileId, StringComparer.Ordinal);
+    if (Math.Abs(estimatedResults["hp-spd"].Score - speedHpScore) > 1)
+        throw new InvalidOperationException("强化增量漏识别时的 RollCount 估算偏差过大");
 
-    Console.WriteLine("===== 默认主属性推导规则 =====");
-    void AssertDerived(string title, IReadOnlyCollection<string> actual, params string[] expected)
+    void AssertAdvice(string title, EquipmentInfo info, EnhanceAdvice expected, bool heroicOnly = false)
     {
-        var matches = actual.Count == expected.Length && expected.All(actual.Contains);
-        Console.WriteLine($"  {title} → {string.Join("、", actual)}");
-        if (!matches)
-            throw new InvalidOperationException($"默认主属性推导失败：{title}，期望 {string.Join("、", expected)}");
+        var result = EnhancementAdvisor.Analyze(info, 24, 24, 28, heroicOnlyGambleSpeed: heroicOnly);
+        Console.WriteLine($"  {title} → {result.Text}（{result.Detail}）");
+        if (result.Advice != expected)
+            throw new InvalidOperationException($"强化建议回归失败：{title}，期望 {expected}，实际 {result.Advice}");
     }
-    AssertDerived("有效属性含暴击时项链只保留暴击",
-        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "生命值", "暴击率" }), "暴击率");
-    AssertDerived("有效属性含暴击和爆伤时项链只保留两者",
-        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "暴击率", "暴击伤害" }), "暴击率", "暴击伤害");
-    AssertDerived("无暴击属性时项链按普通有效属性推导",
-        EquipmentRules.DeriveNecklaceMainStats(new[] { "攻击力", "生命值" }), "攻击力%", "生命值%");
-    AssertDerived("有效属性含速度时鞋子只保留速度",
-        EquipmentRules.DeriveBootsMainStats(new[] { "速度", "生命值", "防御力" }), "速度");
-    AssertDerived("无速度属性时鞋子按普通有效属性推导",
-        EquipmentRules.DeriveBootsMainStats(new[] { "生命值", "防御力" }), "防御力%", "生命值%");
-    Console.WriteLine();
+    AssertAdvice("传说武器 +3 第一跳歪但可赌速度", new EquipmentInfo
+    {
+        Level = 85, Quality = "传说武器", EnhanceLevel = 3,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GambleSpeed);
+    AssertAdvice("传说武器 +6 连歪两跳", new EquipmentInfo
+    {
+        Level = 85, Quality = "传说武器", EnhanceLevel = 6,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GiveUp);
+    AssertAdvice("紫装只赌速度 +0 无速度", new EquipmentInfo
+    {
+        Level = 85, Quality = "英雄武器", EnhanceLevel = 0,
+        SubStats = { new SubStat { Name = "攻击力", Value = "20%" } },
+    }, EnhanceAdvice.GiveUp, heroicOnly: true);
+    AssertAdvice("紫装只赌速度 +0 速度3", new EquipmentInfo
+    {
+        Level = 85, Quality = "英雄武器", EnhanceLevel = 0,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GambleSpeed, heroicOnly: true);
+    AssertAdvice("88级 +15 高分保留", new EquipmentInfo
+    {
+        Level = 88, Quality = "传说武器", EnhanceLevel = 15,
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "15" },
+            new SubStat { Name = "攻击力", Value = "20%" },
+            new SubStat { Name = "暴击率", Value = "12%" },
+            new SubStat { Name = "暴击伤害", Value = "20%" },
+        },
+    }, EnhanceAdvice.Keep);
+    AssertAdvice("固定防御鞋", new EquipmentInfo
+    {
+        Level = 88, Quality = "传说鞋子", MainStatName = "防御力", MainStatValue = "500",
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GiveUpFixedMain);
 
-    Console.WriteLine("===== 副属性强化次数推导 =====");
     var inferEnhanceLevel = typeof(OcrEngine).GetMethod(
         "InferEnhanceLevelByRolls",
         System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
         ?? throw new InvalidOperationException("找不到强化等级推导方法");
-    void AssertInferredEnhanceLevel(string title, string quality, int subStatCount, int totalRolls, int? expected)
-    {
-        var actual = (int?)inferEnhanceLevel.Invoke(null, new object[] { quality, subStatCount, totalRolls });
-        Console.WriteLine($"  {title} → {(actual is int level ? $"+{level}" : "不推导")}");
-        if (actual != expected)
-            throw new InvalidOperationException($"强化等级推导失败：{title}，期望 {expected?.ToString() ?? "null"}，实际 {actual?.ToString() ?? "null"}");
-    }
-    AssertInferredEnhanceLevel("英雄三词条、累计强化 2 次", "英雄铠甲", 3, 2, 6);
-    AssertInferredEnhanceLevel("英雄三词条、累计强化 3 次", "英雄铠甲", 3, 3, 9);
-    AssertInferredEnhanceLevel("英雄四词条、第四条刚解锁", "英雄铠甲", 4, 3, 12);
-    AssertInferredEnhanceLevel("英雄四词条、累计强化 4 次", "英雄铠甲", 4, 4, 15);
-    AssertInferredEnhanceLevel("英雄四词条但计数不足", "英雄铠甲", 4, 2, null);
-    AssertInferredEnhanceLevel("传说四词条、累计强化 2 次", "传说铠甲", 4, 2, 6);
-    Console.WriteLine();
+    var inferred = (int?)inferEnhanceLevel.Invoke(null, new object[] { "英雄铠甲", 3, 2 });
+    if (inferred != 6)
+        throw new InvalidOperationException($"强化等级推导失败：期望6，实际{inferred}");
 
-    // 强化建议自检（85级阈值 24/24，88级阈值 28）
-    void PrintAdvice(
-        string title,
-        EquipmentInfo info,
-        EnhanceAdvice? expected = null,
-        bool heroicOnlyGambleSpeed = false)
-    {
-        var r = EnhancementAdvisor.Analyze(
-            info, 24, 24, 28, heroicOnlyGambleSpeed: heroicOnlyGambleSpeed);
-        Console.WriteLine($"  [强化建议] {title} → {r.Text}（{r.Detail}）");
-        if (expected != null && r.Advice != expected)
-            throw new InvalidOperationException($"强化建议回归失败：期望 {expected}，实际 {r.Advice}");
-    }
-
-    Console.WriteLine("===== 强化建议样例（85级阈值 24/24，88级阈值 28） =====");
-    PrintAdvice("传说武器 +3 第一跳歪掉但仍可赌速度（应：继续赌速度）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说武器",
-        EnhanceLevel = 3,
-        SubStats = { new SubStat { Name = "速度", Value = "3" } },
-    }, EnhanceAdvice.GambleSpeed);
-    PrintAdvice("传说武器 +6 连歪两跳（应：放弃）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说武器",
-        EnhanceLevel = 6,
-        SubStats = { new SubStat { Name = "速度", Value = "3" } },
-    }, EnhanceAdvice.GiveUp);
-    PrintAdvice("紫装只赌速度 +0 高分但无速度（应：放弃）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "英雄武器",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "攻击力", Value = "20%" },
-            new SubStat { Name = "暴击率", Value = "15%" },
-            new SubStat { Name = "暴击伤害", Value = "20%" },
-        },
-    }, EnhanceAdvice.GiveUp, heroicOnlyGambleSpeed: true);
-    PrintAdvice("紫装只赌速度 +0 低分但速度 3（应：继续赌速度）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "英雄武器",
-        EnhanceLevel = 0,
-        SubStats = { new SubStat { Name = "速度", Value = "3" } },
-    }, EnhanceAdvice.GambleSpeed, heroicOnlyGambleSpeed: true);
-    PrintAdvice("紫装只赌速度 +3 第一跳歪掉（应：放弃）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "英雄武器",
-        EnhanceLevel = 3,
-        SubStats = { new SubStat { Name = "速度", Value = "3" } },
-    }, EnhanceAdvice.GiveUp, heroicOnlyGambleSpeed: true);
-    PrintAdvice("紫装只赌速度 +12 新增第四词条不提高速度要求（应：继续赌速度）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "英雄武器",
-        EnhanceLevel = 12,
-        SubStats = { new SubStat { Name = "速度", Value = "12" } },
-    }, EnhanceAdvice.GambleSpeed, heroicOnlyGambleSpeed: true);
-    PrintAdvice("传说武器 +0 高分（应：继续强化）", new EquipmentInfo
-    {
-        Quality = "传说武器",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "8" },
-            new SubStat { Name = "暴击率", Value = "8%" },
-            new SubStat { Name = "攻击力", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-        },
-    });
-    PrintAdvice("弱化套效果命中戒指 +0 分数达标但最高匹配度低于 70% 且无速度（应：放弃）", new EquipmentInfo
-    {
-        Quality = "传说戒指",
-        SetName = "弱化套装",
-        MainStatName = "效果命中",
-        MainStatValue = "60%",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "暴击率", Value = "5%" },
-            new SubStat { Name = "暴击伤害", Value = "7%" },
-            new SubStat { Name = "效果命中", Value = "8%" },
-            new SubStat { Name = "效果抗性", Value = "8%" },
-        },
-    }, EnhanceAdvice.GiveUp);
-    PrintAdvice("弱化套效果命中戒指 +0 匹配度低但速度 3（应：按分数继续强化）", new EquipmentInfo
-    {
-        Quality = "传说戒指",
-        SetName = "弱化套装",
-        MainStatName = "效果命中",
-        MainStatValue = "60%",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "暴击率", Value = "5%" },
-            new SubStat { Name = "暴击伤害", Value = "7%" },
-            new SubStat { Name = "效果命中", Value = "8%" },
-            new SubStat { Name = "速度", Value = "3" },
-        },
-    }, EnhanceAdvice.Continue);
-    PrintAdvice("传说戒指 固定防御主属性速度4（应：作为速度散件继续赌）", new EquipmentInfo
-    {
-        Quality = "传说戒指",
-        MainStatName = "防御力",
-        MainStatValue = "60",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "防御力", Value = "8%" },
-            new SubStat { Name = "攻击力", Value = "38" },
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "速度", Value = "4" },
-        },
-    });
-    PrintAdvice("传说武器 +0 低分带速度3（应：继续赌速度）", new EquipmentInfo
-    {
-        Quality = "传说武器",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "3" },
-            new SubStat { Name = "生命值", Value = "4%" },
-            new SubStat { Name = "防御力", Value = "4%" },
-            new SubStat { Name = "效果命中", Value = "4%" },
-        },
-    });
-    PrintAdvice("传说戒指 固定攻击主属性（应：固定值主属性，建议放弃）", new EquipmentInfo
-    {
-        Quality = "传说戒指",
-        MainStatName = "攻击力",
-        MainStatValue = "500",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "2" },
-            new SubStat { Name = "暴击率", Value = "8%" },
-            new SubStat { Name = "攻击力", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-        },
-    });
-    PrintAdvice("传说戒指 百分比主属性低分无速度（应：分数过低，建议放弃）", new EquipmentInfo
-    {
-        Quality = "传说戒指",
-        MainStatName = "攻击力",
-        MainStatValue = "60%",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "生命值", Value = "4%" },
-            new SubStat { Name = "防御力", Value = "4%" },
-            new SubStat { Name = "效果命中", Value = "4%" },
-            new SubStat { Name = "效果抗性", Value = "4%" },
-        },
-    });
-    PrintAdvice("传说武器 +15 预计重铸恰好 65 分（应：建议重铸）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说武器",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "效果命中", Value = "7%", RollCount = 0 },
-            new SubStat { Name = "攻击力", Value = "15%", RollCount = 1 },
-            new SubStat { Name = "暴击率", Value = "4%", RollCount = 0 },
-            new SubStat { Name = "暴击伤害", Value = "22%", RollCount = 4 },
-        },
-    });
-    PrintAdvice("传说武器 +15 预计重铸 64 分（应：分数过低，建议放弃）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说武器",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "效果命中", Value = "6%", RollCount = 0 },
-            new SubStat { Name = "攻击力", Value = "15%", RollCount = 1 },
-            new SubStat { Name = "暴击率", Value = "4%", RollCount = 0 },
-            new SubStat { Name = "暴击伤害", Value = "22%", RollCount = 4 },
-        },
-    });
-    PrintAdvice("传说武器 +15 预计重铸低于 65 但速度 15（应：建议重铸）", new EquipmentInfo
-    {
-        Level = 85,
-        Quality = "传说武器",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "15", RollCount = 5 },
-            new SubStat { Name = "生命值", Value = "4%", RollCount = 0 },
-            new SubStat { Name = "防御力", Value = "4%", RollCount = 0 },
-            new SubStat { Name = "效果命中", Value = "4%", RollCount = 0 },
-        },
-    });
-    PrintAdvice("传说武器 90 级 +15（应：已完成重铸）", new EquipmentInfo
-    {
-        Level = 90,
-        Quality = "传说武器",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "16", RollCount = 5 },
-            new SubStat { Name = "生命值", Value = "18%", RollCount = 0 },
-            new SubStat { Name = "防御力", Value = "18%", RollCount = 0 },
-            new SubStat { Name = "效果命中", Value = "18%", RollCount = 0 },
-        },
-    });
-    PrintAdvice("88级传说武器 +3 恰好 35 分（应：按每跳 +7 继续强化）", new EquipmentInfo
-    {
-        Level = 88,
-        Quality = "传说武器",
-        EnhanceLevel = 3,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "6" },
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "防御力", Value = "8%" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-        },
-    }, EnhanceAdvice.Continue);
-    PrintAdvice("88级传说武器 +3 只有 34 分（应：分数不达 35，仅继续赌速度）", new EquipmentInfo
-    {
-        Level = 88,
-        Quality = "传说武器",
-        EnhanceLevel = 3,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "6" },
-            new SubStat { Name = "生命值", Value = "8%" },
-            new SubStat { Name = "防御力", Value = "7%" },
-            new SubStat { Name = "效果命中", Value = "7%" },
-        },
-    }, EnhanceAdvice.GambleSpeed);
-    PrintAdvice("88级速度鞋 +15 恰好 63 分（应：不可重铸，建议保留）", new EquipmentInfo
-    {
-        Level = 88,
-        Quality = "传说鞋子",
-        SetName = "速度套装",
-        MainStatName = "速度",
-        MainStatValue = "45",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "3" },
-            new SubStat { Name = "生命值", Value = "20%" },
-            new SubStat { Name = "防御力", Value = "20%" },
-            new SubStat { Name = "效果命中", Value = "17%" },
-        },
-    }, EnhanceAdvice.Keep);
-    PrintAdvice("88级速度鞋 +15 只有 62 分（应：不可重铸，建议放弃）", new EquipmentInfo
-    {
-        Level = 88,
-        Quality = "传说鞋子",
-        SetName = "速度套装",
-        MainStatName = "速度",
-        MainStatValue = "45",
-        EnhanceLevel = 15,
-        SubStats =
-        {
-            new SubStat { Name = "速度", Value = "3" },
-            new SubStat { Name = "生命值", Value = "20%" },
-            new SubStat { Name = "防御力", Value = "19%" },
-            new SubStat { Name = "效果命中", Value = "17%" },
-        },
-    }, EnhanceAdvice.GiveUp);
-    PrintAdvice("速度鞋 低分（应：分数过低，建议放弃，鞋子不赌速度）", new EquipmentInfo
-    {
-        Quality = "传说鞋子",
-        MainStatName = "速度",
-        MainStatValue = "45",
-        EnhanceLevel = 0,
-        SubStats =
-        {
-            new SubStat { Name = "生命值", Value = "4%" },
-            new SubStat { Name = "防御力", Value = "4%" },
-            new SubStat { Name = "效果命中", Value = "4%" },
-            new SubStat { Name = "效果抗性", Value = "4%" },
-        },
-    });
+    Console.WriteLine("套装子类匹配、主属性量化与强化建议合成测试通过");
     return;
 }
 
@@ -1146,13 +801,13 @@ foreach (var name in imageNames)
     var advice = EnhancementAdvisor.Analyze(info, 24, 24);
     Console.WriteLine($"  强化建议: {advice.Text}（{advice.Detail}）");
 
-    // 装备 → 适用角色推荐（官方战绩前排分段数据）
-    var recommendations = HeroRecommender.Recommend(info);
-    Console.WriteLine("  适用角色:");
+    // 装备 → 当前套装属性子类推荐
+    var recommendations = SetProfileMatcher.Match(info);
+    Console.WriteLine("  适用子类:");
     foreach (var rec in recommendations)
-        Console.WriteLine($"    - {rec.Name}({rec.Code}) 匹配度 {rec.Score}%  命中副属性=[{string.Join(",", rec.MatchedStats)}] 套装命中={rec.SetMatched}");
+        Console.WriteLine($"    - {rec.ProfileName} 匹配度 {rec.Score}%  命中=[{string.Join(",", rec.MatchedStats)}] {rec.MainStatContribution}");
     if (recommendations.Count == 0)
-        Console.WriteLine("    （无匹配或 heroes.json 缺失）");
+        Console.WriteLine("    （无匹配或静态需求数据缺失）");
 
     Console.WriteLine();
     Console.WriteLine("原始文本:");

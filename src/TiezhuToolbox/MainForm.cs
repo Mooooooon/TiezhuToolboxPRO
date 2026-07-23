@@ -350,7 +350,7 @@ public partial class MainForm : Form
         lblSet.Text = $"套装：{info.SetName}";
 
         UpdateAdvice();
-        ShowHeroRecommendations(info);
+        ShowDemandRecommendations(info);
     }
 
     /// <summary>比较会影响界面展示与推荐结果的装备字段，忽略每轮都可能不同的 OCR 调试文本。</summary>
@@ -430,80 +430,197 @@ public partial class MainForm : Form
         UpdateAdvice();
     }
 
-    /// <summary>
-    /// 根据识别出的装备信息，展示官方战绩（前排分段）匹配出的适用角色（头像 + 名字 + 匹配度）。
-    /// </summary>
-    private void ShowHeroRecommendations(Modules.Ocr.EquipmentInfo info)
+    /// <summary>根据识别出的装备信息，展示当前套装最匹配的属性子类及英雄配装。</summary>
+    private void ShowDemandRecommendations(Modules.Ocr.EquipmentInfo info)
     {
-        // 清空旧的推荐项并释放头像图片
         var oldItems = flowHeroes.Controls.Cast<Control>().ToList();
         flowHeroes.Controls.Clear();
         foreach (var control in oldItems)
             control.Dispose();
 
-        if (!Modules.Recommend.HeroDatabase.Instance.IsLoaded)
+        var database = Modules.Recommend.DemandDatabase.Instance;
+        if (!database.IsLoaded)
         {
-            lblHeroesTitle.Text = "适用角色（缺少 heroes.json，请先运行 tools/HeroDataCollector）";
+            lblHeroesTitle.Text = $"套装需求（数据未加载：{database.ErrorMessage}）";
             return;
         }
 
-        var recommendations = Modules.Recommend.HeroRecommender.Recommend(info);
-        lblHeroesTitle.Text = recommendations.Count > 0 ? "适用角色" : "适用角色（无匹配）";
+        var set = database.FindSet(info.SetName);
+        if (set == null)
+        {
+            lblHeroesTitle.Text = "套装需求（套装未识别）";
+            return;
+        }
+        if (set.Profiles.Count == 0)
+        {
+            lblHeroesTitle.Text = $"{set.Name}需求（暂无人工数据）";
+            return;
+        }
 
+        var recommendations = Modules.Recommend.SetProfileMatcher.Match(info);
+        lblHeroesTitle.Text = recommendations.Count > 0
+            ? $"{set.Name}适用子类"
+            : $"{set.Name}需求（装备属性无匹配）";
+        flowHeroes.FlowDirection = FlowDirection.TopDown;
+        flowHeroes.WrapContents = false;
+
+        var cardWidth = Math.Max(ScalePixel(430),
+            flowHeroes.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - ScalePixel(8));
         foreach (var rec in recommendations)
         {
-            // 这些控件是运行时创建的，不会经过 Designer 的自动缩放，需要按当前显示器 DPI 换算。
-            var item = new Panel
+            const int collapsedLogicalHeight = 86;
+            var collapsedHeight = ScalePixel(collapsedLogicalHeight);
+            var heroRowHeight = ScalePixel(52);
+            var card = new Panel
             {
-                Width = ScalePixel(172),
-                Height = ScalePixel(62),
-                Margin = new Padding(0, 0, ScalePixel(10), ScalePixel(10)),
+                Width = cardWidth,
+                Height = collapsedHeight,
+                Margin = new Padding(0, 0, 0, ScalePixel(10)),
                 BackColor = Color.FromArgb(248, 249, 250),
             };
-
-            var avatar = new PictureBox
+            var header = new Panel
             {
-                Location = new Point(ScalePixel(9), ScalePixel(9)),
-                Size = new Size(ScalePixel(44), ScalePixel(44)),
-                SizeMode = PictureBoxSizeMode.Zoom,
+                Dock = DockStyle.Top,
+                Height = collapsedHeight,
+                Cursor = Cursors.Hand,
             };
-            if (rec.AvatarPath != null)
-                avatar.Image = LoadImageNoLock(rec.AvatarPath);
-
             var nameLabel = new Label
             {
-                Location = new Point(ScalePixel(62), ScalePixel(11)),
-                Size = new Size(ScalePixel(104), ScalePixel(20)),
-                Font = HeroNameFont,
+                Text = rec.ProfileName,
+                Location = new Point(ScalePixel(12), ScalePixel(9)),
+                Size = new Size(cardWidth - ScalePixel(145), ScalePixel(24)),
+                Font = new Font("Microsoft YaHei UI", 11F, FontStyle.Bold),
                 ForeColor = TextDarkColor,
-                Text = rec.Name,
                 AutoEllipsis = true,
             };
-
             var scoreLabel = new Label
             {
-                Location = new Point(ScalePixel(62), ScalePixel(33)),
-                Size = new Size(ScalePixel(104), ScalePixel(20)),
+                Text = $"{rec.Score:0.#}%",
+                Location = new Point(cardWidth - ScalePixel(116), ScalePixel(9)),
+                Size = new Size(ScalePixel(82), ScalePixel(24)),
                 Font = HeroScoreFont,
                 ForeColor = AccentColor,
-                Text = $"匹配度 {rec.Score:0.#}%",
+                TextAlign = ContentAlignment.MiddleRight,
+            };
+            var toggleLabel = new Label
+            {
+                Text = "▼",
+                Location = new Point(cardWidth - ScalePixel(31), ScalePixel(10)),
+                Size = new Size(ScalePixel(20), ScalePixel(22)),
+                ForeColor = Color.FromArgb(95, 99, 104),
+                TextAlign = ContentAlignment.MiddleCenter,
+            };
+            var statsLabel = new Label
+            {
+                Text = $"命中：{string.Join("、", rec.MatchedStats)}　需求权重 {rec.DemandWeight:0.##}",
+                Location = new Point(ScalePixel(12), ScalePixel(37)),
+                Size = new Size(cardWidth - ScalePixel(24), ScalePixel(20)),
+                ForeColor = Color.FromArgb(70, 72, 76),
                 AutoEllipsis = true,
             };
-
-            if (rec.MatchedStats.Count > 0)
+            var mainLabel = new Label
             {
-                var tip = $"命中属性：{string.Join("、", rec.MatchedStats)}";
-                toolTip.SetToolTip(item, tip);
-                toolTip.SetToolTip(avatar, tip);
-                toolTip.SetToolTip(nameLabel, tip);
-                toolTip.SetToolTip(scoreLabel, tip);
+                Text = string.IsNullOrWhiteSpace(rec.MainStatContribution)
+                    ? "左三固定主属性不参与匹配"
+                    : rec.MainStatContribution,
+                Location = new Point(ScalePixel(12), ScalePixel(60)),
+                Size = new Size(cardWidth - ScalePixel(24), ScalePixel(18)),
+                ForeColor = Color.FromArgb(95, 99, 104),
+                AutoEllipsis = true,
+            };
+            header.Controls.Add(nameLabel);
+            header.Controls.Add(scoreLabel);
+            header.Controls.Add(toggleLabel);
+            header.Controls.Add(statsLabel);
+            header.Controls.Add(mainLabel);
+
+            var builds = new Panel
+            {
+                Dock = DockStyle.Fill,
+                Visible = false,
+                AutoScroll = rec.Heroes.Count * heroRowHeight > ScalePixel(330),
+                BackColor = Color.White,
+            };
+            var y = 0;
+            foreach (var hero in rec.Heroes)
+            {
+                var row = CreateHeroBuildRecommendationRow(hero, cardWidth, heroRowHeight, y);
+                builds.Controls.Add(row);
+                y += heroRowHeight;
             }
 
-            item.Controls.Add(avatar);
-            item.Controls.Add(nameLabel);
-            item.Controls.Add(scoreLabel);
-            flowHeroes.Controls.Add(item);
+            void ToggleExpanded(object? _, EventArgs __)
+            {
+                builds.Visible = !builds.Visible;
+                toggleLabel.Text = builds.Visible ? "▲" : "▼";
+                card.Height = builds.Visible
+                    ? collapsedHeight + Math.Min(y, ScalePixel(330))
+                    : collapsedHeight;
+            }
+
+            header.Click += ToggleExpanded;
+            foreach (Control child in header.Controls)
+            {
+                child.Cursor = Cursors.Hand;
+                child.Click += ToggleExpanded;
+            }
+            card.Controls.Add(builds);
+            card.Controls.Add(header);
+            flowHeroes.Controls.Add(card);
         }
+    }
+
+    private Panel CreateHeroBuildRecommendationRow(
+        Modules.Recommend.HeroBuildRecommendation hero,
+        int width,
+        int height,
+        int top)
+    {
+        var row = new Panel
+        {
+            Location = new Point(0, top),
+            Size = new Size(width - ScalePixel(4), height),
+            BackColor = Color.White,
+        };
+        var avatar = new PictureBox
+        {
+            Location = new Point(ScalePixel(12), ScalePixel(6)),
+            Size = new Size(ScalePixel(40), ScalePixel(40)),
+            SizeMode = PictureBoxSizeMode.Zoom,
+        };
+        if (hero.AvatarPath != null)
+            avatar.Image = LoadImageNoLock(hero.AvatarPath);
+        var name = new Label
+        {
+            Text = hero.Name,
+            Location = new Point(ScalePixel(62), ScalePixel(6)),
+            Size = new Size(ScalePixel(150), ScalePixel(20)),
+            Font = HeroNameFont,
+            AutoEllipsis = true,
+        };
+        var combo = new Label
+        {
+            Text = $"{hero.ComboName} · 样本 {hero.SampleShare:P1} · 需求 {hero.DemandContribution:0.###}",
+            Location = new Point(ScalePixel(62), ScalePixel(27)),
+            Size = new Size(Math.Max(ScalePixel(160), width - ScalePixel(205)), ScalePixel(19)),
+            ForeColor = Color.FromArgb(95, 99, 104),
+            AutoEllipsis = true,
+        };
+        var score = new Label
+        {
+            Text = $"{hero.Score:0.#}%",
+            Location = new Point(width - ScalePixel(92), ScalePixel(15)),
+            Size = new Size(ScalePixel(70), ScalePixel(22)),
+            ForeColor = AccentColor,
+            Font = HeroScoreFont,
+            TextAlign = ContentAlignment.MiddleRight,
+        };
+        row.Controls.Add(avatar);
+        row.Controls.Add(name);
+        row.Controls.Add(combo);
+        row.Controls.Add(score);
+        toolTip.SetToolTip(row, $"命中属性：{string.Join("、", hero.MatchedStats)}");
+        return row;
     }
 
     private int ScalePixel(int logicalPixel)
@@ -544,9 +661,9 @@ public partial class MainForm : Form
     protected override void OnDpiChanged(DpiChangedEventArgs e)
     {
         _layoutDpi = Math.Max(96, e.DeviceDpiNew);
-        _heroConfigControl?.PrepareForDpiChange(_layoutDpi);
+        _demandBrowserControl?.PrepareForDpiChange(_layoutDpi);
         base.OnDpiChanged(e);
-        _heroConfigControl?.CompleteDpiChange();
+        _demandBrowserControl?.CompleteDpiChange();
         LayoutTopToolbar();
     }
 

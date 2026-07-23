@@ -9,9 +9,6 @@ internal static class AppPaths
     public static string UserRoot { get; } = ResolveUserRoot();
 
     public static string SettingsPath => Path.Combine(UserRoot, "settings.json");
-    public static string HeroOverridesPath => Path.Combine(UserRoot, "hero-overrides.json");
-    public static string UserHeroDataDirectory => Path.Combine(UserRoot, "HeroData");
-    public static string UserHeroDataPath => Path.Combine(UserHeroDataDirectory, "heroes.json");
 
     public static JsonSerializerOptions JsonOptions { get; } = new()
     {
@@ -73,32 +70,4 @@ internal static class AppPaths
         }
     }
 
-    public static void ReplaceUserHeroDataDirectory(string stagedDirectory)
-    {
-        var stagedFullPath = Path.GetFullPath(stagedDirectory);
-        var userRootFullPath = Path.GetFullPath(UserRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        if (!stagedFullPath.StartsWith(userRootFullPath, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(stagedFullPath, Path.GetFullPath(UserHeroDataDirectory), StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("英雄数据暂存目录不安全");
-        }
-
-        Directory.CreateDirectory(UserRoot);
-        var target = Path.GetFullPath(UserHeroDataDirectory);
-        var backup = Path.Combine(UserRoot, $".HeroData.backup-{Guid.NewGuid():N}");
-        try
-        {
-            if (Directory.Exists(target))
-                Directory.Move(target, backup);
-            Directory.Move(stagedFullPath, target);
-            if (Directory.Exists(backup))
-                Directory.Delete(backup, recursive: true);
-        }
-        catch
-        {
-            if (!Directory.Exists(target) && Directory.Exists(backup))
-                Directory.Move(backup, target);
-            throw;
-        }
-    }
 }

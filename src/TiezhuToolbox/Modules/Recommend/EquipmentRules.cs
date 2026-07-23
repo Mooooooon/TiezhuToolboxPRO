@@ -18,15 +18,6 @@ public static class EquipmentRules
     public static readonly string[] UsefulStats =
         { "攻击力", "防御力", "生命值", "速度", "暴击率", "暴击伤害", "效果命中", "效果抗性" };
 
-    public static readonly string[] NecklaceMainStats =
-        { "攻击力%", "防御力%", "生命值%", "暴击率", "暴击伤害" };
-
-    public static readonly string[] RingMainStats =
-        { "攻击力%", "防御力%", "生命值%", "效果命中", "效果抗性" };
-
-    public static readonly string[] BootsMainStats =
-        { "攻击力%", "防御力%", "生命值%", "速度" };
-
     public static EquipmentPart DetectPart(string? quality)
     {
         if (string.IsNullOrWhiteSpace(quality)) return EquipmentPart.Unknown;
@@ -58,26 +49,4 @@ public static class EquipmentRules
         };
     }
 
-    public static List<string> DeriveMainStats(IEnumerable<string> usefulStats, IEnumerable<string> candidates)
-    {
-        var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
-        return candidates.Where(candidate => useful.Contains(candidate.TrimEnd('%'))).ToList();
-    }
-
-    public static List<string> DeriveNecklaceMainStats(IEnumerable<string> usefulStats)
-    {
-        var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
-        var criticalStats = new[] { "暴击率", "暴击伤害" }.Where(useful.Contains).ToList();
-        return criticalStats.Count > 0
-            ? criticalStats
-            : DeriveMainStats(useful, NecklaceMainStats);
-    }
-
-    public static List<string> DeriveBootsMainStats(IEnumerable<string> usefulStats)
-    {
-        var useful = usefulStats.ToHashSet(StringComparer.Ordinal);
-        return useful.Contains("速度")
-            ? new List<string> { "速度" }
-            : DeriveMainStats(useful, BootsMainStats);
-    }
 }

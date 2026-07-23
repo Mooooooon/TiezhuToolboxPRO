@@ -38,14 +38,14 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 /// 传说装备因多一次强化机会，按 3/3/6/9/12 判断，允许累计歪一跳；
 /// +15 时速度 ≥ 15，85 级建议重铸，88 级建议保留。
 /// 开启“紫装只赌速度”后，英雄装备忽略分数、角色匹配度和主属性规则，只走严格速度阶梯。
-/// 分数达标时仍会检查用途：没有速度潜质且最高角色匹配度低于用户设置时建议放弃；
+/// 分数达标时仍会检查用途：没有速度潜质且最高需求匹配度低于用户设置时建议放弃；
 /// 左三件（武器/头盔/铠甲）直接走上述流程；项链/戒指即使是固定值主属性，只要速度达标也可作为速度散件继续赌；
 /// 其余右三件固定值主属性直接淘汰。只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
 /// </summary>
 public static class EnhancementAdvisor
 {
     private const double ReforgeScoreThreshold = 65;
-    public const double DefaultMinimumHeroMatchScore = 70;
+    public const double DefaultMinimumDemandMatchScore = 70;
 
     /// <summary>分数阶梯：强化档位上限（不含）→ 相对阈值的加分。</summary>
     private static readonly (int LevelCap, double Offset)[] ScoreSteps =
@@ -69,17 +69,17 @@ public static class EnhancementAdvisor
     /// <param name="leftThreshold">左三件分数阈值。</param>
     /// <param name="rightThreshold">右三件分数阈值。</param>
     /// <param name="level88Threshold">88 级装备的统一起步阈值。</param>
-    /// <param name="minimumHeroMatchScore">没有速度潜质时允许继续强化的最低角色匹配度。</param>
+    /// <param name="minimumDemandMatchScore">没有速度潜质时允许继续强化的最低需求匹配度。</param>
     /// <param name="heroicOnlyGambleSpeed">英雄（紫色）装备是否忽略分数和角色匹配度，只按严格速度阶梯处理。</param>
     public static EnhanceAdviceResult Analyze(
         EquipmentInfo info,
         double leftThreshold,
         double rightThreshold,
         double level88Threshold = 28,
-        double minimumHeroMatchScore = DefaultMinimumHeroMatchScore,
+        double minimumDemandMatchScore = DefaultMinimumDemandMatchScore,
         bool heroicOnlyGambleSpeed = false)
     {
-        minimumHeroMatchScore = Math.Clamp(minimumHeroMatchScore, 0, 100);
+        minimumDemandMatchScore = Math.Clamp(minimumDemandMatchScore, 0, 100);
         var part = EquipmentRules.DetectPart(info.Quality);
         if (part == EquipmentPart.Unknown)
             return new EnhanceAdviceResult(EnhanceAdvice.None, "无法判断", "未从品质文本中识别出装备部位");
@@ -113,7 +113,7 @@ public static class EnhancementAdvisor
             var leftScoreAdvice = ScoreLadder(score, reforgedScore, enhance, threshold, isLevel88);
             if (leftScoreAdvice != null)
                 return ApplyHeroMatchGate(
-                    info, leftScoreAdvice, speed, enhance, minimumHeroMatchScore, isLegendary);
+                    info, leftScoreAdvice, speed, enhance, minimumDemandMatchScore, isLegendary);
 
             return SpeedLadder(speed, enhance, isLevel88, isLegendary,
                 GiveUpDetail(score, reforgedScore, enhance, threshold, isLevel88));
@@ -136,7 +136,7 @@ public static class EnhancementAdvisor
         var byScore = ScoreLadder(score, reforgedScore, enhance, threshold, isLevel88);
         if (byScore != null)
             return ApplyHeroMatchGate(
-                info, byScore, GetSpeed(info), enhance, minimumHeroMatchScore, isLegendary);
+                info, byScore, GetSpeed(info), enhance, minimumDemandMatchScore, isLegendary);
 
         if (part is EquipmentPart.Necklace or EquipmentPart.Ring)
             return SpeedLadder(GetSpeed(info), enhance, isLevel88, isLegendary,
@@ -176,27 +176,27 @@ public static class EnhancementAdvisor
     }
 
     /// <summary>
-    /// 分数达标后再检查装备用途：没有速度潜质且所有角色匹配度都低于设置值时放弃。
-    /// 角色数据未加载时跳过此门槛，避免数据文件异常导致误判。
+    /// 分数达标后再检查装备用途：没有速度潜质且所有需求子类匹配度都低于设置值时放弃。
+    /// 需求数据未加载时跳过此门槛，避免数据文件异常导致误判。
     /// </summary>
     private static EnhanceAdviceResult ApplyHeroMatchGate(
         EquipmentInfo info,
         EnhanceAdviceResult scoreAdvice,
         int speed,
         int enhance,
-        double minimumHeroMatchScore,
+        double minimumDemandMatchScore,
         bool allowOneMiss)
     {
-        if (HasSpeedPotential(speed, enhance, allowOneMiss) || !HeroDatabase.Instance.IsLoaded)
+        if (HasSpeedPotential(speed, enhance, allowOneMiss) || !DemandDatabase.Instance.IsLoaded)
             return scoreAdvice;
 
-        var bestMatch = HeroRecommender.Recommend(info, top: 1).FirstOrDefault();
-        if (bestMatch?.Score >= minimumHeroMatchScore)
+        var bestMatch = SetProfileMatcher.Match(info, top: 1).FirstOrDefault();
+        if (bestMatch?.Score >= minimumDemandMatchScore)
             return scoreAdvice;
 
         var matchDetail = bestMatch == null
-            ? "没有匹配到适用角色"
-            : $"最高匹配度 {bestMatch.Score:0.#}% < {minimumHeroMatchScore:0.#}%";
+            ? "没有匹配到适用需求子类"
+            : $"最高需求匹配度 {bestMatch.Score:0.#}% < {minimumDemandMatchScore:0.#}%";
         return new EnhanceAdviceResult(EnhanceAdvice.GiveUp,
             "匹配度过低，建议放弃", $"{matchDetail}，且速度 {speed} 未达当前强化档位要求");
     }

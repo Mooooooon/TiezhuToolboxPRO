@@ -32,7 +32,7 @@ public sealed record AutoEnhancementOptions(
     double LeftThreshold,
     double RightThreshold,
     double Level88Threshold,
-    double MinimumHeroMatchScore,
+    double MinimumDemandMatchScore,
     EquipmentDisposalMethod DisposalMethod,
     bool StopOnValuableEquipment,
     bool HeroicOnlyGambleSpeed,
@@ -44,7 +44,7 @@ public sealed record AutoEnhancementOptions(
         double leftThreshold,
         double rightThreshold,
         double level88Threshold,
-        double minimumHeroMatchScore = EnhancementAdvisor.DefaultMinimumHeroMatchScore,
+        double minimumDemandMatchScore = EnhancementAdvisor.DefaultMinimumDemandMatchScore,
         EquipmentDisposalMethod disposalMethod = EquipmentDisposalMethod.Sell,
         bool stopOnValuableEquipment = true,
         bool heroicOnlyGambleSpeed = false)
@@ -53,7 +53,7 @@ public sealed record AutoEnhancementOptions(
             leftThreshold,
             rightThreshold,
             level88Threshold,
-            Math.Clamp(minimumHeroMatchScore, 0, 100),
+            Math.Clamp(minimumDemandMatchScore, 0, 100),
             disposalMethod,
             stopOnValuableEquipment,
             heroicOnlyGambleSpeed,
@@ -142,7 +142,7 @@ public sealed class AutoEnhancementRunner : IDisposable
                     _options.LeftThreshold,
                     _options.RightThreshold,
                     _options.Level88Threshold,
-                    _options.MinimumHeroMatchScore,
+                    _options.MinimumDemandMatchScore,
                     _options.HeroicOnlyGambleSpeed);
                 Report(AutoEnhancementLogLevel.Recognition,
                     $"强化判断：{advice.Text}；{advice.Detail}");

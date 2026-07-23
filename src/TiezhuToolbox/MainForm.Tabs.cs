@@ -7,8 +7,7 @@ public partial class MainForm
     private readonly AppSettings _settings = AppSettingsStore.Load();
     private AntdUI.Tabs _mainTabs = null!;
     private AntdUI.TabPage _equipmentTab = null!;
-    private HeroConfigControl _heroConfigControl = null!;
-    private CancellationTokenSource? _heroUpdateCancellation;
+    private DemandBrowserControl _demandBrowserControl = null!;
     private bool _isLoadingSettings;
     private Label _settingsRulesLabel = null!;
 
@@ -39,7 +38,7 @@ public partial class MainForm
         };
         _equipmentTab = new AntdUI.TabPage { Text = "装备强化", BackColor = Color.White };
         _autoEnhanceTab = new AntdUI.TabPage { Text = "自动强化", BackColor = Color.FromArgb(245, 246, 248) };
-        var heroTab = new AntdUI.TabPage { Text = "英雄配置", BackColor = Color.White };
+        var demandTab = new AntdUI.TabPage { Text = "需求分析", BackColor = Color.White };
         var settingsTab = new AntdUI.TabPage { Text = "软件设置", BackColor = Color.FromArgb(245, 246, 248) };
 
         _equipmentTab.Controls.Add(mainTable);
@@ -53,11 +52,9 @@ public partial class MainForm
         comboDevices.List = true;
         topPanel.Resize += (_, _) => LayoutTopToolbar();
 
-        _heroConfigControl = new HeroConfigControl();
-        _heroConfigControl.UpdateRequested += async (_, _) => await UpdateHeroDataAsync();
-        _heroConfigControl.CancelUpdateRequested += (_, _) => _heroUpdateCancellation?.Cancel();
-        heroTab.Controls.Add(_heroConfigControl);
-        _heroConfigControl.ApplyInitialDpiScale(_layoutDpi);
+        _demandBrowserControl = new DemandBrowserControl();
+        demandTab.Controls.Add(_demandBrowserControl);
+        _demandBrowserControl.ApplyInitialDpiScale(_layoutDpi);
 
         var autoEnhanceContent = CreateAutoEnhanceContent();
         _autoEnhanceTab.Controls.Add(autoEnhanceContent);
@@ -69,7 +66,7 @@ public partial class MainForm
 
         _mainTabs.Pages.Add(_equipmentTab);
         _mainTabs.Pages.Add(_autoEnhanceTab);
-        _mainTabs.Pages.Add(heroTab);
+        _mainTabs.Pages.Add(demandTab);
         _mainTabs.Pages.Add(settingsTab);
         _mainTabs.SelectedIndex = 0;
         _mainTabs.SelectedIndexChanged += MainTabs_SelectedIndexChanged;
@@ -79,7 +76,6 @@ public partial class MainForm
 
         LoadSettingsIntoControls();
         txtAddress.Leave += (_, _) => SaveSettingsFromControls();
-        HeroDatabase.Instance.Changed += HeroDatabase_Changed;
         ResumeLayout(performLayout: true);
         LayoutTopToolbar();
     }
@@ -155,7 +151,7 @@ public partial class MainForm
 
         var automationTitle = CreateSettingsHeading(
             "自动强化",
-            "设置淘汰装备的处理方式、单次处理上限、最低角色匹配度和赌速度规则。",
+            "设置淘汰装备的处理方式、单次处理上限、最低需求匹配度和赌速度规则。",
             314);
         var automationPanel = new FlowLayoutPanel
         {
@@ -212,9 +208,9 @@ public partial class MainForm
         };
         var matchLabel = new Label
         {
-            Text = "最低匹配度",
+            Text = "最低需求匹配度",
             ForeColor = TextDarkColor,
-            Size = new Size(78, 34),
+            Size = new Size(106, 34),
             TextAlign = ContentAlignment.MiddleLeft,
             Margin = Padding.Empty,
         };
@@ -270,7 +266,7 @@ public partial class MainForm
 
         var rulesTitle = CreateSettingsHeading(
             "自动规则说明",
-            "推荐匹配与角色默认配置会自动应用以下规则。",
+            "推荐匹配与套装需求数据会自动应用以下规则。",
             514);
         var rulesPanel = new Panel
         {
@@ -286,10 +282,10 @@ public partial class MainForm
             ForeColor = Color.FromArgb(66, 70, 77),
             Text = "• 红装赌速度：比紫装多一次强化机会，允许累计歪一跳。\r\n"
                    + "• 紫装只赌速度：开启后忽略分数与匹配度，按严格速度阶梯处理。\r\n"
-                   + "• 速度硬门槛：角色需要速度时，装备必须带速度（速度鞋主属性也算），否则不推荐。\r\n"
-                   + "• 速度鞋默认：采集数据包含速度时，鞋子主属性默认只勾选速度。\r\n"
-                   + "• 双爆项链默认：角色同时需要暴击率和暴击伤害时，项链默认勾选双爆。\r\n"
-                   + "• 速度套补全：主流搭配包含速度套时，自动把速度加入角色有效属性。",
+                   + "• 套装子类：只匹配当前套装下人工维护的属性组合，不使用旧角色算法回退。\r\n"
+                   + "• 右三主属性：85级按90级满值预估，88/90使用同一满值档参与用途匹配。\r\n"
+                   + "• 强化分数：始终只统计副属性；主属性不会加入分数阶梯或重铸分数。\r\n"
+                   + "• 固定主属性：右三固定攻击、生命、防御不匹配任何需求子类。",
         };
         rulesPanel.Controls.Add(_settingsRulesLabel);
 
@@ -343,7 +339,7 @@ public partial class MainForm
             txtAddress.Text = _settings.AdbAddress;
             _numAutoMaxEquipment.Value = _settings.AutoEnhanceMaxEquipment;
             _comboAutoDisposalMethod.SelectedValue = _settings.AutoEnhanceDisposalMethod;
-            _numHeroMatchThreshold.Value = _settings.MinimumHeroMatchScore;
+            _numHeroMatchThreshold.Value = _settings.MinimumDemandMatchScore;
             _chkAutoStopOnValuableEquipment.Checked = _settings.AutoEnhanceStopOnValuableEquipment;
             _chkHeroicOnlyGambleSpeed.Checked = _settings.HeroicOnlyGambleSpeed;
         }
@@ -368,7 +364,7 @@ public partial class MainForm
         _settings.AutoEnhanceMaxEquipment = (int)_numAutoMaxEquipment.Value;
         _settings.AutoEnhanceDisposalMethod = _comboAutoDisposalMethod.SelectedValue as string
             ?? _comboAutoDisposalMethod.Text;
-        _settings.MinimumHeroMatchScore = _numHeroMatchThreshold.Value;
+        _settings.MinimumDemandMatchScore = _numHeroMatchThreshold.Value;
         _settings.AutoEnhanceStopOnValuableEquipment = _chkAutoStopOnValuableEquipment.Checked;
         _settings.HeroicOnlyGambleSpeed = _chkHeroicOnlyGambleSpeed.Checked;
         try
@@ -399,7 +395,7 @@ public partial class MainForm
         _settings.AdbAddress = defaults.AdbAddress;
         _settings.AutoEnhanceMaxEquipment = defaults.AutoEnhanceMaxEquipment;
         _settings.AutoEnhanceDisposalMethod = defaults.AutoEnhanceDisposalMethod;
-        _settings.MinimumHeroMatchScore = defaults.MinimumHeroMatchScore;
+        _settings.MinimumDemandMatchScore = defaults.MinimumDemandMatchScore;
         _settings.AutoEnhanceStopOnValuableEquipment = defaults.AutoEnhanceStopOnValuableEquipment;
         _settings.HeroicOnlyGambleSpeed = defaults.HeroicOnlyGambleSpeed;
         LoadSettingsIntoControls();
@@ -414,7 +410,7 @@ public partial class MainForm
         ApplyRecognitionAvailability(showHotKeySuccess: false);
         if (IsEquipmentTabActive && _lastInfo != null)
         {
-            ShowHeroRecommendations(_lastInfo);
+            ShowDemandRecommendations(_lastInfo);
             UpdateAdvice();
         }
     }
@@ -436,101 +432,9 @@ public partial class MainForm
         RegisterSelectedRecognitionHotKey(showHotKeySuccess);
     }
 
-    private void HeroDatabase_Changed(object? sender, EventArgs e)
-    {
-        if (_lastInfo != null)
-        {
-            ShowHeroRecommendations(_lastInfo);
-            UpdateAdvice();
-        }
-    }
-
-    private async Task UpdateHeroDataAsync()
-    {
-        if (_heroUpdateCancellation != null)
-            return;
-
-        _heroUpdateCancellation = new CancellationTokenSource();
-        var token = _heroUpdateCancellation.Token;
-        var stagingDirectory = Path.Combine(AppPaths.UserRoot, $".hero-update-{Guid.NewGuid():N}");
-        _heroConfigControl.BeginUpdate();
-        UpdateStatus("正在更新官方英雄数据...");
-
-        try
-        {
-            if (Directory.Exists(AppPaths.UserHeroDataDirectory))
-                CopyDirectory(AppPaths.UserHeroDataDirectory, stagingDirectory);
-            else
-                Directory.CreateDirectory(stagingDirectory);
-
-            var progress = new Progress<HeroDataUpdateProgress>(value =>
-            {
-                _heroConfigControl.ReportUpdate(value);
-                UpdateStatus(value.Message);
-            });
-            using var service = new HeroDataUpdateService();
-            var updateResult = await service.WritePackageAsync(stagingDirectory,
-                HeroDatabase.Instance.GetBaseDocumentSnapshot(), progress, token);
-            token.ThrowIfCancellationRequested();
-            AppPaths.ReplaceUserHeroDataDirectory(stagingDirectory);
-            HeroDatabase.Instance.Reload();
-            _heroConfigControl.RefreshData();
-            UpdateStatus(updateResult.Warnings.Count == 0
-                ? $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}，自定义配置已保留"
-                : $"官方英雄数据已更新：{HeroDatabase.Instance.SeasonCode}，自定义配置已保留；{updateResult.Warnings.Count} 个英雄沿用旧配置或为空");
-        }
-        catch (OperationCanceledException)
-        {
-            CleanupStagingDirectory(stagingDirectory);
-            UpdateStatus("英雄数据更新已取消，原数据未改变");
-        }
-        catch (Exception ex)
-        {
-            CleanupStagingDirectory(stagingDirectory);
-            UpdateStatus($"英雄数据更新失败：{ex.Message}");
-            WriteDebugLog($"英雄数据更新失败：{ex}");
-        }
-        finally
-        {
-            _heroUpdateCancellation.Dispose();
-            _heroUpdateCancellation = null;
-            _heroConfigControl.EndUpdate();
-        }
-    }
-
-    private static void CopyDirectory(string source, string destination)
-    {
-        Directory.CreateDirectory(destination);
-        foreach (var directory in Directory.GetDirectories(source, "*", SearchOption.AllDirectories))
-            Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
-        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
-        {
-            var target = Path.Combine(destination, Path.GetRelativePath(source, file));
-            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-            File.Copy(file, target, overwrite: true);
-        }
-    }
-
-    private static void CleanupStagingDirectory(string path)
-    {
-        try
-        {
-            var fullPath = Path.GetFullPath(path);
-            var root = Path.GetFullPath(AppPaths.UserRoot).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            if (fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase) && Directory.Exists(fullPath))
-                Directory.Delete(fullPath, recursive: true);
-        }
-        catch
-        {
-            // 清理暂存目录失败不覆盖原异常。
-        }
-    }
-
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _autoEnhanceCancellation?.Cancel();
-        _heroUpdateCancellation?.Cancel();
-        HeroDatabase.Instance.Changed -= HeroDatabase_Changed;
         base.OnFormClosing(e);
     }
 }

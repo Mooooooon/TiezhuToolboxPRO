@@ -733,7 +733,7 @@ partial class MainForm
         this.lblHeroesTitle.Margin = new Padding(0, 4, 8, 0);
         this.lblHeroesTitle.Name = "lblHeroesTitle";
         this.lblHeroesTitle.TabIndex = 0;
-        this.lblHeroesTitle.Text = "适用角色";
+        this.lblHeroesTitle.Text = "套装需求";
         //
         // lblHeroesHint
         //
@@ -743,7 +743,7 @@ partial class MainForm
         this.lblHeroesHint.Margin = new Padding(0, 9, 0, 0);
         this.lblHeroesHint.Name = "lblHeroesHint";
         this.lblHeroesHint.TabIndex = 1;
-        this.lblHeroesHint.Text = "官方战绩 · 前排分段";
+        this.lblHeroesHint.Text = "内置人工维护数据";
         //
         // flowHeroes
         //
