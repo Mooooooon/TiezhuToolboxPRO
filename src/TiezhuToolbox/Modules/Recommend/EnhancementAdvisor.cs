@@ -45,7 +45,16 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 public static class EnhancementAdvisor
 {
     private const double ReforgeScoreThreshold = 65;
+    private const double HighCriticalWeightRatio = 0.30;
     public const double DefaultMinimumDemandMatchScore = 70;
+
+    [Flags]
+    private enum CriticalMainStats
+    {
+        None = 0,
+        CriticalChance = 1,
+        CriticalDamage = 2,
+    }
 
     /// <summary>分数阶梯：强化档位上限（不含）→ 相对阈值的加分。</summary>
     private static readonly (int LevelCap, double Offset)[] ScoreSteps =
@@ -71,18 +80,26 @@ public static class EnhancementAdvisor
     /// <param name="level88Threshold">88 级装备的统一起步阈值。</param>
     /// <param name="minimumDemandMatchScore">没有速度潜质时允许继续强化的最低需求匹配度。</param>
     /// <param name="heroicOnlyGambleSpeed">英雄（紫色）装备是否忽略分数和角色匹配度，只按严格速度阶梯处理。</param>
+    /// <param name="speedSetRequiresSpeed">速度套鞋子是否必须为速度主属性、其他部位是否必须含速度副属性。</param>
+    /// <param name="criticalNecklaceMainStatRule">暴击率或暴伤达到高权重时，项链是否只接受对应主属性。</param>
     public static EnhanceAdviceResult Analyze(
         EquipmentInfo info,
         double leftThreshold,
         double rightThreshold,
         double level88Threshold = 28,
         double minimumDemandMatchScore = DefaultMinimumDemandMatchScore,
-        bool heroicOnlyGambleSpeed = false)
+        bool heroicOnlyGambleSpeed = false,
+        bool speedSetRequiresSpeed = true,
+        bool criticalNecklaceMainStatRule = true)
     {
         minimumDemandMatchScore = Math.Clamp(minimumDemandMatchScore, 0, 100);
         var part = EquipmentRules.DetectPart(info.Quality);
         if (part == EquipmentPart.Unknown)
             return new EnhanceAdviceResult(EnhanceAdvice.None, "无法判断", "未从品质文本中识别出装备部位");
+
+        var speedSetRule = ApplySpeedSetRule(info, part, speedSetRequiresSpeed);
+        if (speedSetRule != null)
+            return speedSetRule;
 
         // 分数用民间算法由副属性现算，不依赖调用方是否已填 info.Score
         var score = EquipmentScoreCalculator.Calculate(info.SubStats);
@@ -113,7 +130,8 @@ public static class EnhancementAdvisor
             var leftScoreAdvice = ScoreLadder(score, reforgedScore, enhance, threshold, isLevel88);
             if (leftScoreAdvice != null)
                 return ApplyHeroMatchGate(
-                    info, leftScoreAdvice, speed, enhance, minimumDemandMatchScore, isLegendary);
+                    info, leftScoreAdvice, speed, enhance, minimumDemandMatchScore, isLegendary,
+                    criticalNecklaceMainStatRule);
 
             return SpeedLadder(speed, enhance, isLevel88, isLegendary,
                 GiveUpDetail(score, reforgedScore, enhance, threshold, isLevel88));
@@ -136,7 +154,8 @@ public static class EnhancementAdvisor
         var byScore = ScoreLadder(score, reforgedScore, enhance, threshold, isLevel88);
         if (byScore != null)
             return ApplyHeroMatchGate(
-                info, byScore, GetSpeed(info), enhance, minimumDemandMatchScore, isLegendary);
+                info, byScore, GetSpeed(info), enhance, minimumDemandMatchScore, isLegendary,
+                criticalNecklaceMainStatRule);
 
         if (part is EquipmentPart.Necklace or EquipmentPart.Ring)
             return SpeedLadder(GetSpeed(info), enhance, isLevel88, isLegendary,
@@ -185,12 +204,43 @@ public static class EnhancementAdvisor
         int speed,
         int enhance,
         double minimumDemandMatchScore,
-        bool allowOneMiss)
+        bool allowOneMiss,
+        bool criticalNecklaceMainStatRule)
     {
-        if (HasSpeedPotential(speed, enhance, allowOneMiss) || !DemandDatabase.Instance.IsLoaded)
+        if (!DemandDatabase.Instance.IsLoaded)
             return scoreAdvice;
 
-        var bestMatch = SetProfileMatcher.Match(info, top: 1).FirstOrDefault();
+        var recommendations = SetProfileMatcher.Match(info, top: int.MaxValue);
+        var bestMatch = recommendations.FirstOrDefault();
+        if (criticalNecklaceMainStatRule
+            && EquipmentRules.DetectPart(info.Quality) == EquipmentPart.Necklace
+            && bestMatch != null)
+        {
+            var set = DemandDatabase.Instance.FindSet(info.SetName);
+            var mainStat = GetCriticalMainStat(info);
+            var requiredMainStats = GetRequiredCriticalMainStats(set, bestMatch.ProfileId);
+            if (!AllowsCriticalMainStat(requiredMainStats, mainStat))
+            {
+                var allowedMatch = recommendations.FirstOrDefault(recommendation =>
+                    AllowsCriticalMainStat(
+                        GetRequiredCriticalMainStats(set, recommendation.ProfileId),
+                        mainStat));
+                if (allowedMatch == null || allowedMatch.Score < minimumDemandMatchScore)
+                {
+                    return new EnhanceAdviceResult(
+                        EnhanceAdvice.GiveUp,
+                        "项链暴击主属性规则，建议放弃",
+                        $"最高子类“{bestMatch.ProfileName}”高权重需求{DescribeCriticalMainStats(requiredMainStats)}，"
+                        + $"当前主属性为{info.MainStatName}，且没有主属性适配的其他子类达到 {minimumDemandMatchScore:0.#}%");
+                }
+
+                bestMatch = allowedMatch;
+            }
+        }
+
+        if (HasSpeedPotential(speed, enhance, allowOneMiss))
+            return scoreAdvice;
+
         if (bestMatch?.Score >= minimumDemandMatchScore)
             return scoreAdvice;
 
@@ -200,6 +250,96 @@ public static class EnhancementAdvisor
         return new EnhanceAdviceResult(EnhanceAdvice.GiveUp,
             "匹配度过低，建议放弃", $"{matchDetail}，且速度 {speed} 未达当前强化档位要求");
     }
+
+    private static EnhanceAdviceResult? ApplySpeedSetRule(
+        EquipmentInfo info,
+        EquipmentPart part,
+        bool enabled)
+    {
+        if (!enabled || !string.Equals(info.SetName, "速度套装", StringComparison.Ordinal))
+            return null;
+
+        var hasRequiredSpeed = part == EquipmentPart.Boots
+            ? EquipmentRules.NormalizeMainStat(info) == "速度"
+            : GetSpeed(info) > 0;
+        if (hasRequiredSpeed)
+            return null;
+
+        var detail = part == EquipmentPart.Boots
+            ? $"速度套鞋子只强化速度主属性，当前主属性为{info.MainStatName}"
+            : "速度套的非鞋部位必须包含速度副属性";
+        return new EnhanceAdviceResult(
+            EnhanceAdvice.GiveUp,
+            "速度套缺少速度，建议放弃",
+            detail);
+    }
+
+    private static CriticalMainStats GetCriticalMainStat(EquipmentInfo info)
+    {
+        return EquipmentRules.NormalizeMainStat(info) switch
+        {
+            "暴击率" => CriticalMainStats.CriticalChance,
+            "暴击伤害" => CriticalMainStats.CriticalDamage,
+            _ => CriticalMainStats.None,
+        };
+    }
+
+    private static CriticalMainStats GetRequiredCriticalMainStats(DemandSet? set, string profileId)
+    {
+        var profile = set?.Profiles.FirstOrDefault(item =>
+            string.Equals(item.Id, profileId, StringComparison.Ordinal));
+        if (profile == null)
+            return CriticalMainStats.None;
+
+        var result = GetHighCriticalWeights(profile.Stats, profile.Weights);
+        foreach (var hero in profile.Heroes)
+            result |= GetHighCriticalWeights(profile.Stats, hero.Weights);
+        return result;
+    }
+
+    private static CriticalMainStats GetHighCriticalWeights(
+        IReadOnlyCollection<string> explicitStats,
+        IReadOnlyDictionary<string, double> weights)
+    {
+        if (explicitStats.Count == 0)
+            return CriticalMainStats.None;
+
+        var maxWeight = explicitStats.Max(stat => weights.GetValueOrDefault(stat));
+        if (maxWeight <= 0)
+            return CriticalMainStats.None;
+
+        var threshold = maxWeight * HighCriticalWeightRatio;
+        var result = CriticalMainStats.None;
+        if (explicitStats.Contains("暴击率")
+            && weights.GetValueOrDefault("暴击率") >= threshold)
+        {
+            result |= CriticalMainStats.CriticalChance;
+        }
+
+        if (explicitStats.Contains("暴击伤害")
+            && weights.GetValueOrDefault("暴击伤害") >= threshold)
+        {
+            result |= CriticalMainStats.CriticalDamage;
+        }
+
+        return result;
+    }
+
+    private static bool AllowsCriticalMainStat(
+        CriticalMainStats required,
+        CriticalMainStats actual)
+        => required == CriticalMainStats.None
+           || actual != CriticalMainStats.None && (required & actual) != 0;
+
+    private static string DescribeCriticalMainStats(CriticalMainStats stats)
+        => stats switch
+        {
+            CriticalMainStats.CriticalChance => "暴击率主属性",
+            CriticalMainStats.CriticalDamage => "暴击伤害主属性",
+            CriticalMainStats.CriticalChance | CriticalMainStats.CriticalDamage
+                => "暴击率或暴击伤害主属性",
+            _ => "对应主属性",
+        };
 
     /// <summary>副属性速度是否达到当前强化档位的速度潜质要求。</summary>
     private static bool HasSpeedPotential(int speed, int enhance, bool allowOneMiss)

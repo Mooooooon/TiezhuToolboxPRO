@@ -110,7 +110,7 @@ public partial class MainForm
         {
             BackColor = Color.White,
             Location = new Point(24, 24),
-            Size = new Size(720, 820),
+            Size = new Size(720, 950),
             Padding = new Padding(24),
         };
         host.Resize += (_, _) => card.Width = Math.Min(
@@ -256,11 +256,37 @@ public partial class MainForm
             UpdateAdvice();
         };
 
+        _chkSpeedSetRequiresSpeed = new AntdUI.Checkbox
+        {
+            Text = "速度套只强化带速度的装备（鞋子看主属性，其他部位看副属性）",
+            Checked = true,
+            Location = new Point(24, 466),
+            Size = new Size(520, 34),
+        };
+        _chkSpeedSetRequiresSpeed.CheckedChanged += (_, _) =>
+        {
+            SaveSettingsFromControls();
+            UpdateAdvice();
+        };
+
+        _chkCriticalNecklaceMainStatRule = new AntdUI.Checkbox
+        {
+            Text = "暴击/暴伤高权重子类的项链只强化对应主属性",
+            Checked = true,
+            Location = new Point(24, 502),
+            Size = new Size(520, 34),
+        };
+        _chkCriticalNecklaceMainStatRule.CheckedChanged += (_, _) =>
+        {
+            SaveSettingsFromControls();
+            UpdateAdvice();
+        };
+
         _chkAutoStopOnValuableEquipment = new AntdUI.Checkbox
         {
             Text = "遇到符合保留条件的装备后停止（关闭后将返回背包并继续下一件）",
             Checked = true,
-            Location = new Point(24, 466),
+            Location = new Point(24, 538),
             Size = new Size(520, 34),
         };
         _chkAutoStopOnValuableEquipment.CheckedChanged += (_, _) => SaveSettingsFromControls();
@@ -268,12 +294,12 @@ public partial class MainForm
         var rulesTitle = CreateSettingsHeading(
             "自动规则说明",
             "推荐匹配与套装需求数据会自动应用以下规则。",
-            514);
+            586);
         var rulesPanel = new Panel
         {
             BackColor = Color.FromArgb(247, 249, 252),
-            Location = new Point(24, 574),
-            Size = new Size(690, 150),
+            Location = new Point(24, 646),
+            Size = new Size(690, 194),
             Padding = new Padding(12, 9, 12, 9),
         };
         _settingsRulesLabel = new Label
@@ -283,6 +309,8 @@ public partial class MainForm
             ForeColor = Color.FromArgb(66, 70, 77),
             Text = "• 红装赌速度：比紫装多一次强化机会，允许累计歪一跳。\r\n"
                    + "• 紫装只赌速度：鞋子除外；开启后忽略分数与匹配度，按严格速度阶梯处理。\r\n"
+                   + "• 速度套速度规则：鞋子必须为速度主属性，其他部位必须含速度副属性。\r\n"
+                   + "• 暴击项链规则：暴击率或暴伤达到高权重时，项链只接受对应的主属性。\r\n"
                    + "• 套装子类：只匹配当前套装下人工维护的属性组合，不使用旧角色算法回退。\r\n"
                    + "• 右三主属性：85级按90级满值预估，88/90使用同一满值档参与用途匹配。\r\n"
                    + "• 强化分数：始终只统计副属性；主属性不会加入分数阶梯或重铸分数。\r\n"
@@ -293,7 +321,7 @@ public partial class MainForm
         var reset = new AntdUI.Button
         {
             Text = "恢复默认设置",
-            Location = new Point(24, 750),
+            Location = new Point(24, 866),
             Size = new Size(120, 34),
             Radius = 6,
         };
@@ -303,6 +331,8 @@ public partial class MainForm
         card.Controls.Add(rulesPanel);
         card.Controls.Add(rulesTitle);
         card.Controls.Add(_chkAutoStopOnValuableEquipment);
+        card.Controls.Add(_chkCriticalNecklaceMainStatRule);
+        card.Controls.Add(_chkSpeedSetRequiresSpeed);
         card.Controls.Add(_chkHeroicOnlyGambleSpeed);
         card.Controls.Add(automationPanel);
         card.Controls.Add(automationTitle);
@@ -354,6 +384,8 @@ public partial class MainForm
             _numHeroMatchThreshold.Value = _settings.MinimumDemandMatchScore;
             _chkAutoStopOnValuableEquipment.Checked = _settings.AutoEnhanceStopOnValuableEquipment;
             _chkHeroicOnlyGambleSpeed.Checked = _settings.HeroicOnlyGambleSpeed;
+            _chkSpeedSetRequiresSpeed.Checked = _settings.SpeedSetRequiresSpeed;
+            _chkCriticalNecklaceMainStatRule.Checked = _settings.CriticalNecklaceMainStatRule;
         }
         finally
         {
@@ -379,6 +411,8 @@ public partial class MainForm
         _settings.MinimumDemandMatchScore = _numHeroMatchThreshold.Value;
         _settings.AutoEnhanceStopOnValuableEquipment = _chkAutoStopOnValuableEquipment.Checked;
         _settings.HeroicOnlyGambleSpeed = _chkHeroicOnlyGambleSpeed.Checked;
+        _settings.SpeedSetRequiresSpeed = _chkSpeedSetRequiresSpeed.Checked;
+        _settings.CriticalNecklaceMainStatRule = _chkCriticalNecklaceMainStatRule.Checked;
         try
         {
             AppSettingsStore.Save(_settings);
@@ -410,6 +444,8 @@ public partial class MainForm
         _settings.MinimumDemandMatchScore = defaults.MinimumDemandMatchScore;
         _settings.AutoEnhanceStopOnValuableEquipment = defaults.AutoEnhanceStopOnValuableEquipment;
         _settings.HeroicOnlyGambleSpeed = defaults.HeroicOnlyGambleSpeed;
+        _settings.SpeedSetRequiresSpeed = defaults.SpeedSetRequiresSpeed;
+        _settings.CriticalNecklaceMainStatRule = defaults.CriticalNecklaceMainStatRule;
         LoadSettingsIntoControls();
         SaveSettingsFromControls();
         ApplyRecognitionAvailability(showHotKeySuccess: false);

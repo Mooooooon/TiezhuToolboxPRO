@@ -6,7 +6,7 @@ namespace TiezhuToolbox;
 /// <summary>软件设置。新增字段必须提供兼容旧文件的默认值。</summary>
 public class AppSettings
 {
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
 
     public int Version { get; set; } = CurrentVersion;
     public decimal LeftThreshold { get; set; } = 24;
@@ -23,6 +23,10 @@ public class AppSettings
     public decimal MinimumDemandMatchScore { get; set; } = 70;
     public bool AutoEnhanceStopOnValuableEquipment { get; set; } = true;
     public bool HeroicOnlyGambleSpeed { get; set; }
+    public bool SpeedSetRequiresSpeed { get; set; } = true;
+    // 保留第一版特殊规则使用的 JSON 字段名，兼容已经保存的 settings.json。
+    [JsonPropertyName("DoubleCritNecklaceOnly")]
+    public bool CriticalNecklaceMainStatRule { get; set; } = true;
 
     public static AppSettings CreateDefault() => new();
 

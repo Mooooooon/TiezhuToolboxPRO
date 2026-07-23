@@ -43,6 +43,15 @@ if (args.Contains("--config-smoke"))
                     var heroicOnlyGambleSpeed = typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     heroicOnlyGambleSpeed.GetType().GetProperty("Checked")!.SetValue(heroicOnlyGambleSpeed, true);
+                    var speedSetRequiresSpeed = typeof(TiezhuToolbox.MainForm).GetField("_chkSpeedSetRequiresSpeed",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    var criticalNecklaceMainStatRule = typeof(TiezhuToolbox.MainForm).GetField("_chkCriticalNecklaceMainStatRule",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    if (!(bool)speedSetRequiresSpeed.GetType().GetProperty("Checked")!.GetValue(speedSetRequiresSpeed)!
+                        || !(bool)criticalNecklaceMainStatRule.GetType().GetProperty("Checked")!.GetValue(criticalNecklaceMainStatRule)!)
+                        throw new InvalidOperationException("两项特殊强化规则没有默认开启");
+                    speedSetRequiresSpeed.GetType().GetProperty("Checked")!.SetValue(speedSetRequiresSpeed, false);
+                    criticalNecklaceMainStatRule.GetType().GetProperty("Checked")!.SetValue(criticalNecklaceMainStatRule, false);
                     typeof(TiezhuToolbox.MainForm).GetMethod("SaveSettingsFromControls",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(firstForm, null);
                 }
@@ -71,9 +80,18 @@ if (args.Contains("--config-smoke"))
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
                 var heroicOnlyGambleSpeedValue = (bool)loadedHeroicOnlyGambleSpeed.GetType().GetProperty("Checked")!
                     .GetValue(loadedHeroicOnlyGambleSpeed)!;
+                var loadedSpeedSetRequiresSpeed = typeof(TiezhuToolbox.MainForm).GetField("_chkSpeedSetRequiresSpeed",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var speedSetRequiresSpeedValue = (bool)loadedSpeedSetRequiresSpeed.GetType().GetProperty("Checked")!
+                    .GetValue(loadedSpeedSetRequiresSpeed)!;
+                var loadedCriticalNecklaceMainStatRule = typeof(TiezhuToolbox.MainForm).GetField("_chkCriticalNecklaceMainStatRule",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var criticalNecklaceMainStatRuleValue = (bool)loadedCriticalNecklaceMainStatRule.GetType().GetProperty("Checked")!
+                    .GetValue(loadedCriticalNecklaceMainStatRule)!;
                 if (value != 31M || level88Value != 33M || maxAutoValue != 17M
                     || disposalValue != "分解" || matchValue != 82M || stopOnValuableValue
                     || !heroicOnlyGambleSpeedValue
+                    || speedSetRequiresSpeedValue || criticalNecklaceMainStatRuleValue
                     || loadedAddress.Text != "127.0.0.1:5555")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
@@ -87,7 +105,7 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine("配置持久化测试通过：软件设置 31/33/17/分解/82%/紫装只赌速度/符合后继续/127.0.0.1:5555");
+        Console.WriteLine("配置持久化测试通过：两项特殊强化规则默认开启且可关闭并持久化");
     }
     finally
     {
@@ -379,7 +397,10 @@ if (args.Contains("--ui-smoke"))
             if (heroicOnlySpeedCheck.Width < DpiPixel(400) || heroicOnlySpeedCheck.Height < DpiPixel(32))
                 throw new InvalidOperationException("紫装只赌速度设置项尺寸不足");
             var requiredRuleTexts = new[]
-                { "红装赌速度", "紫装只赌速度", "套装子类", "右三主属性", "强化分数", "固定主属性" };
+                {
+                    "红装赌速度", "紫装只赌速度", "速度套速度规则", "暴击项链规则",
+                    "套装子类", "右三主属性", "强化分数", "固定主属性",
+                };
             if (requiredRuleTexts.Any(text => !settingsRulesLabel.Text.Contains(text)))
                 throw new InvalidOperationException("软件设置页缺少自动规则说明");
             var preferredRulesHeight = settingsRulesLabel.GetPreferredSize(
@@ -726,9 +747,22 @@ if (args.Contains("--synthetic"))
     if (Math.Abs(estimatedResults["hp-spd"].Score - speedHpScore) > 1)
         throw new InvalidOperationException("强化增量漏识别时的 RollCount 估算偏差过大");
 
-    void AssertAdvice(string title, EquipmentInfo info, EnhanceAdvice expected, bool heroicOnly = false)
+    void AssertAdvice(
+        string title,
+        EquipmentInfo info,
+        EnhanceAdvice expected,
+        bool heroicOnly = false,
+        bool speedSetRequiresSpeed = true,
+        bool criticalNecklaceMainStatRule = true)
     {
-        var result = EnhancementAdvisor.Analyze(info, 24, 24, 28, heroicOnlyGambleSpeed: heroicOnly);
+        var result = EnhancementAdvisor.Analyze(
+            info,
+            24,
+            24,
+            28,
+            heroicOnlyGambleSpeed: heroicOnly,
+            speedSetRequiresSpeed: speedSetRequiresSpeed,
+            criticalNecklaceMainStatRule: criticalNecklaceMainStatRule);
         Console.WriteLine($"  {title} → {result.Text}（{result.Detail}）");
         if (result.Advice != expected)
             throw new InvalidOperationException($"强化建议回归失败：{title}，期望 {expected}，实际 {result.Advice}");
@@ -775,6 +809,87 @@ if (args.Contains("--synthetic"))
         Level = 88, Quality = "传说鞋子", MainStatName = "防御力", MainStatValue = "500",
         SubStats = { new SubStat { Name = "速度", Value = "3" } },
     }, EnhanceAdvice.GiveUpFixedMain);
+
+    EquipmentInfo SpeedSetHpBoots() => new()
+    {
+        Level = 85,
+        Quality = "传说鞋子",
+        SetName = "速度套装",
+        MainStatName = "生命值",
+        MainStatValue = "65%",
+        SubStats =
+        {
+            new SubStat { Name = "速度", Value = "4" },
+            new SubStat { Name = "防御力", Value = "20%" },
+            new SubStat { Name = "效果命中", Value = "20%" },
+            new SubStat { Name = "效果抗性", Value = "20%" },
+        },
+    };
+    AssertAdvice(
+        "速度套生命鞋特殊规则",
+        SpeedSetHpBoots(),
+        EnhanceAdvice.GiveUp);
+    AssertAdvice(
+        "关闭速度套特殊规则",
+        SpeedSetHpBoots(),
+        EnhanceAdvice.Continue,
+        speedSetRequiresSpeed: false);
+
+    EquipmentInfo AttackSetNecklace(string mainStat)
+    {
+        var info = new EquipmentInfo
+        {
+            Level = 85,
+            Quality = "传说项链",
+            SetName = "攻击套装",
+            MainStatName = mainStat,
+            MainStatValue = mainStat == "暴击伤害" ? "70%" : "65%",
+            SubStats =
+            {
+                new SubStat { Name = "速度", Value = "5" },
+                new SubStat { Name = "暴击率", Value = "12%" },
+                new SubStat { Name = "效果命中", Value = "8%" },
+            },
+        };
+        info.SubStats.Add(mainStat == "暴击伤害"
+            ? new SubStat { Name = "攻击力", Value = "20%" }
+            : new SubStat { Name = "暴击伤害", Value = "20%" });
+        return info;
+    }
+    AssertAdvice(
+        "双爆需求攻击项链特殊规则",
+        AttackSetNecklace("攻击力"),
+        EnhanceAdvice.GiveUp);
+    AssertAdvice(
+        "关闭暴击项链特殊规则",
+        AttackSetNecklace("攻击力"),
+        EnhanceAdvice.Continue,
+        criticalNecklaceMainStatRule: false);
+    AssertAdvice(
+        "双爆需求暴伤项链",
+        AttackSetNecklace("暴击伤害"),
+        EnhanceAdvice.Continue);
+
+    var classifyCriticalWeights = typeof(EnhancementAdvisor).GetMethod(
+        "GetHighCriticalWeights",
+        System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
+        ?? throw new InvalidOperationException("找不到暴击项链权重分类方法");
+    string ClassifyCriticalWeights(IEnumerable<string> stats, double crit, double critDamage)
+    {
+        var result = classifyCriticalWeights.Invoke(null, new object[]
+        {
+            stats.ToList(),
+            Weights(speed: 3, crit: crit, critDamage: critDamage),
+        });
+        return result?.ToString() ?? string.Empty;
+    }
+    if (ClassifyCriticalWeights(new[] { "速度", "暴击率" }, 1.5, 0) != "CriticalChance"
+        || ClassifyCriticalWeights(new[] { "速度", "暴击伤害" }, 0, 1.5) != "CriticalDamage"
+        || ClassifyCriticalWeights(new[] { "速度", "暴击率", "暴击伤害" }, 1.5, 1.5)
+        != "CriticalChance, CriticalDamage")
+    {
+        throw new InvalidOperationException("单暴击、单暴伤和双爆需求未被分别识别");
+    }
 
     var inferEnhanceLevel = typeof(OcrEngine).GetMethod(
         "InferEnhanceLevelByRolls",

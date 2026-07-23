@@ -13,6 +13,8 @@ public partial class MainForm
     private AntdUI.InputNumber _numHeroMatchThreshold = null!;
     private AntdUI.Checkbox _chkAutoStopOnValuableEquipment = null!;
     private AntdUI.Checkbox _chkHeroicOnlyGambleSpeed = null!;
+    private AntdUI.Checkbox _chkSpeedSetRequiresSpeed = null!;
+    private AntdUI.Checkbox _chkCriticalNecklaceMainStatRule = null!;
     private Label _lblAutoDevice = null!;
     private Label _lblAutoState = null!;
     private Label _lblAutoStats = null!;
@@ -153,7 +155,7 @@ public partial class MainForm
         };
         _lblAutoStats = new Label
         {
-            Text = "已处理 0 · 强化 0 · 出售 0 · 分解 0",
+            Text = "已处理 0 · 强化装备 0 · 出售 0 · 分解 0",
             ForeColor = Color.FromArgb(95, 99, 104),
             Anchor = AnchorStyles.Top | AnchorStyles.Right,
             Location = new Point(620, 0),
@@ -240,6 +242,8 @@ public partial class MainForm
         _numHeroMatchThreshold.Enabled = false;
         _chkAutoStopOnValuableEquipment.Enabled = false;
         _chkHeroicOnlyGambleSpeed.Enabled = false;
+        _chkSpeedSetRequiresSpeed.Enabled = false;
+        _chkCriticalNecklaceMainStatRule.Enabled = false;
         _lblAutoDevice.Text = $"设备：{device.Serial}";
         _lblAutoState.Text = "运行中";
         _lblAutoState.ForeColor = AdviceContinueColor;
@@ -253,22 +257,24 @@ public partial class MainForm
             (double)_numHeroMatchThreshold.Value,
             disposalMethod,
             _chkAutoStopOnValuableEquipment.Checked,
-            _chkHeroicOnlyGambleSpeed.Checked);
+            _chkHeroicOnlyGambleSpeed.Checked,
+            _chkSpeedSetRequiresSpeed.Checked,
+            _chkCriticalNecklaceMainStatRule.Checked);
         var progress = new Progress<AutoEnhancementProgress>(value =>
         {
             AppendAutoLog(value.Level, value.Message);
-            _lblAutoStats.Text = $"已处理 {value.Processed} · 强化 {value.Enhanced} · 出售 {value.Sold} · 分解 {value.Extracted}";
+            _lblAutoStats.Text = $"已处理 {value.Processed} · 强化装备 {value.Enhanced} · 出售 {value.Sold} · 分解 {value.Extracted}";
         });
         var templateDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", "Templates");
+        AutoEnhancementRunner? runner = null;
 
         try
         {
-            using var runner = new AutoEnhancementRunner(device.Serial, templateDir, options, progress);
+            runner = new AutoEnhancementRunner(device.Serial, templateDir, options, progress);
             var result = await runner.RunAsync(cancellationToken);
-            _lblAutoStats.Text = $"已处理 {result.Processed} · 强化 {result.Enhanced} · 出售 {result.Sold} · 分解 {result.Extracted}";
+            _lblAutoStats.Text = $"已处理 {result.Processed} · 强化装备 {result.Enhanced} · 出售 {result.Sold} · 分解 {result.Extracted}";
             _lblAutoState.Text = result.StoppedForValuableEquipment ? "已安全停止" : "已完成";
             _lblAutoState.ForeColor = result.StoppedForValuableEquipment ? AdviceGambleColor : AdviceContinueColor;
-            AppendAutoLog(AutoEnhancementLogLevel.Success, result.Message);
             UpdateStatus(result.Message);
         }
         catch (OperationCanceledException)
@@ -288,6 +294,11 @@ public partial class MainForm
         }
         finally
         {
+            if (runner != null)
+            {
+                AppendAutoEnhancementSummary(runner.GetSummary());
+                runner.Dispose();
+            }
             _autoEnhanceCancellation?.Dispose();
             _autoEnhanceCancellation = null;
             if (!IsDisposed)
@@ -299,6 +310,8 @@ public partial class MainForm
                 _numHeroMatchThreshold.Enabled = true;
                 _chkAutoStopOnValuableEquipment.Enabled = true;
                 _chkHeroicOnlyGambleSpeed.Enabled = true;
+                _chkSpeedSetRequiresSpeed.Enabled = true;
+                _chkCriticalNecklaceMainStatRule.Enabled = true;
                 ApplyRecognitionAvailability(showHotKeySuccess: false);
             }
         }
@@ -308,6 +321,32 @@ public partial class MainForm
         => (_comboAutoDisposalMethod.SelectedValue as string ?? _comboAutoDisposalMethod.Text) == "分解"
             ? EquipmentDisposalMethod.Extract
             : EquipmentDisposalMethod.Sell;
+
+    private void AppendAutoEnhancementSummary(AutoEnhancementSummary summary)
+    {
+        _lblAutoStats.Text =
+            $"已处理 {summary.Processed} · 强化装备 {summary.Enhanced} · 出售 {summary.Sold} · 分解 {summary.Extracted}";
+        AppendAutoLog(
+            AutoEnhancementLogLevel.Success,
+            $"任务详情：共处理 {summary.Processed} 件装备，强化了 {summary.Enhanced} 件，" +
+            $"出售 {summary.Sold} 件，分解 {summary.Extracted} 件，值得重铸 {summary.ReforgeEquipment.Count} 件");
+
+        if (summary.ReforgeEquipment.Count == 0)
+        {
+            AppendAutoLog(AutoEnhancementLogLevel.Info, "值得重铸装备：无");
+            return;
+        }
+
+        AppendAutoLog(AutoEnhancementLogLevel.Success, "值得重铸装备列表：");
+        for (var i = 0; i < summary.ReforgeEquipment.Count; i++)
+        {
+            var equipment = summary.ReforgeEquipment[i];
+            AppendAutoLog(
+                AutoEnhancementLogLevel.Recognition,
+                $"{i + 1}. 套装：{equipment.SetName}；部位：{equipment.Part}；" +
+                $"副属性：{string.Join("，", equipment.SubStats)}");
+        }
+    }
 
     private void AppendAutoLog(AutoEnhancementLogLevel level, string message)
     {

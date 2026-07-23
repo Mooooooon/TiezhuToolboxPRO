@@ -27,6 +27,18 @@ public sealed record AutoEnhancementProgress(
     int Sold,
     int Extracted);
 
+public sealed record ReforgeEquipmentSummary(
+    string SetName,
+    string Part,
+    IReadOnlyList<string> SubStats);
+
+public sealed record AutoEnhancementSummary(
+    int Processed,
+    int Enhanced,
+    int Sold,
+    int Extracted,
+    IReadOnlyList<ReforgeEquipmentSummary> ReforgeEquipment);
+
 public sealed record AutoEnhancementOptions(
     int MaxEquipment,
     double LeftThreshold,
@@ -36,6 +48,8 @@ public sealed record AutoEnhancementOptions(
     EquipmentDisposalMethod DisposalMethod,
     bool StopOnValuableEquipment,
     bool HeroicOnlyGambleSpeed,
+    bool SpeedSetRequiresSpeed,
+    bool CriticalNecklaceMainStatRule,
     TimeSpan UiTimeout,
     TimeSpan AnimationMinimumWait)
 {
@@ -47,7 +61,9 @@ public sealed record AutoEnhancementOptions(
         double minimumDemandMatchScore = EnhancementAdvisor.DefaultMinimumDemandMatchScore,
         EquipmentDisposalMethod disposalMethod = EquipmentDisposalMethod.Sell,
         bool stopOnValuableEquipment = true,
-        bool heroicOnlyGambleSpeed = false)
+        bool heroicOnlyGambleSpeed = false,
+        bool speedSetRequiresSpeed = true,
+        bool criticalNecklaceMainStatRule = true)
         => new(
             Math.Clamp(maxEquipment, 1, 999),
             leftThreshold,
@@ -57,17 +73,23 @@ public sealed record AutoEnhancementOptions(
             disposalMethod,
             stopOnValuableEquipment,
             heroicOnlyGambleSpeed,
+            speedSetRequiresSpeed,
+            criticalNecklaceMainStatRule,
             TimeSpan.FromSeconds(10),
             TimeSpan.FromSeconds(4));
 }
 
 public sealed record AutoEnhancementResult(
-    int Processed,
-    int Enhanced,
-    int Sold,
-    int Extracted,
+    AutoEnhancementSummary Summary,
     bool StoppedForValuableEquipment,
-    string Message);
+    string Message)
+{
+    public int Processed => Summary.Processed;
+    public int Enhanced => Summary.Enhanced;
+    public int Sold => Summary.Sold;
+    public int Extracted => Summary.Extracted;
+    public IReadOnlyList<ReforgeEquipmentSummary> ReforgeEquipment => Summary.ReforgeEquipment;
+}
 
 /// <summary>
 /// 自动强化闭环：图片确认界面与按钮 → OCR 判断 → 单次 ADB 点击 → 再截图确认。
@@ -85,6 +107,7 @@ public sealed class AutoEnhancementRunner : IDisposable
     private int _enhanced;
     private int _sold;
     private int _extracted;
+    private readonly List<ReforgeEquipmentSummary> _reforgeEquipment = new();
 
     public AutoEnhancementRunner(
         string serial,
@@ -103,6 +126,7 @@ public sealed class AutoEnhancementRunner : IDisposable
         Report(AutoEnhancementLogLevel.Info,
             $"自动强化已启动，设备 {_serial}，本次最多处理 {_options.MaxEquipment} 件装备，" +
             $"淘汰装备处理方式：{DisposalDisplayName}，紫装规则：{(_options.HeroicOnlyGambleSpeed ? "只赌速度" : "按常规评分")}，" +
+            $"速度套速度规则：{(_options.SpeedSetRequiresSpeed ? "开启" : "关闭")}，暴击项链规则：{(_options.CriticalNecklaceMainStatRule ? "开启" : "关闭")}，" +
             $"符合保留条件后：{(_options.StopOnValuableEquipment ? "停止" : "返回背包继续")}");
 
         while (_processed < _options.MaxEquipment)
@@ -112,6 +136,7 @@ public sealed class AutoEnhancementRunner : IDisposable
             await EnterEnhancementScreenAsync(cancellationToken);
 
             int? expectedEnhanceLevel = null;
+            var currentEquipmentEnhanced = false;
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -143,7 +168,9 @@ public sealed class AutoEnhancementRunner : IDisposable
                     _options.RightThreshold,
                     _options.Level88Threshold,
                     _options.MinimumDemandMatchScore,
-                    _options.HeroicOnlyGambleSpeed);
+                    _options.HeroicOnlyGambleSpeed,
+                    _options.SpeedSetRequiresSpeed,
+                    _options.CriticalNecklaceMainStatRule);
                 Report(AutoEnhancementLogLevel.Recognition,
                     $"强化判断：{advice.Text}；{advice.Detail}");
 
@@ -158,7 +185,11 @@ public sealed class AutoEnhancementRunner : IDisposable
 
                     await EnhanceToTargetAsync(screenshot, targetLevel.Value, cancellationToken);
                     expectedEnhanceLevel = targetLevel.Value;
-                    _enhanced++;
+                    if (!currentEquipmentEnhanced)
+                    {
+                        currentEquipmentEnhanced = true;
+                        _enhanced++;
+                    }
                     Report(AutoEnhancementLogLevel.Success,
                         $"+{targetLevel} 强化动画结束，开始重新识别并判断");
                     continue;
@@ -179,6 +210,9 @@ public sealed class AutoEnhancementRunner : IDisposable
 
                 if (advice.Advice is EnhanceAdvice.Keep or EnhanceAdvice.Reforge)
                 {
+                    if (advice.Advice == EnhanceAdvice.Reforge)
+                        AddReforgeEquipment(info);
+
                     if (_options.StopOnValuableEquipment)
                     {
                         return FinishForValuableEquipment(
@@ -199,7 +233,7 @@ public sealed class AutoEnhancementRunner : IDisposable
 
         var message = $"已达到本次上限 {_options.MaxEquipment} 件，自动强化结束";
         Report(AutoEnhancementLogLevel.Success, message);
-        return new AutoEnhancementResult(_processed, _enhanced, _sold, _extracted, false, message);
+        return new AutoEnhancementResult(GetSummary(), false, message);
     }
 
     private async Task EnterEnhancementScreenAsync(CancellationToken cancellationToken)
@@ -425,7 +459,33 @@ public sealed class AutoEnhancementRunner : IDisposable
     {
         _processed++;
         Report(AutoEnhancementLogLevel.Success, message);
-        return new AutoEnhancementResult(_processed, _enhanced, _sold, _extracted, true, message);
+        return new AutoEnhancementResult(GetSummary(), true, message);
+    }
+
+    public AutoEnhancementSummary GetSummary()
+        => new(
+            _processed,
+            _enhanced,
+            _sold,
+            _extracted,
+            _reforgeEquipment.ToArray());
+
+    private void AddReforgeEquipment(EquipmentInfo info)
+    {
+        var part = EquipmentRules.DetectPart(info.Quality) switch
+        {
+            EquipmentPart.Weapon => "武器",
+            EquipmentPart.Helm => "头盔",
+            EquipmentPart.Armor => "铠甲",
+            EquipmentPart.Necklace => "项链",
+            EquipmentPart.Ring => "戒指",
+            EquipmentPart.Boots => "鞋子",
+            _ => "未知部位",
+        };
+        var subStats = info.SubStats
+            .Select(stat => $"{stat.Name}{stat.Value}")
+            .ToArray();
+        _reforgeEquipment.Add(new ReforgeEquipmentSummary(info.SetName, part, subStats));
     }
 
     private static void EnsureValidEquipmentInfo(EquipmentInfo info)
