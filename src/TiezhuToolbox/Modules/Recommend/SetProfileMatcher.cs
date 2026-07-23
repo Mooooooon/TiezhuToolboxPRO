@@ -5,7 +5,7 @@ namespace TiezhuToolbox.Modules.Recommend;
 /// <summary>装备 → 当前套装属性子类匹配算法。</summary>
 public static class SetProfileMatcher
 {
-    private const double OffProfileInitialPenalty = 0.25;
+    private const double ReplacedInitialStatPenalty = 0.20;
 
     private sealed record ScoreComponent(
         string Name,
@@ -240,10 +240,7 @@ public static class SetProfileMatcher
         if (usefulValue <= 0)
             return new ScoreResult(0, present, 0);
 
-        var offProfilePenalty = components
-            .Where(component => !desired.Contains(component.Name))
-            .Sum(component => component.EnhancedValue
-                              + component.InitialValue * OffProfileInitialPenalty);
+        var offProfilePenalty = CalculateOffProfilePenalty(desired, components);
         var effectiveness = Math.Clamp(
             usefulValue / (usefulValue + offProfilePenalty),
             0,
@@ -260,6 +257,26 @@ public static class SetProfileMatcher
             Math.Round(100 * effectiveness * coverage * allocationQuality, 1),
             present,
             mainEffectiveValue);
+    }
+
+    /// <summary>
+    /// 装备只能修改一条副属性：选择初始价值最高的一条歪副属性作为修改目标，
+    /// 其强化增量全额损失、初始值按20%损失；其他歪属性及错误主属性全额处罚。
+    /// </summary>
+    private static double CalculateOffProfilePenalty(
+        IReadOnlyCollection<string> desired,
+        IReadOnlyList<ScoreComponent> components)
+    {
+        var offProfile = components
+            .Where(component => !desired.Contains(component.Name))
+            .ToList();
+        var fullPenalty = offProfile.Sum(component => component.Value);
+        var bestReplacementSaving = offProfile
+            .Where(component => !component.IsMain)
+            .Select(component => component.InitialValue * (1 - ReplacedInitialStatPenalty))
+            .DefaultIfEmpty(0)
+            .Max();
+        return Math.Max(0, fullPenalty - bestReplacementSaving);
     }
 
     /// <summary>

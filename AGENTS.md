@@ -38,7 +38,8 @@ src/TiezhuToolbox/            主程序（WinForms）
 │   ├── DemandDataModels.cs   套装、属性子类、英雄完整配装和八维权重模型。
 │   ├── EquipmentRules.cs     装备部位识别和右三主属性规范化。
 │   ├── SetProfileMatcher.cs  装备→套装子类推荐：匹配度=有效率×属性覆盖率×JSD配点契合度；
-│   │                         初始歪词条轻罚、歪强化全罚；右三主属性用满值量化。
+│   │                         仅一条可修改歪副属性按初始值20%+歪强化全罚，其余歪属性全罚；
+│   │                         右三主属性用满值量化。
 │   ├── SetProfileRecommendation.cs 子类和英雄配装两级推荐结果。
 │   └── EnhancementAdvisor.cs 强化建议：85级分数阶梯（+3 前分数≥左右件阈值，之后每 3 级 +6，
 │                             +15 时预计重铸≥65建议重铸）；88级使用独立阈值（默认28、每跳+7，

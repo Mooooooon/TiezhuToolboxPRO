@@ -791,7 +791,9 @@ if (args.Contains("--synthetic"))
         + $"速度命中 {speedHitScore}% / 速度生命 {speedHpScore}%");
     if (Math.Abs(fourStatScore - 90.1) > 0.1 || fourStatScore <= fiveStatScore)
         throw new InvalidOperationException("四项完全命中子类未按权重分布得到高匹配");
-    if (speedHitScore < 85 || speedHpScore >= 65 || speedHitScore - speedHpScore < 25)
+    if (Math.Abs(speedHitScore - 81.9) > 0.1
+        || speedHpScore >= 60
+        || speedHitScore - speedHpScore < 25)
         throw new InvalidOperationException("双属性子类未区分初始歪词条与歪强化");
 
     var estimatedResults = SetProfileMatcher.Match(
