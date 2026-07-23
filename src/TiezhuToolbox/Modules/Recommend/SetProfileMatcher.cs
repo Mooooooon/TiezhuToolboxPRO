@@ -16,21 +16,27 @@ public static class SetProfileMatcher
     private sealed record ScoreResult(double Score, List<string> MatchedStats, double MainEffectiveValue);
 
     /// <summary>按匹配度返回当前套装最适合的属性子类。</summary>
-    public static IReadOnlyList<SetProfileRecommendation> Match(EquipmentInfo info, int top = 5)
+    public static IReadOnlyList<SetProfileRecommendation> Match(
+        EquipmentInfo info,
+        int top = 5,
+        IReadOnlySet<string>? disabledProfileKeys = null)
     {
         var database = DemandDatabase.Instance;
         if (!database.IsLoaded)
             return Array.Empty<SetProfileRecommendation>();
 
         var set = database.FindSet(info.SetName);
-        return set == null ? Array.Empty<SetProfileRecommendation>() : Match(info, set, top);
+        return set == null
+            ? Array.Empty<SetProfileRecommendation>()
+            : Match(info, set, top, disabledProfileKeys);
     }
 
     /// <summary>使用指定套装数据匹配，供回归测试使用。</summary>
     public static IReadOnlyList<SetProfileRecommendation> Match(
         EquipmentInfo info,
         DemandSet set,
-        int top = 5)
+        int top = 5,
+        IReadOnlySet<string>? disabledProfileKeys = null)
     {
         if (set.Profiles.Count == 0 || top <= 0)
             return Array.Empty<SetProfileRecommendation>();
@@ -50,6 +56,8 @@ public static class SetProfileMatcher
             return Array.Empty<SetProfileRecommendation>();
 
         return set.Profiles
+            .Where(profile => disabledProfileKeys == null
+                              || !disabledProfileKeys.Contains(CreateProfileKey(set.Code, profile.Id)))
             .Select(profile =>
             {
                 var aggregate = Calculate(profile.Stats, profile.Weights, components, slotCount);
@@ -97,6 +105,10 @@ public static class SetProfileMatcher
             .Take(top)
             .ToList();
     }
+
+    /// <summary>生成可持久化的套装子类唯一键。</summary>
+    public static string CreateProfileKey(string setCode, string profileId)
+        => $"{setCode}/{profileId}";
 
     private static List<ScoreComponent>? BuildComponents(
         EquipmentInfo info,

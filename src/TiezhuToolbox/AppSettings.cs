@@ -6,7 +6,7 @@ namespace TiezhuToolbox;
 /// <summary>软件设置。新增字段必须提供兼容旧文件的默认值。</summary>
 public class AppSettings
 {
-    public const int CurrentVersion = 7;
+    public const int CurrentVersion = 8;
 
     public int Version { get; set; } = CurrentVersion;
     public decimal LeftThreshold { get; set; } = 24;
@@ -27,6 +27,8 @@ public class AppSettings
     // 保留第一版特殊规则使用的 JSON 字段名，兼容已经保存的 settings.json。
     [JsonPropertyName("DoubleCritNecklaceOnly")]
     public bool CriticalNecklaceMainStatRule { get; set; } = true;
+    /// <summary>不参与装备用途匹配的需求子类，键格式为“套装代码/子类代码”。</summary>
+    public List<string> DisabledDemandProfiles { get; set; } = new();
 
     public static AppSettings CreateDefault() => new();
 
@@ -45,6 +47,13 @@ public class AppSettings
             RecognitionHotKey = "F2";
         if (string.IsNullOrWhiteSpace(AdbAddress))
             AdbAddress = "127.0.0.1:16384";
+        DisabledDemandProfiles ??= new List<string>();
+        DisabledDemandProfiles = DisabledDemandProfiles
+            .Where(key => !string.IsNullOrWhiteSpace(key))
+            .Select(key => key.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToList();
     }
 }
 

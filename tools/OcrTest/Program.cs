@@ -9,6 +9,10 @@ if (args.Contains("--config-smoke"))
     Environment.SetEnvironmentVariable("TIEZHU_TOOLBOX_USER_ROOT", testRoot);
     try
     {
+        var persistedProfileKey = DemandDatabase.Instance.Sets
+            .SelectMany(set => set.Profiles.Select(profile =>
+                SetProfileMatcher.CreateProfileKey(set.Code, profile.Id)))
+            .First();
         Exception? settingsError = null;
         var settingsThread = new Thread(() =>
         {
@@ -52,6 +56,9 @@ if (args.Contains("--config-smoke"))
                         throw new InvalidOperationException("两项特殊强化规则没有默认开启");
                     speedSetRequiresSpeed.GetType().GetProperty("Checked")!.SetValue(speedSetRequiresSpeed, false);
                     criticalNecklaceMainStatRule.GetType().GetProperty("Checked")!.SetValue(criticalNecklaceMainStatRule, false);
+                    typeof(TiezhuToolbox.MainForm).GetMethod("SetDemandProfileEnabled",
+                            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                        .Invoke(firstForm, new object[] { persistedProfileKey, false });
                     typeof(TiezhuToolbox.MainForm).GetMethod("SaveSettingsFromControls",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(firstForm, null);
                 }
@@ -88,10 +95,15 @@ if (args.Contains("--config-smoke"))
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
                 var criticalNecklaceMainStatRuleValue = (bool)loadedCriticalNecklaceMainStatRule.GetType().GetProperty("Checked")!
                     .GetValue(loadedCriticalNecklaceMainStatRule)!;
+                var loadedDisabledProfiles = (IReadOnlySet<string>)typeof(TiezhuToolbox.MainForm)
+                    .GetField("_disabledDemandProfiles",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                    .GetValue(secondForm)!;
                 if (value != 31M || level88Value != 33M || maxAutoValue != 17M
                     || disposalValue != "分解" || matchValue != 82M || stopOnValuableValue
                     || !heroicOnlyGambleSpeedValue
                     || speedSetRequiresSpeedValue || criticalNecklaceMainStatRuleValue
+                    || !loadedDisabledProfiles.Contains(persistedProfileKey)
                     || loadedAddress.Text != "127.0.0.1:5555")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
@@ -105,7 +117,7 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine("配置持久化测试通过：两项特殊强化规则默认开启且可关闭并持久化");
+        Console.WriteLine("配置持久化测试通过：强化规则与停用需求子类均可保存并恢复");
     }
     finally
     {
@@ -356,9 +368,43 @@ if (args.Contains("--ui-smoke"))
             Application.DoEvents();
             if (profilesPanel.Controls.Count == 0)
                 throw new InvalidOperationException("需求分析页未显示属性子类");
-            if (profilesPanel.Controls.Cast<Control>().Any(control =>
-                    control.Controls.Cast<Control>().OfType<AntdUI.Checkbox>().Any()))
-                throw new InvalidOperationException("只读需求分析页仍包含可编辑复选框");
+            var profileCards = profilesPanel.Controls.Cast<Control>()
+                .Where(control => Equals(control.Tag, "profile-card"))
+                .ToList();
+            var profileSwitches = profileCards
+                .SelectMany(card => card.Controls.Cast<Control>())
+                .OfType<Panel>()
+                .SelectMany(header => header.Controls.Cast<Control>())
+                .OfType<AntdUI.Switch>()
+                .ToList();
+            if (profileSwitches.Count != ((DemandSet)setList.SelectedItem!).Profiles.Count
+                || profileSwitches.Any(profileSwitch => !profileSwitch.Checked))
+                throw new InvalidOperationException("需求子类参与匹配开关数量或默认状态错误");
+            var analysisCard = profileCards[0];
+            var analysisCollapsedHeight = analysisCard.Height;
+            var analysisHeader = analysisCard.Controls.Cast<Control>().OfType<Panel>()
+                .First(panel => panel.Cursor == Cursors.Hand);
+            var analysisBuilds = analysisCard.Controls.Cast<Control>().OfType<Panel>()
+                .First(panel => panel != analysisHeader);
+            if (analysisBuilds.Visible)
+                throw new InvalidOperationException("需求分析页角色列表没有默认折叠");
+            typeof(Control).GetMethod("OnClick",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .Invoke(analysisHeader, new object[] { EventArgs.Empty });
+            Application.DoEvents();
+            if (!analysisBuilds.Visible || analysisCard.Height <= analysisCollapsedHeight)
+                throw new InvalidOperationException("需求分析页角色列表无法展开");
+            CaptureTab("demand-analysis-expanded");
+            var firstProfileSwitch = profileSwitches[0];
+            firstProfileSwitch.Checked = false;
+            Application.DoEvents();
+            var disabledProfiles = (IReadOnlySet<string>)typeof(TiezhuToolbox.MainForm)
+                .GetField("_disabledDemandProfiles",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(form)!;
+            if (firstProfileSwitch.Tag is not string disabledKey
+                || !disabledProfiles.Contains(disabledKey))
+                throw new InvalidOperationException("需求子类开关没有更新匹配过滤配置");
             if (timer.Enabled)
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
             selectedIndex.SetValue(tabs, 3);
@@ -597,6 +643,13 @@ if (args.Contains("--synthetic"))
         throw new InvalidOperationException("高速度权重子类未优先推荐速度鞋");
     if (speedShoe.Heroes.Count != 2 || speedShoe.Heroes.Select(hero => hero.ComboName).Distinct().Count() != 2)
         throw new InvalidOperationException("同英雄不同完整套装组合未分别返回");
+    var disabledWeightedProfile = new HashSet<string>(StringComparer.Ordinal)
+    {
+        SetProfileMatcher.CreateProfileKey(weightedSet.Code, weightedSet.Profiles[0].Id),
+    };
+    if (SetProfileMatcher.Match(
+            RightGear("速度", "1"), weightedSet, int.MaxValue, disabledWeightedProfile).Count != 0)
+        throw new InvalidOperationException("已停用需求子类仍参与装备匹配");
 
     string MainContribution(string mainName, string mainValue, string stat, double weight)
     {

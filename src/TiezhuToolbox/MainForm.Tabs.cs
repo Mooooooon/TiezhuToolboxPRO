@@ -5,6 +5,7 @@ namespace TiezhuToolbox;
 public partial class MainForm
 {
     private readonly AppSettings _settings = AppSettingsStore.Load();
+    private readonly HashSet<string> _disabledDemandProfiles = new(StringComparer.Ordinal);
     private AntdUI.Tabs _mainTabs = null!;
     private AntdUI.TabPage _equipmentTab = null!;
     private DemandBrowserControl _demandBrowserControl = null!;
@@ -52,7 +53,10 @@ public partial class MainForm
         comboDevices.List = true;
         topPanel.Resize += (_, _) => LayoutTopToolbar();
 
-        _demandBrowserControl = new DemandBrowserControl();
+        _disabledDemandProfiles.UnionWith(_settings.DisabledDemandProfiles);
+        _demandBrowserControl = new DemandBrowserControl(
+            profileKey => !_disabledDemandProfiles.Contains(profileKey),
+            SetDemandProfileEnabled);
         demandTab.Controls.Add(_demandBrowserControl);
         _demandBrowserControl.ApplyInitialDpiScale(_layoutDpi);
 
@@ -413,6 +417,9 @@ public partial class MainForm
         _settings.HeroicOnlyGambleSpeed = _chkHeroicOnlyGambleSpeed.Checked;
         _settings.SpeedSetRequiresSpeed = _chkSpeedSetRequiresSpeed.Checked;
         _settings.CriticalNecklaceMainStatRule = _chkCriticalNecklaceMainStatRule.Checked;
+        _settings.DisabledDemandProfiles = _disabledDemandProfiles
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToList();
         try
         {
             AppSettingsStore.Save(_settings);
@@ -446,11 +453,29 @@ public partial class MainForm
         _settings.HeroicOnlyGambleSpeed = defaults.HeroicOnlyGambleSpeed;
         _settings.SpeedSetRequiresSpeed = defaults.SpeedSetRequiresSpeed;
         _settings.CriticalNecklaceMainStatRule = defaults.CriticalNecklaceMainStatRule;
+        _disabledDemandProfiles.Clear();
+        _settings.DisabledDemandProfiles.Clear();
         LoadSettingsIntoControls();
+        _demandBrowserControl.RefreshProfiles();
         SaveSettingsFromControls();
         ApplyRecognitionAvailability(showHotKeySuccess: false);
         UpdateAdvice();
         UpdateStatus("软件设置已恢复默认");
+    }
+
+    private void SetDemandProfileEnabled(string profileKey, bool enabled)
+    {
+        if (enabled)
+            _disabledDemandProfiles.Remove(profileKey);
+        else
+            _disabledDemandProfiles.Add(profileKey);
+
+        SaveSettingsFromControls();
+        if (_lastInfo != null)
+        {
+            ShowDemandRecommendations(_lastInfo);
+            UpdateAdvice();
+        }
     }
 
     private void MainTabs_SelectedIndexChanged(object sender, AntdUI.IntEventArgs e)

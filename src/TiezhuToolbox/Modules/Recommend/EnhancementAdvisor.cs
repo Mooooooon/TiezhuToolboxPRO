@@ -82,6 +82,7 @@ public static class EnhancementAdvisor
     /// <param name="heroicOnlyGambleSpeed">英雄（紫色）装备是否忽略分数和角色匹配度，只按严格速度阶梯处理。</param>
     /// <param name="speedSetRequiresSpeed">速度套鞋子是否必须为速度主属性、其他部位是否必须含速度副属性。</param>
     /// <param name="criticalNecklaceMainStatRule">暴击率或暴伤达到高权重时，项链是否只接受对应主属性。</param>
+    /// <param name="disabledDemandProfiles">不参与用途匹配的套装子类键。</param>
     public static EnhanceAdviceResult Analyze(
         EquipmentInfo info,
         double leftThreshold,
@@ -90,7 +91,8 @@ public static class EnhancementAdvisor
         double minimumDemandMatchScore = DefaultMinimumDemandMatchScore,
         bool heroicOnlyGambleSpeed = false,
         bool speedSetRequiresSpeed = true,
-        bool criticalNecklaceMainStatRule = true)
+        bool criticalNecklaceMainStatRule = true,
+        IReadOnlySet<string>? disabledDemandProfiles = null)
     {
         minimumDemandMatchScore = Math.Clamp(minimumDemandMatchScore, 0, 100);
         var part = EquipmentRules.DetectPart(info.Quality);
@@ -131,7 +133,7 @@ public static class EnhancementAdvisor
             if (leftScoreAdvice != null)
                 return ApplyHeroMatchGate(
                     info, leftScoreAdvice, speed, enhance, minimumDemandMatchScore, isLegendary,
-                    criticalNecklaceMainStatRule);
+                    criticalNecklaceMainStatRule, disabledDemandProfiles);
 
             return SpeedLadder(speed, enhance, isLevel88, isLegendary,
                 GiveUpDetail(score, reforgedScore, enhance, threshold, isLevel88));
@@ -155,7 +157,7 @@ public static class EnhancementAdvisor
         if (byScore != null)
             return ApplyHeroMatchGate(
                 info, byScore, GetSpeed(info), enhance, minimumDemandMatchScore, isLegendary,
-                criticalNecklaceMainStatRule);
+                criticalNecklaceMainStatRule, disabledDemandProfiles);
 
         if (part is EquipmentPart.Necklace or EquipmentPart.Ring)
             return SpeedLadder(GetSpeed(info), enhance, isLevel88, isLegendary,
@@ -205,12 +207,14 @@ public static class EnhancementAdvisor
         int enhance,
         double minimumDemandMatchScore,
         bool allowOneMiss,
-        bool criticalNecklaceMainStatRule)
+        bool criticalNecklaceMainStatRule,
+        IReadOnlySet<string>? disabledDemandProfiles)
     {
         if (!DemandDatabase.Instance.IsLoaded)
             return scoreAdvice;
 
-        var recommendations = SetProfileMatcher.Match(info, top: int.MaxValue);
+        var recommendations = SetProfileMatcher.Match(
+            info, top: int.MaxValue, disabledProfileKeys: disabledDemandProfiles);
         var bestMatch = recommendations.FirstOrDefault();
         if (criticalNecklaceMainStatRule
             && EquipmentRules.DetectPart(info.Quality) == EquipmentPart.Necklace

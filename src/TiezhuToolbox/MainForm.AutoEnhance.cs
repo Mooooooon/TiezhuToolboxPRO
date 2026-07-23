@@ -259,7 +259,8 @@ public partial class MainForm
             _chkAutoStopOnValuableEquipment.Checked,
             _chkHeroicOnlyGambleSpeed.Checked,
             _chkSpeedSetRequiresSpeed.Checked,
-            _chkCriticalNecklaceMainStatRule.Checked);
+            _chkCriticalNecklaceMainStatRule.Checked,
+            _disabledDemandProfiles);
         var progress = new Progress<AutoEnhancementProgress>(value =>
         {
             AppendAutoLog(value.Level, value.Message);

@@ -50,6 +50,7 @@ public sealed record AutoEnhancementOptions(
     bool HeroicOnlyGambleSpeed,
     bool SpeedSetRequiresSpeed,
     bool CriticalNecklaceMainStatRule,
+    IReadOnlySet<string> DisabledDemandProfiles,
     TimeSpan UiTimeout,
     TimeSpan AnimationMinimumWait)
 {
@@ -63,7 +64,8 @@ public sealed record AutoEnhancementOptions(
         bool stopOnValuableEquipment = true,
         bool heroicOnlyGambleSpeed = false,
         bool speedSetRequiresSpeed = true,
-        bool criticalNecklaceMainStatRule = true)
+        bool criticalNecklaceMainStatRule = true,
+        IReadOnlySet<string>? disabledDemandProfiles = null)
         => new(
             Math.Clamp(maxEquipment, 1, 999),
             leftThreshold,
@@ -75,6 +77,9 @@ public sealed record AutoEnhancementOptions(
             heroicOnlyGambleSpeed,
             speedSetRequiresSpeed,
             criticalNecklaceMainStatRule,
+            disabledDemandProfiles == null
+                ? new HashSet<string>(StringComparer.Ordinal)
+                : new HashSet<string>(disabledDemandProfiles, StringComparer.Ordinal),
             TimeSpan.FromSeconds(10),
             TimeSpan.FromSeconds(4));
 }
@@ -170,7 +175,8 @@ public sealed class AutoEnhancementRunner : IDisposable
                     _options.MinimumDemandMatchScore,
                     _options.HeroicOnlyGambleSpeed,
                     _options.SpeedSetRequiresSpeed,
-                    _options.CriticalNecklaceMainStatRule);
+                    _options.CriticalNecklaceMainStatRule,
+                    _options.DisabledDemandProfiles);
                 Report(AutoEnhancementLogLevel.Recognition,
                     $"强化判断：{advice.Text}；{advice.Detail}");
 

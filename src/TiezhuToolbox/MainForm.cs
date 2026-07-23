@@ -410,7 +410,8 @@ public partial class MainForm : Form
             (double)numLevel88Threshold.Value, (double)_numHeroMatchThreshold.Value,
             _chkHeroicOnlyGambleSpeed.Checked,
             _chkSpeedSetRequiresSpeed.Checked,
-            _chkCriticalNecklaceMainStatRule.Checked);
+            _chkCriticalNecklaceMainStatRule.Checked,
+            _disabledDemandProfiles);
 
         lblAdviceBadge.Text = result.Text;
         lblAdviceBadge.BackColor = result.Advice switch
@@ -458,8 +459,15 @@ public partial class MainForm : Form
             lblHeroesTitle.Text = $"{set.Name}需求（暂无人工数据）";
             return;
         }
+        if (set.Profiles.All(profile => _disabledDemandProfiles.Contains(
+                Modules.Recommend.SetProfileMatcher.CreateProfileKey(set.Code, profile.Id))))
+        {
+            lblHeroesTitle.Text = $"{set.Name}需求（全部子类已停用）";
+            return;
+        }
 
-        var recommendations = Modules.Recommend.SetProfileMatcher.Match(info);
+        var recommendations = Modules.Recommend.SetProfileMatcher.Match(
+            info, disabledProfileKeys: _disabledDemandProfiles);
         lblHeroesTitle.Text = recommendations.Count > 0
             ? $"{set.Name}适用子类"
             : $"{set.Name}需求（装备属性无匹配）";
