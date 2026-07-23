@@ -35,6 +35,7 @@ public sealed record AutoEnhancementOptions(
     double MinimumHeroMatchScore,
     EquipmentDisposalMethod DisposalMethod,
     bool StopOnValuableEquipment,
+    bool HeroicOnlyGambleSpeed,
     TimeSpan UiTimeout,
     TimeSpan AnimationMinimumWait)
 {
@@ -45,7 +46,8 @@ public sealed record AutoEnhancementOptions(
         double level88Threshold,
         double minimumHeroMatchScore = EnhancementAdvisor.DefaultMinimumHeroMatchScore,
         EquipmentDisposalMethod disposalMethod = EquipmentDisposalMethod.Sell,
-        bool stopOnValuableEquipment = true)
+        bool stopOnValuableEquipment = true,
+        bool heroicOnlyGambleSpeed = false)
         => new(
             Math.Clamp(maxEquipment, 1, 999),
             leftThreshold,
@@ -54,6 +56,7 @@ public sealed record AutoEnhancementOptions(
             Math.Clamp(minimumHeroMatchScore, 0, 100),
             disposalMethod,
             stopOnValuableEquipment,
+            heroicOnlyGambleSpeed,
             TimeSpan.FromSeconds(10),
             TimeSpan.FromSeconds(4));
 }
@@ -99,7 +102,8 @@ public sealed class AutoEnhancementRunner : IDisposable
     {
         Report(AutoEnhancementLogLevel.Info,
             $"自动强化已启动，设备 {_serial}，本次最多处理 {_options.MaxEquipment} 件装备，" +
-            $"淘汰装备处理方式：{DisposalDisplayName}，符合保留条件后：{(_options.StopOnValuableEquipment ? "停止" : "返回背包继续")}");
+            $"淘汰装备处理方式：{DisposalDisplayName}，紫装规则：{(_options.HeroicOnlyGambleSpeed ? "只赌速度" : "按常规评分")}，" +
+            $"符合保留条件后：{(_options.StopOnValuableEquipment ? "停止" : "返回背包继续")}");
 
         while (_processed < _options.MaxEquipment)
         {
@@ -138,7 +142,8 @@ public sealed class AutoEnhancementRunner : IDisposable
                     _options.LeftThreshold,
                     _options.RightThreshold,
                     _options.Level88Threshold,
-                    _options.MinimumHeroMatchScore);
+                    _options.MinimumHeroMatchScore,
+                    _options.HeroicOnlyGambleSpeed);
                 Report(AutoEnhancementLogLevel.Recognition,
                     $"强化判断：{advice.Text}；{advice.Detail}");
 

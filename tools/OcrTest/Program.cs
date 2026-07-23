@@ -89,6 +89,9 @@ if (args.Contains("--config-smoke"))
                     var stopOnValuable = typeof(TiezhuToolbox.MainForm).GetField("_chkAutoStopOnValuableEquipment",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     stopOnValuable.GetType().GetProperty("Checked")!.SetValue(stopOnValuable, false);
+                    var heroicOnlyGambleSpeed = typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    heroicOnlyGambleSpeed.GetType().GetProperty("Checked")!.SetValue(heroicOnlyGambleSpeed, true);
                     typeof(TiezhuToolbox.MainForm).GetMethod("SaveSettingsFromControls",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(firstForm, null);
                 }
@@ -113,8 +116,13 @@ if (args.Contains("--config-smoke"))
                 var loadedStopOnValuable = typeof(TiezhuToolbox.MainForm).GetField("_chkAutoStopOnValuableEquipment",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
                 var stopOnValuableValue = (bool)loadedStopOnValuable.GetType().GetProperty("Checked")!.GetValue(loadedStopOnValuable)!;
+                var loadedHeroicOnlyGambleSpeed = typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var heroicOnlyGambleSpeedValue = (bool)loadedHeroicOnlyGambleSpeed.GetType().GetProperty("Checked")!
+                    .GetValue(loadedHeroicOnlyGambleSpeed)!;
                 if (value != 31M || level88Value != 33M || maxAutoValue != 17M
                     || disposalValue != "分解" || matchValue != 82M || stopOnValuableValue
+                    || !heroicOnlyGambleSpeedValue
                     || loadedAddress.Text != "127.0.0.1:5555")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
@@ -128,7 +136,7 @@ if (args.Contains("--config-smoke"))
         settingsThread.Join();
         if (settingsError != null)
             throw new InvalidOperationException("软件设置持久化测试失败", settingsError);
-        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/17/分解/82%/符合后继续/127.0.0.1:5555");
+        Console.WriteLine($"配置持久化测试通过：{original.Name}（{original.Code}），软件设置 31/33/17/分解/82%/紫装只赌速度/符合后继续/127.0.0.1:5555");
     }
     finally
     {
@@ -420,7 +428,12 @@ if (args.Contains("--ui-smoke"))
                     $"88级阈值输入框被裁剪：输入框={level88Input.Bounds}，容器={thresholdPanel.ClientSize}");
             var settingsRulesLabel = (Label)typeof(TiezhuToolbox.MainForm).GetField("_settingsRulesLabel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
-            var requiredRuleTexts = new[] { "速度硬门槛", "速度鞋默认", "双爆项链默认", "速度套补全" };
+            var heroicOnlySpeedCheck = (Control)typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            if (heroicOnlySpeedCheck.Width < 400 || heroicOnlySpeedCheck.Height < 32)
+                throw new InvalidOperationException("紫装只赌速度设置项尺寸不足");
+            var requiredRuleTexts = new[]
+                { "红装赌速度", "紫装只赌速度", "速度硬门槛", "速度鞋默认", "双爆项链默认", "速度套补全" };
             if (requiredRuleTexts.Any(text => !settingsRulesLabel.Text.Contains(text)))
                 throw new InvalidOperationException("软件设置页缺少自动规则说明");
             var preferredRulesHeight = settingsRulesLabel.GetPreferredSize(
@@ -811,15 +824,67 @@ if (args.Contains("--synthetic"))
     Console.WriteLine();
 
     // 强化建议自检（85级阈值 24/24，88级阈值 28）
-    void PrintAdvice(string title, EquipmentInfo info, EnhanceAdvice? expected = null)
+    void PrintAdvice(
+        string title,
+        EquipmentInfo info,
+        EnhanceAdvice? expected = null,
+        bool heroicOnlyGambleSpeed = false)
     {
-        var r = EnhancementAdvisor.Analyze(info, 24, 24, 28);
+        var r = EnhancementAdvisor.Analyze(
+            info, 24, 24, 28, heroicOnlyGambleSpeed: heroicOnlyGambleSpeed);
         Console.WriteLine($"  [强化建议] {title} → {r.Text}（{r.Detail}）");
         if (expected != null && r.Advice != expected)
             throw new InvalidOperationException($"强化建议回归失败：期望 {expected}，实际 {r.Advice}");
     }
 
     Console.WriteLine("===== 强化建议样例（85级阈值 24/24，88级阈值 28） =====");
+    PrintAdvice("传说武器 +3 第一跳歪掉但仍可赌速度（应：继续赌速度）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "传说武器",
+        EnhanceLevel = 3,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GambleSpeed);
+    PrintAdvice("传说武器 +6 连歪两跳（应：放弃）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "传说武器",
+        EnhanceLevel = 6,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GiveUp);
+    PrintAdvice("紫装只赌速度 +0 高分但无速度（应：放弃）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "英雄武器",
+        EnhanceLevel = 0,
+        SubStats =
+        {
+            new SubStat { Name = "攻击力", Value = "20%" },
+            new SubStat { Name = "暴击率", Value = "15%" },
+            new SubStat { Name = "暴击伤害", Value = "20%" },
+        },
+    }, EnhanceAdvice.GiveUp, heroicOnlyGambleSpeed: true);
+    PrintAdvice("紫装只赌速度 +0 低分但速度 3（应：继续赌速度）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "英雄武器",
+        EnhanceLevel = 0,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GambleSpeed, heroicOnlyGambleSpeed: true);
+    PrintAdvice("紫装只赌速度 +3 第一跳歪掉（应：放弃）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "英雄武器",
+        EnhanceLevel = 3,
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GiveUp, heroicOnlyGambleSpeed: true);
+    PrintAdvice("紫装只赌速度 +12 新增第四词条不提高速度要求（应：继续赌速度）", new EquipmentInfo
+    {
+        Level = 85,
+        Quality = "英雄武器",
+        EnhanceLevel = 12,
+        SubStats = { new SubStat { Name = "速度", Value = "12" } },
+    }, EnhanceAdvice.GambleSpeed, heroicOnlyGambleSpeed: true);
     PrintAdvice("传说武器 +0 高分（应：继续强化）", new EquipmentInfo
     {
         Quality = "传说武器",

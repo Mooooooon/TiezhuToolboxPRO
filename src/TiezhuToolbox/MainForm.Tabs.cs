@@ -108,7 +108,7 @@ public partial class MainForm
         {
             BackColor = Color.White,
             Location = new Point(24, 24),
-            Size = new Size(720, 760),
+            Size = new Size(720, 820),
             Padding = new Padding(24),
         };
         host.Resize += (_, _) => card.Width = Math.Min(760, Math.Max(560, host.ClientSize.Width - 48));
@@ -147,7 +147,7 @@ public partial class MainForm
 
         var automationTitle = CreateSettingsHeading(
             "自动强化",
-            "设置淘汰装备的处理方式、单次处理上限、最低角色匹配度，以及保留装备后的行为。",
+            "设置淘汰装备的处理方式、单次处理上限、最低角色匹配度和赌速度规则。",
             314);
         var automationPanel = new FlowLayoutPanel
         {
@@ -238,11 +238,24 @@ public partial class MainForm
             maxUnit, matchLabel, _numHeroMatchThreshold, matchUnit,
         });
 
+        _chkHeroicOnlyGambleSpeed = new AntdUI.Checkbox
+        {
+            Text = "紫装只赌速度（忽略分数和匹配度，速度不达标立即处理）",
+            Checked = false,
+            Location = new Point(24, 430),
+            Size = new Size(470, 34),
+        };
+        _chkHeroicOnlyGambleSpeed.CheckedChanged += (_, _) =>
+        {
+            SaveSettingsFromControls();
+            UpdateAdvice();
+        };
+
         _chkAutoStopOnValuableEquipment = new AntdUI.Checkbox
         {
             Text = "遇到符合保留条件的装备后停止（关闭后将返回背包并继续下一件）",
             Checked = true,
-            Location = new Point(24, 430),
+            Location = new Point(24, 466),
             Size = new Size(520, 34),
         };
         _chkAutoStopOnValuableEquipment.CheckedChanged += (_, _) => SaveSettingsFromControls();
@@ -250,12 +263,12 @@ public partial class MainForm
         var rulesTitle = CreateSettingsHeading(
             "自动规则说明",
             "推荐匹配与角色默认配置会自动应用以下规则。",
-            478);
+            514);
         var rulesPanel = new Panel
         {
             BackColor = Color.FromArgb(247, 249, 252),
-            Location = new Point(24, 538),
-            Size = new Size(690, 126),
+            Location = new Point(24, 574),
+            Size = new Size(690, 150),
             Padding = new Padding(12, 9, 12, 9),
         };
         _settingsRulesLabel = new Label
@@ -263,7 +276,9 @@ public partial class MainForm
             Dock = DockStyle.Fill,
             Font = new Font("Microsoft YaHei UI", 9.2F),
             ForeColor = Color.FromArgb(66, 70, 77),
-            Text = "• 速度硬门槛：角色需要速度时，装备必须带速度（速度鞋主属性也算），否则不推荐。\r\n"
+            Text = "• 红装赌速度：比紫装多一次强化机会，允许累计歪一跳。\r\n"
+                   + "• 紫装只赌速度：开启后忽略分数与匹配度，按严格速度阶梯处理。\r\n"
+                   + "• 速度硬门槛：角色需要速度时，装备必须带速度（速度鞋主属性也算），否则不推荐。\r\n"
                    + "• 速度鞋默认：采集数据包含速度时，鞋子主属性默认只勾选速度。\r\n"
                    + "• 双爆项链默认：角色同时需要暴击率和暴击伤害时，项链默认勾选双爆。\r\n"
                    + "• 速度套补全：主流搭配包含速度套时，自动把速度加入角色有效属性。",
@@ -273,7 +288,7 @@ public partial class MainForm
         var reset = new AntdUI.Button
         {
             Text = "恢复默认设置",
-            Location = new Point(24, 690),
+            Location = new Point(24, 750),
             Size = new Size(120, 34),
             Radius = 6,
         };
@@ -283,6 +298,7 @@ public partial class MainForm
         card.Controls.Add(rulesPanel);
         card.Controls.Add(rulesTitle);
         card.Controls.Add(_chkAutoStopOnValuableEquipment);
+        card.Controls.Add(_chkHeroicOnlyGambleSpeed);
         card.Controls.Add(automationPanel);
         card.Controls.Add(automationTitle);
         card.Controls.Add(recognitionSettingsPanel);
@@ -321,6 +337,7 @@ public partial class MainForm
             _comboAutoDisposalMethod.SelectedValue = _settings.AutoEnhanceDisposalMethod;
             _numHeroMatchThreshold.Value = _settings.MinimumHeroMatchScore;
             _chkAutoStopOnValuableEquipment.Checked = _settings.AutoEnhanceStopOnValuableEquipment;
+            _chkHeroicOnlyGambleSpeed.Checked = _settings.HeroicOnlyGambleSpeed;
         }
         finally
         {
@@ -345,6 +362,7 @@ public partial class MainForm
             ?? _comboAutoDisposalMethod.Text;
         _settings.MinimumHeroMatchScore = _numHeroMatchThreshold.Value;
         _settings.AutoEnhanceStopOnValuableEquipment = _chkAutoStopOnValuableEquipment.Checked;
+        _settings.HeroicOnlyGambleSpeed = _chkHeroicOnlyGambleSpeed.Checked;
         try
         {
             AppSettingsStore.Save(_settings);
@@ -375,6 +393,7 @@ public partial class MainForm
         _settings.AutoEnhanceDisposalMethod = defaults.AutoEnhanceDisposalMethod;
         _settings.MinimumHeroMatchScore = defaults.MinimumHeroMatchScore;
         _settings.AutoEnhanceStopOnValuableEquipment = defaults.AutoEnhanceStopOnValuableEquipment;
+        _settings.HeroicOnlyGambleSpeed = defaults.HeroicOnlyGambleSpeed;
         LoadSettingsIntoControls();
         SaveSettingsFromControls();
         ApplyRecognitionAvailability(showHotKeySuccess: false);

@@ -5,7 +5,7 @@ namespace TiezhuToolbox;
 /// <summary>软件设置。新增字段必须提供兼容旧文件的默认值。</summary>
 public class AppSettings
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 6;
 
     public int Version { get; set; } = CurrentVersion;
     public decimal LeftThreshold { get; set; } = 24;
@@ -19,6 +19,7 @@ public class AppSettings
     public string AutoEnhanceDisposalMethod { get; set; } = "出售";
     public decimal MinimumHeroMatchScore { get; set; } = 70;
     public bool AutoEnhanceStopOnValuableEquipment { get; set; } = true;
+    public bool HeroicOnlyGambleSpeed { get; set; }
 
     public static AppSettings CreateDefault() => new();
 

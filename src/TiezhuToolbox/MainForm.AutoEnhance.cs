@@ -12,6 +12,7 @@ public partial class MainForm
     private AntdUI.Select _comboAutoDisposalMethod = null!;
     private AntdUI.InputNumber _numHeroMatchThreshold = null!;
     private AntdUI.Checkbox _chkAutoStopOnValuableEquipment = null!;
+    private AntdUI.Checkbox _chkHeroicOnlyGambleSpeed = null!;
     private Label _lblAutoDevice = null!;
     private Label _lblAutoState = null!;
     private Label _lblAutoStats = null!;
@@ -236,6 +237,7 @@ public partial class MainForm
         _comboAutoDisposalMethod.Enabled = false;
         _numHeroMatchThreshold.Enabled = false;
         _chkAutoStopOnValuableEquipment.Enabled = false;
+        _chkHeroicOnlyGambleSpeed.Enabled = false;
         _lblAutoDevice.Text = $"设备：{device.Serial}";
         _lblAutoState.Text = "运行中";
         _lblAutoState.ForeColor = AdviceContinueColor;
@@ -248,7 +250,8 @@ public partial class MainForm
             (double)numLevel88Threshold.Value,
             (double)_numHeroMatchThreshold.Value,
             disposalMethod,
-            _chkAutoStopOnValuableEquipment.Checked);
+            _chkAutoStopOnValuableEquipment.Checked,
+            _chkHeroicOnlyGambleSpeed.Checked);
         var progress = new Progress<AutoEnhancementProgress>(value =>
         {
             AppendAutoLog(value.Level, value.Message);
@@ -293,6 +296,7 @@ public partial class MainForm
                 _comboAutoDisposalMethod.Enabled = true;
                 _numHeroMatchThreshold.Enabled = true;
                 _chkAutoStopOnValuableEquipment.Enabled = true;
+                _chkHeroicOnlyGambleSpeed.Enabled = true;
                 ApplyRecognitionAvailability(showHotKeySuccess: false);
             }
         }
