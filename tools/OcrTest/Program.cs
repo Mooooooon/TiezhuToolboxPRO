@@ -261,6 +261,10 @@ if (args.Contains("--ui-smoke"))
             using var form = new TiezhuToolbox.MainForm();
             form.Show();
             Application.DoEvents();
+            var dpiScale = form.DeviceDpi / 96D;
+            int DpiPixel(int logicalPixel) => (int)Math.Round(logicalPixel * dpiScale);
+            if (form.AutoScaleMode != AutoScaleMode.Dpi)
+                throw new InvalidOperationException($"主窗体未启用 DPI 缩放：{form.AutoScaleMode}");
 
             var tabsField = typeof(TiezhuToolbox.MainForm).GetField("_mainTabs",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -298,7 +302,7 @@ if (args.Contains("--ui-smoke"))
             Application.DoEvents();
             var addressInput = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
-            if (addressInput.Width < 200)
+            if (addressInput.Width < DpiPixel(200))
                 throw new InvalidOperationException($"ADB 地址输入框宽度不足：{addressInput.Width}");
             CaptureTab("equipment");
             var timer = (System.Windows.Forms.Timer)(typeof(TiezhuToolbox.MainForm)
@@ -417,7 +421,8 @@ if (args.Contains("--ui-smoke"))
             var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "numLevel88Threshold", "comboRecognitionHotKey", "numRecognitionInterval" }
                 .Select(name => (Control)typeof(TiezhuToolbox.MainForm).GetField(name,
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!);
-            if (settingInputs.Any(control => control.Height < 32 || control.Width < 70))
+            if (settingInputs.Any(control =>
+                    control.Height < DpiPixel(32) || control.Width < DpiPixel(70)))
                 throw new InvalidOperationException("软件设置输入框尺寸不足");
             var thresholdPanel = (Control)typeof(TiezhuToolbox.MainForm).GetField("thresholdPanel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
@@ -430,7 +435,7 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var heroicOnlySpeedCheck = (Control)typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
-            if (heroicOnlySpeedCheck.Width < 400 || heroicOnlySpeedCheck.Height < 32)
+            if (heroicOnlySpeedCheck.Width < DpiPixel(400) || heroicOnlySpeedCheck.Height < DpiPixel(32))
                 throw new InvalidOperationException("紫装只赌速度设置项尺寸不足");
             var requiredRuleTexts = new[]
                 { "红装赌速度", "紫装只赌速度", "速度硬门槛", "速度鞋默认", "双爆项链默认", "速度套补全" };

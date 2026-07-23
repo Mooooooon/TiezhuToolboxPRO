@@ -855,8 +855,10 @@ partial class MainForm
         //
         // MainForm
         //
-        this.AutoScaleDimensions = new SizeF(7F, 17F);
-        this.AutoScaleMode = AutoScaleMode.Font;
+        // 使用明确的 96 DPI 设计基线；Font 模式在系统字体与缩放同时变化时可能只放大文字，
+        // 导致控件边界仍停留在设计尺寸。
+        this.AutoScaleDimensions = new SizeF(96F, 96F);
+        this.AutoScaleMode = AutoScaleMode.Dpi;
         this.BackColor = Color.FromArgb(245, 246, 248);
         this.ClientSize = new Size(1000, 640);
         this.Controls.Add(this.mainTable);

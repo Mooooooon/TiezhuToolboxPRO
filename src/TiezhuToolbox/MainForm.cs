@@ -26,6 +26,7 @@ public partial class MainForm : Form
     private Keys _registeredRecognitionHotKey = Keys.None;
     private bool _isRecognizing;
     private bool _isUpdatingHotKeySelection;
+    private int _layoutDpi = 96;
     private Icon? _applicationIcon;
     // AntdUI.Select 不支持 DataSource 绑定，设备列表单独保存，SelectedIndex 对应下标。
     private List<AdbDeviceInfo> _devices = new();
@@ -39,6 +40,7 @@ public partial class MainForm : Form
     public MainForm()
     {
         InitializeComponent();
+        _layoutDpi = Math.Max(96, DeviceDpi);
         using var iconStream = typeof(MainForm).Assembly.GetManifestResourceStream("TiezhuToolbox.AppIcon.ico");
         if (iconStream is not null)
         {
@@ -506,7 +508,46 @@ public partial class MainForm : Form
 
     private int ScalePixel(int logicalPixel)
     {
-        return (int)Math.Round(logicalPixel * DeviceDpi / 96D);
+        return (int)Math.Round(logicalPixel * _layoutDpi / 96D);
+    }
+
+    /// <summary>
+    /// 设计器控件会在 InitializeComponent 中自动缩放；构造函数中动态创建的页面错过了该阶段，
+    /// 因此在首次加入窗体时按当前显示器 DPI 补做一次边界缩放。
+    /// </summary>
+    private void ScaleRuntimePage(Control page)
+    {
+        if (_layoutDpi == 96)
+            return;
+
+        var factor = _layoutDpi / 96F;
+        page.SuspendLayout();
+        page.Scale(new SizeF(factor, factor));
+        page.ResumeLayout(performLayout: true);
+    }
+
+    /// <summary>
+    /// 从设计器页面移出的控件已经随窗体缩放过；它们将被放入随后统一缩放的动态页面，
+    /// 先还原到 96 DPI 逻辑尺寸，避免边距和标签宽度被重复放大。
+    /// </summary>
+    private void NormalizeDesignerControlForRuntime(Control control)
+    {
+        if (_layoutDpi == 96)
+            return;
+
+        var factor = 96F / _layoutDpi;
+        control.SuspendLayout();
+        control.Scale(new SizeF(factor, factor));
+        control.ResumeLayout(performLayout: false);
+    }
+
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        _layoutDpi = Math.Max(96, e.DeviceDpiNew);
+        _heroConfigControl?.PrepareForDpiChange(_layoutDpi);
+        base.OnDpiChanged(e);
+        _heroConfigControl?.CompleteDpiChange();
+        LayoutTopToolbar();
     }
 
     /// <summary>读文件加载图片且不占用文件句柄（避免锁住 Assets 下的头像）。</summary>

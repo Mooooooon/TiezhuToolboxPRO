@@ -47,6 +47,7 @@ internal sealed class HeroConfigControl : UserControl
     private List<HeroProfile> _visibleProfiles = new();
     private string? _selectedHeroCode;
     private bool _loadingEditor;
+    private int _layoutDpi = 96;
 
     public event EventHandler? UpdateRequested;
     public event EventHandler? CancelUpdateRequested;
@@ -58,6 +59,35 @@ internal sealed class HeroConfigControl : UserControl
         BuildInterface();
         RefreshData();
     }
+
+    internal void ApplyInitialDpiScale(int dpi)
+    {
+        dpi = Math.Max(96, dpi);
+        if (dpi == _layoutDpi)
+            return;
+
+        var factor = dpi / (float)_layoutDpi;
+        _layoutDpi = dpi;
+        SuspendLayout();
+        Scale(new SizeF(factor, factor));
+        _heroList.ItemHeight = ScalePixel(58);
+        ResumeLayout(performLayout: true);
+        ResizeEditorChildren();
+    }
+
+    internal void PrepareForDpiChange(int dpi)
+    {
+        _layoutDpi = Math.Max(96, dpi);
+    }
+
+    internal void CompleteDpiChange()
+    {
+        _heroList.ItemHeight = ScalePixel(58);
+        ResizeEditorChildren();
+    }
+
+    private int ScalePixel(int logicalPixel)
+        => (int)Math.Round(logicalPixel * _layoutDpi / 96D);
 
     private void BuildInterface()
     {
@@ -587,9 +617,9 @@ internal sealed class HeroConfigControl : UserControl
     {
         // 为原生纵向滚动区域和控件边距预留空间，避免产生横向滚动条。
         var visibleWidth = _editor.Parent?.ClientSize.Width ?? _editor.ClientSize.Width;
-        var width = Math.Max(380, visibleWidth
+        var width = Math.Max(ScalePixel(380), visibleWidth
             - _editor.Padding.Horizontal
-            - 8);
+            - ScalePixel(8));
         foreach (Control child in _editor.Controls)
             child.Width = width;
         ResizeCheckboxSections();
@@ -598,9 +628,12 @@ internal sealed class HeroConfigControl : UserControl
         if (_editor.Controls.Count > 0)
         {
             var header = _editor.Controls[0];
-            _resetAllButton.Location = new Point(header.Width - _resetAllButton.Width - 4, 4);
-            _resetHeroButton.Location = new Point(_resetAllButton.Left - _resetHeroButton.Width - 8, 4);
-            _participatesInMatchingCheck.Location = new Point(Math.Max(210, _resetHeroButton.Left), 38);
+            _resetAllButton.Location = new Point(
+                header.Width - _resetAllButton.Width - ScalePixel(4), ScalePixel(4));
+            _resetHeroButton.Location = new Point(
+                _resetAllButton.Left - _resetHeroButton.Width - ScalePixel(8), ScalePixel(4));
+            _participatesInMatchingCheck.Location = new Point(
+                Math.Max(ScalePixel(210), _resetHeroButton.Left), ScalePixel(38));
         }
     }
 
@@ -610,10 +643,10 @@ internal sealed class HeroConfigControl : UserControl
             ResizeCheckboxSection(section, options);
     }
 
-    private static void ResizeCheckboxSection(Panel section, FlowLayoutPanel options)
+    private void ResizeCheckboxSection(Panel section, FlowLayoutPanel options)
     {
-        const int titleHeight = 28;
-        const int minimumOptionsHeight = 30;
+        var titleHeight = ScalePixel(28);
+        var minimumOptionsHeight = ScalePixel(30);
         var availableWidth = Math.Max(1, section.ClientSize.Width - section.Padding.Horizontal);
         var rowWidth = options.Padding.Left;
         var rowHeight = 0;
@@ -646,21 +679,23 @@ internal sealed class HeroConfigControl : UserControl
     {
         if (_setSection == null || _setOptions == null)
             return;
-        const int itemWidth = 132;
-        const int itemHeight = 44;
+        var itemWidth = ScalePixel(132);
+        var itemHeight = ScalePixel(44);
         var availableWidth = Math.Max(itemWidth, _setSection.Width - _setSection.Padding.Horizontal);
         var columns = Math.Max(1, availableWidth / itemWidth);
         var rows = (int)Math.Ceiling(_setOptions.Controls.Count / (double)columns);
-        _setSection.Height = 28 + _setSection.Padding.Vertical + rows * itemHeight + 4;
+        _setSection.Height = ScalePixel(28) + _setSection.Padding.Vertical + rows * itemHeight + ScalePixel(4);
     }
 
     private void ResizeComboSection()
     {
         if (_comboSection == null || _comboInfo == null)
             return;
-        var textWidth = Math.Max(200, _comboSection.Width - _comboSection.Padding.Horizontal);
+        var textWidth = Math.Max(ScalePixel(200), _comboSection.Width - _comboSection.Padding.Horizontal);
         var textHeight = _comboInfo.GetPreferredSize(new Size(textWidth, int.MaxValue)).Height;
-        _comboSection.Height = Math.Max(106, 28 + _comboSection.Padding.Vertical + textHeight + 6);
+        _comboSection.Height = Math.Max(
+            ScalePixel(106),
+            ScalePixel(28) + _comboSection.Padding.Vertical + textHeight + ScalePixel(6));
     }
 
     private void ClearEditor()

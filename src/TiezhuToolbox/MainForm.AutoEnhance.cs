@@ -116,10 +116,10 @@ public partial class MainForm
 
         controlCard.Resize += (_, _) =>
         {
-            hint.Width = Math.Max(300, controlCard.ClientSize.Width - 48);
-            warning.Width = Math.Max(300, controlCard.ClientSize.Width - 48);
-            _btnAutoStop.Left = controlCard.ClientSize.Width - 110;
-            _btnAutoStart.Left = _btnAutoStop.Left - 140;
+            hint.Width = Math.Max(ScalePixel(300), controlCard.ClientSize.Width - ScalePixel(48));
+            warning.Width = Math.Max(ScalePixel(300), controlCard.ClientSize.Width - ScalePixel(48));
+            _btnAutoStop.Left = controlCard.ClientSize.Width - ScalePixel(110);
+            _btnAutoStart.Left = _btnAutoStop.Left - ScalePixel(140);
         };
         controlCard.Controls.AddRange(new Control[]
         {
@@ -175,7 +175,9 @@ public partial class MainForm
         logHeader.Resize += (_, _) =>
         {
             _btnAutoClearLog.Left = Math.Max(0, logHeader.ClientSize.Width - _btnAutoClearLog.Width);
-            _lblAutoStats.Left = Math.Max(250, _btnAutoClearLog.Left - _lblAutoStats.Width - 8);
+            _lblAutoStats.Left = Math.Max(
+                ScalePixel(250),
+                _btnAutoClearLog.Left - _lblAutoStats.Width - ScalePixel(8));
         };
         logHeader.Controls.AddRange(new Control[] { logTitle, _lblAutoState, _lblAutoStats, _btnAutoClearLog });
 

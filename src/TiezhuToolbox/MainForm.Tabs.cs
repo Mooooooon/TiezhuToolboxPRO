@@ -24,6 +24,8 @@ public partial class MainForm
         equipTable.Controls.Remove(settingsDivider);
         equipTable.Controls.Remove(thresholdPanel);
         equipTable.Controls.Remove(recognitionSettingsPanel);
+        NormalizeDesignerControlForRuntime(thresholdPanel);
+        NormalizeDesignerControlForRuntime(recognitionSettingsPanel);
         while (equipTable.RowStyles.Count > 8)
             equipTable.RowStyles.RemoveAt(equipTable.RowStyles.Count - 1);
         equipTable.RowCount = 8;
@@ -55,8 +57,15 @@ public partial class MainForm
         _heroConfigControl.UpdateRequested += async (_, _) => await UpdateHeroDataAsync();
         _heroConfigControl.CancelUpdateRequested += (_, _) => _heroUpdateCancellation?.Cancel();
         heroTab.Controls.Add(_heroConfigControl);
-        _autoEnhanceTab.Controls.Add(CreateAutoEnhanceContent());
-        settingsTab.Controls.Add(CreateSettingsContent());
+        _heroConfigControl.ApplyInitialDpiScale(_layoutDpi);
+
+        var autoEnhanceContent = CreateAutoEnhanceContent();
+        _autoEnhanceTab.Controls.Add(autoEnhanceContent);
+        ScaleRuntimePage(autoEnhanceContent);
+
+        var settingsContent = CreateSettingsContent();
+        settingsTab.Controls.Add(settingsContent);
+        ScaleRuntimePage(settingsContent);
 
         _mainTabs.Pages.Add(_equipmentTab);
         _mainTabs.Pages.Add(_autoEnhanceTab);
@@ -77,27 +86,24 @@ public partial class MainForm
 
     private void LayoutTopToolbar()
     {
-        const int margin = 12;
-        const int gap = 8;
-        // 设计器控件会随 DPI 自动缩放；运行时重排坐标要换回 96 DPI 逻辑宽度，
-        // 否则高分屏下会把右侧按钮排到窗口可视区域之外。
-        var logicalWidth = (int)Math.Round(topPanel.ClientSize.Width * 96D / Math.Max(96, DeviceDpi));
-        var right = logicalWidth - margin;
-        PlaceFromRight(btnCaptureRecognize, 112, ref right, gap);
-        PlaceFromRight(btnToggleShot, 92, ref right, gap);
-        PlaceFromRight(btnOpenFolder, 76, ref right, gap);
-        PlaceFromRight(btnRefresh, 76, ref right, gap);
-        PlaceFromRight(btnConnect, 76, ref right, gap);
-        PlaceFromRight(txtAddress, 210, ref right, gap);
-        comboDevices.Location = new Point(margin, 15);
-        comboDevices.Size = new Size(Math.Max(180, right - margin), 34);
+        var margin = ScalePixel(12);
+        var gap = ScalePixel(8);
+        var right = topPanel.ClientSize.Width - margin;
+        PlaceFromRight(btnCaptureRecognize, ScalePixel(112), ref right, gap);
+        PlaceFromRight(btnToggleShot, ScalePixel(92), ref right, gap);
+        PlaceFromRight(btnOpenFolder, ScalePixel(76), ref right, gap);
+        PlaceFromRight(btnRefresh, ScalePixel(76), ref right, gap);
+        PlaceFromRight(btnConnect, ScalePixel(76), ref right, gap);
+        PlaceFromRight(txtAddress, ScalePixel(210), ref right, gap);
+        comboDevices.Location = new Point(margin, ScalePixel(15));
+        comboDevices.Size = new Size(Math.Max(ScalePixel(180), right - margin), ScalePixel(34));
     }
 
-    private static void PlaceFromRight(Control control, int width, ref int right, int gap)
+    private void PlaceFromRight(Control control, int width, ref int right, int gap)
     {
         right -= width;
-        control.Location = new Point(right, 15);
-        control.Size = new Size(width, 34);
+        control.Location = new Point(right, ScalePixel(15));
+        control.Size = new Size(width, ScalePixel(34));
         right -= gap;
     }
 
@@ -111,16 +117,18 @@ public partial class MainForm
             Size = new Size(720, 820),
             Padding = new Padding(24),
         };
-        host.Resize += (_, _) => card.Width = Math.Min(760, Math.Max(560, host.ClientSize.Width - 48));
+        host.Resize += (_, _) => card.Width = Math.Min(
+            ScalePixel(760),
+            Math.Max(ScalePixel(560), host.ClientSize.Width - ScalePixel(48)));
 
         var title = new Label
         {
             Text = "软件设置",
             Font = new Font("Microsoft YaHei UI", 17F, FontStyle.Bold),
-            Dock = DockStyle.Top,
-            Height = 48,
+            Location = new Point(24, 18),
+            Size = new Size(650, 48),
         };
-        var scoreTitle = CreateSettingsHeading("强化分数", "85级按左/右三件阈值每跳 +6；88级使用独立阈值，每跳 +7。", 62);
+        var scoreTitle = CreateSettingsHeading("强化分数", "85级按左/右三件阈值每跳 +6；88级使用独立阈值，每跳 +7。", 70);
         thresholdPanel.Dock = DockStyle.None;
         thresholdPanel.Location = new Point(24, 132);
         // 高 DPI 下 FlowLayoutPanel 会按缩放后的 Margin 排列子控件，预留足够宽度避免最右侧 88 级输入框被裁剪。
