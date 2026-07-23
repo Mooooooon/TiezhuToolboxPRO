@@ -739,6 +739,12 @@ if (args.Contains("--synthetic"))
         Level = 85, Quality = "英雄武器", EnhanceLevel = 0,
         SubStats = { new SubStat { Name = "速度", Value = "3" } },
     }, EnhanceAdvice.GambleSpeed, heroicOnly: true);
+    AssertAdvice("紫装只赌速度不包含鞋子", new EquipmentInfo
+    {
+        Level = 85, Quality = "英雄鞋子", EnhanceLevel = 0,
+        MainStatName = "生命值", MainStatValue = "65%",
+        SubStats = { new SubStat { Name = "速度", Value = "3" } },
+    }, EnhanceAdvice.GiveUp, heroicOnly: true);
     AssertAdvice("88级 +15 高分保留", new EquipmentInfo
     {
         Level = 88, Quality = "传说武器", EnhanceLevel = 15,

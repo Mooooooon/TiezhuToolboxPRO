@@ -37,7 +37,7 @@ public record EnhanceAdviceResult(EnhanceAdvice Advice, string Text, string Deta
 /// 分数不达标时赌速度 —— 英雄装备按 3/6/9/12/12 的严格阶梯判断；
 /// 传说装备因多一次强化机会，按 3/3/6/9/12 判断，允许累计歪一跳；
 /// +15 时速度 ≥ 15，85 级建议重铸，88 级建议保留。
-/// 开启“紫装只赌速度”后，英雄装备忽略分数、角色匹配度和主属性规则，只走严格速度阶梯。
+/// 开启“紫装只赌速度”后，除鞋子外的英雄装备忽略分数、角色匹配度和主属性规则，只走严格速度阶梯。
 /// 分数达标时仍会检查用途：没有速度潜质且最高需求匹配度低于用户设置时建议放弃；
 /// 左三件（武器/头盔/铠甲）直接走上述流程；项链/戒指即使是固定值主属性，只要速度达标也可作为速度散件继续赌；
 /// 其余右三件固定值主属性直接淘汰。只有项链/戒指分数不足时可赌速度，鞋子分数不足直接放弃。
@@ -99,7 +99,7 @@ public static class EnhancementAdvisor
         var isLegendary = info.Quality.StartsWith("传说", StringComparison.Ordinal);
         var isHeroic = info.Quality.StartsWith("英雄", StringComparison.Ordinal);
         if (heroicOnlyGambleSpeed && isHeroic)
-            return HeroicSpeedOnlyLadder(GetSpeed(info), enhance, isLevel88);
+            return HeroicSpeedOnlyLadder(part, GetSpeed(info), enhance, isLevel88);
 
         var threshold = isLevel88
             ? level88Threshold
@@ -263,9 +263,14 @@ public static class EnhancementAdvisor
             : null;
     }
 
-    /// <summary>英雄装备开启“只赌速度”后，完全绕过分数、匹配度和右三件主属性规则。</summary>
-    private static EnhanceAdviceResult HeroicSpeedOnlyLadder(int speed, int enhance, bool isLevel88)
+    /// <summary>英雄装备开启“只赌速度”后，鞋子直接放弃，其余部位绕过分数、匹配度和主属性规则。</summary>
+    private static EnhanceAdviceResult HeroicSpeedOnlyLadder(
+        EquipmentPart part, int speed, int enhance, bool isLevel88)
     {
+        if (part == EquipmentPart.Boots)
+            return new EnhanceAdviceResult(EnhanceAdvice.GiveUp,
+                "鞋子不赌速度，建议放弃", "紫装只赌速度：鞋子不属于赌速度部位");
+
         foreach (var (cap, required) in StrictSpeedSteps)
         {
             if (enhance < cap)
