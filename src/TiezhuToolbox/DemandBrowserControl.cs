@@ -114,7 +114,7 @@ internal sealed class DemandBrowserControl : UserControl
     {
         var database = DemandDatabase.Instance;
         _sourceInfo.Text = database.IsLoaded
-            ? $"内置人工数据 · 更新于 {database.UpdatedAt}"
+            ? $"内置数据 · 更新于 {database.UpdatedAt}"
             : $"需求数据未加载：{database.ErrorMessage}";
         _setList.Items.Clear();
         if (!database.IsLoaded)
@@ -172,7 +172,7 @@ internal sealed class DemandBrowserControl : UserControl
         {
             _profiles.Controls.Add(new Label
             {
-                Text = $"{set.Name}暂无人工维护的需求子类",
+                Text = $"{set.Name}暂无内置需求数据",
                 AutoSize = true,
                 Font = new Font("Microsoft YaHei UI", 12F),
                 ForeColor = Color.FromArgb(95, 99, 104),

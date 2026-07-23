@@ -21,6 +21,7 @@ partial class MainForm
     private Panel scorePanel;
     private Label lblScoreValue;
     private Label lblScoreCaption;
+    private Label lblScoreHelp;
     private Label lblMainStat;
     private Label lblSubStatsTitle;
     private ListBox listSubStats;
@@ -99,6 +100,7 @@ partial class MainForm
         this.scorePanel = new Panel();
         this.lblScoreValue = new Label();
         this.lblScoreCaption = new Label();
+        this.lblScoreHelp = new Label();
         this.lblMainStat = new Label();
         this.lblSubStatsTitle = new Label();
         this.listSubStats = new ListBox();
@@ -354,6 +356,7 @@ partial class MainForm
         //
         // scorePanel
         //
+        this.scorePanel.Controls.Add(this.lblScoreHelp);
         this.scorePanel.Controls.Add(this.lblScoreValue);
         this.scorePanel.Controls.Add(this.lblScoreCaption);
         this.scorePanel.Dock = DockStyle.Fill;
@@ -368,9 +371,9 @@ partial class MainForm
         this.lblScoreValue.Dock = DockStyle.Fill;
         this.lblScoreValue.Font = new Font("Microsoft YaHei UI", 24F, FontStyle.Bold);
         this.lblScoreValue.ForeColor = Color.FromArgb(26, 115, 232);
-        this.lblScoreValue.Location = new Point(0, 18);
+        this.lblScoreValue.Location = new Point(0, 21);
         this.lblScoreValue.Name = "lblScoreValue";
-        this.lblScoreValue.Size = new Size(318, 56);
+        this.lblScoreValue.Size = new Size(318, 53);
         this.lblScoreValue.TabIndex = 0;
         this.lblScoreValue.Text = "-";
         this.lblScoreValue.TextAlign = ContentAlignment.MiddleLeft;
@@ -378,12 +381,26 @@ partial class MainForm
         // lblScoreCaption
         //
         this.lblScoreCaption.Dock = DockStyle.Top;
+        this.lblScoreCaption.Font = new Font("Microsoft YaHei UI", 10F);
         this.lblScoreCaption.ForeColor = Color.FromArgb(95, 99, 104);
         this.lblScoreCaption.Location = new Point(0, 0);
         this.lblScoreCaption.Name = "lblScoreCaption";
-        this.lblScoreCaption.Size = new Size(318, 18);
+        this.lblScoreCaption.Size = new Size(318, 21);
         this.lblScoreCaption.TabIndex = 1;
-        this.lblScoreCaption.Text = "民间分数";
+        this.lblScoreCaption.Text = "装备分数";
+        //
+        // lblScoreHelp
+        //
+        this.lblScoreHelp.Cursor = Cursors.Help;
+        this.lblScoreHelp.AccessibleName = "查看装备分数计算规则";
+        this.lblScoreHelp.ForeColor = Color.FromArgb(95, 99, 104);
+        this.lblScoreHelp.Location = new Point(67, 2);
+        this.lblScoreHelp.Name = "lblScoreHelp";
+        this.lblScoreHelp.Size = new Size(17, 17);
+        this.lblScoreHelp.TabIndex = 2;
+        this.lblScoreHelp.Paint += this.LblScoreHelp_Paint;
+        this.toolTip.SetToolTip(this.lblScoreHelp, "装备分数仅统计副属性，不包含主属性。\r\n\r\n攻击力/防御力/生命值百分比、效果命中、效果抗性：数值 × 1\r\n速度：数值 × 2\r\n暴击率：数值 × 1.5\r\n暴击伤害：数值 × 1.125\r\n\r\n固定攻击力：数值 × 3.46 ÷ 39\r\n固定防御力：数值 × 4.99 ÷ 31\r\n固定生命值：数值 × 3.09 ÷ 174");
+        this.lblScoreHelp.BringToFront();
         //
         // lblMainStat
         //
@@ -743,7 +760,7 @@ partial class MainForm
         this.lblHeroesHint.Margin = new Padding(0, 9, 0, 0);
         this.lblHeroesHint.Name = "lblHeroesHint";
         this.lblHeroesHint.TabIndex = 1;
-        this.lblHeroesHint.Text = "内置人工维护数据";
+        this.lblHeroesHint.Text = "内置数据";
         //
         // flowHeroes
         //

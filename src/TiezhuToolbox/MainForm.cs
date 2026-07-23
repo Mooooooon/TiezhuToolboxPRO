@@ -188,11 +188,11 @@ public partial class MainForm : Form
                 capturedBitmap = null;
 
                 ShowEquipmentInfo(info);
-                UpdateStatus($"识别完成：等级 {info.Level}，民间分数 {info.Score:0.##}");
+                UpdateStatus($"识别完成：等级 {info.Level}，装备分数 {info.Score:0.##}");
             }
             else if (!isContinuous)
             {
-                UpdateStatus($"识别完成：结果未变化，民间分数 {info.Score:0.##}");
+                UpdateStatus($"识别完成：结果未变化，装备分数 {info.Score:0.##}");
             }
 
             WriteDebugLog($"识别成功\n截图路径: {_lastScreenshotPath}\n原始文本:\n{info.RawText}");
@@ -456,7 +456,7 @@ public partial class MainForm : Form
         }
         if (set.Profiles.Count == 0)
         {
-            lblHeroesTitle.Text = $"{set.Name}需求（暂无人工数据）";
+            lblHeroesTitle.Text = $"{set.Name}需求（暂无内置数据）";
             return;
         }
         if (set.Profiles.All(profile => _disabledDemandProfiles.Contains(
@@ -631,6 +631,46 @@ public partial class MainForm : Form
         row.Controls.Add(score);
         toolTip.SetToolTip(row, $"命中属性：{string.Join("、", hero.MatchedStats)}");
         return row;
+    }
+
+    private void LblScoreHelp_Paint(object? sender, PaintEventArgs e)
+    {
+        e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        var bounds = lblScoreHelp.ClientRectangle;
+        bounds.Inflate(-1, -1);
+
+        using var circlePen = new Pen(lblScoreHelp.ForeColor, 1.2F);
+        e.Graphics.DrawEllipse(circlePen, bounds);
+
+        var scale = Math.Min(bounds.Width, bounds.Height) / 15F;
+        var centerX = bounds.Left + bounds.Width / 2F;
+        using var questionPen = new Pen(lblScoreHelp.ForeColor, Math.Max(1.2F, 1.4F * scale))
+        {
+            StartCap = System.Drawing.Drawing2D.LineCap.Round,
+            EndCap = System.Drawing.Drawing2D.LineCap.Round,
+        };
+
+        using var questionPath = new System.Drawing.Drawing2D.GraphicsPath();
+        questionPath.AddBezier(
+            centerX - 2.4F * scale, bounds.Top + 5.1F * scale,
+            centerX - 2.1F * scale, bounds.Top + 2.6F * scale,
+            centerX + 2.7F * scale, bounds.Top + 2.5F * scale,
+            centerX + 2.7F * scale, bounds.Top + 5.2F * scale);
+        questionPath.AddBezier(
+            centerX + 2.7F * scale, bounds.Top + 5.2F * scale,
+            centerX + 2.7F * scale, bounds.Top + 7.2F * scale,
+            centerX, bounds.Top + 7.1F * scale,
+            centerX, bounds.Top + 9.2F * scale);
+        e.Graphics.DrawPath(questionPen, questionPath);
+
+        var dotSize = Math.Max(1.5F, 1.7F * scale);
+        using var dotBrush = new SolidBrush(lblScoreHelp.ForeColor);
+        e.Graphics.FillEllipse(
+            dotBrush,
+            centerX - dotSize / 2F,
+            bounds.Top + 11.2F * scale,
+            dotSize,
+            dotSize);
     }
 
     private int ScalePixel(int logicalPixel)
