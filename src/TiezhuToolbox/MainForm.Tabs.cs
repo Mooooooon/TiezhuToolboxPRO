@@ -135,7 +135,7 @@ public partial class MainForm
         numRightThreshold.Size = new Size(82, 34);
         numLevel88Threshold.Size = new Size(82, 34);
         foreach (var label in new[] { lblThresholdGroup, lblThLeft, lblThRight, lblTh88 })
-            label.Height = 34;
+            ConfigureSettingsRowLabel(label);
 
         var recognitionTitle = CreateSettingsHeading("识别控制", "全局快捷键和持续识别只在“装备强化”页生效。", 188);
         recognitionSettingsPanel.Dock = DockStyle.None;
@@ -146,8 +146,9 @@ public partial class MainForm
         comboRecognitionHotKey.Size = new Size(76, 34);
         chkContinuousRecognition.Size = new Size(108, 34);
         numRecognitionInterval.Size = new Size(88, 34);
-        foreach (var label in new[] { lblRecognitionGroup, lblRecognitionHotKey, lblRecognitionInterval, lblIntervalUnit })
-            label.Height = 34;
+        foreach (var label in new[]
+                 { lblRecognitionGroup, lblRecognitionHotKey, lblRecognitionInterval, lblIntervalUnit })
+            ConfigureSettingsRowLabel(label);
 
         var automationTitle = CreateSettingsHeading(
             "自动强化",
@@ -281,7 +282,7 @@ public partial class MainForm
             Font = new Font("Microsoft YaHei UI", 9.2F),
             ForeColor = Color.FromArgb(66, 70, 77),
             Text = "• 红装赌速度：比紫装多一次强化机会，允许累计歪一跳。\r\n"
-                   + "• 紫装只赌速度：开启后忽略分数与匹配度，按严格速度阶梯处理。\r\n"
+                   + "• 紫装只赌速度：鞋子除外；开启后忽略分数与匹配度，按严格速度阶梯处理。\r\n"
                    + "• 套装子类：只匹配当前套装下人工维护的属性组合，不使用旧角色算法回退。\r\n"
                    + "• 右三主属性：85级按90级满值预估，88/90使用同一满值档参与用途匹配。\r\n"
                    + "• 强化分数：始终只统计副属性；主属性不会加入分数阶梯或重铸分数。\r\n"
@@ -312,6 +313,17 @@ public partial class MainForm
         card.Controls.Add(title);
         host.Controls.Add(card);
         return host;
+    }
+
+    /// <summary>
+    /// 设置行来自设计器页面，高 DPI 下字体可能先于运行时页面完成缩放。
+    /// 标签宽度交给首选尺寸计算，避免固定像素宽度只显示部分文字。
+    /// </summary>
+    private static void ConfigureSettingsRowLabel(Label label)
+    {
+        label.AutoSize = true;
+        label.MinimumSize = new Size(0, 34);
+        label.TextAlign = ContentAlignment.MiddleLeft;
     }
 
     private static Label CreateSettingsHeading(string title, string description, int top)

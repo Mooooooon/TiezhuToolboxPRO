@@ -351,6 +351,20 @@ if (args.Contains("--ui-smoke"))
             if (settingInputs.Any(control =>
                     control.Height < DpiPixel(32) || control.Width < DpiPixel(70)))
                 throw new InvalidOperationException("软件设置输入框尺寸不足");
+            var settingRowLabels = new[]
+                {
+                    "lblThresholdGroup", "lblThLeft", "lblThRight", "lblTh88",
+                    "lblRecognitionGroup", "lblRecognitionHotKey", "lblRecognitionInterval", "lblIntervalUnit",
+                }
+                .Select(name => (Label)typeof(TiezhuToolbox.MainForm).GetField(name,
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!);
+            var clippedSettingLabel = settingRowLabels.FirstOrDefault(label =>
+                label.GetPreferredSize(Size.Empty).Width > label.ClientSize.Width);
+            if (clippedSettingLabel != null)
+                throw new InvalidOperationException(
+                    $"软件设置标签被裁剪：{clippedSettingLabel.Text}，"
+                    + $"需要 {clippedSettingLabel.GetPreferredSize(Size.Empty).Width}，"
+                    + $"实际 {clippedSettingLabel.ClientSize.Width}");
             var thresholdPanel = (Control)typeof(TiezhuToolbox.MainForm).GetField("thresholdPanel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var level88Input = (Control)typeof(TiezhuToolbox.MainForm).GetField("numLevel88Threshold",
