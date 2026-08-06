@@ -454,13 +454,15 @@ public partial class MainForm : Form
             lblHeroesTitle.Text = "套装需求（套装未识别）";
             return;
         }
-        if (set.Profiles.Count == 0)
+        var profiles = Modules.Recommend.SetProfileMatcher.GetProfiles(
+            set, includeDisabledCustomProfiles: true);
+        if (profiles.Count == 0)
         {
-            lblHeroesTitle.Text = $"{set.Name}需求（暂无内置数据）";
+            lblHeroesTitle.Text = $"{set.Name}需求（暂无数据）";
             return;
         }
-        if (set.Profiles.All(profile => _disabledDemandProfiles.Contains(
-                Modules.Recommend.SetProfileMatcher.CreateProfileKey(set.Code, profile.Id))))
+        if (Modules.Recommend.SetProfileMatcher.GetMatchableProfiles(
+                set, _disabledDemandProfiles).Count == 0)
         {
             lblHeroesTitle.Text = $"{set.Name}需求（全部子类已停用）";
             return;
@@ -522,7 +524,9 @@ public partial class MainForm : Form
             };
             var statsLabel = new Label
             {
-                Text = $"命中：{string.Join("、", rec.MatchedStats)}　需求权重 {rec.DemandWeight:0.##}",
+                Text = rec.ProfileId.StartsWith("custom-", StringComparison.Ordinal)
+                    ? $"命中：{string.Join("、", rec.MatchedStats)}　手动属性子类"
+                    : $"命中：{string.Join("、", rec.MatchedStats)}　需求权重 {rec.DemandWeight:0.##}",
                 Location = new Point(ScalePixel(12), ScalePixel(37)),
                 Size = new Size(cardWidth - ScalePixel(24), ScalePixel(20)),
                 ForeColor = Color.FromArgb(70, 72, 76),

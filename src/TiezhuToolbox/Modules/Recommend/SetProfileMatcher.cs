@@ -28,7 +28,7 @@ public static class SetProfileMatcher
         var set = database.FindSet(info.SetName);
         return set == null
             ? Array.Empty<SetProfileRecommendation>()
-            : Match(info, set, top, disabledProfileKeys);
+            : MatchProfiles(info, set, GetProfiles(set), top, disabledProfileKeys);
     }
 
     /// <summary>使用指定套装数据匹配，供回归测试使用。</summary>
@@ -37,8 +37,46 @@ public static class SetProfileMatcher
         DemandSet set,
         int top = 5,
         IReadOnlySet<string>? disabledProfileKeys = null)
+        => MatchProfiles(info, set, set.Profiles, top, disabledProfileKeys);
+
+    /// <summary>取得内置子类及已启用的手动子类；手动数据始终保留在独立存储中。</summary>
+    public static IReadOnlyList<DemandProfile> GetProfiles(
+        DemandSet set,
+        bool includeDisabledCustomProfiles = false)
     {
-        if (set.Profiles.Count == 0 || top <= 0)
+        var profiles = new List<DemandProfile>(set.Profiles);
+        profiles.AddRange(CustomDemandProfileStore.Instance.GetProfiles(set.Code)
+            .Where(profile => includeDisabledCustomProfiles || profile.Enabled)
+            .Select(profile => profile.ToDemandProfile()));
+        return profiles;
+    }
+
+    /// <summary>取得当前真正参与匹配的内置及手动子类。</summary>
+    public static IReadOnlyList<DemandProfile> GetMatchableProfiles(
+        DemandSet set,
+        IReadOnlySet<string>? disabledProfileKeys = null) => GetProfiles(set)
+        .Where(profile => disabledProfileKeys == null
+                          || !disabledProfileKeys.Contains(CreateProfileKey(set.Code, profile.Id)))
+        .ToList();
+
+    /// <summary>按标识查找内置或手动子类。</summary>
+    public static DemandProfile? FindProfile(DemandSet? set, string profileId)
+    {
+        if (set == null)
+            return null;
+        return set.Profiles.FirstOrDefault(profile =>
+                   string.Equals(profile.Id, profileId, StringComparison.Ordinal))
+               ?? CustomDemandProfileStore.Instance.Find(set.Code, profileId)?.ToDemandProfile();
+    }
+
+    private static IReadOnlyList<SetProfileRecommendation> MatchProfiles(
+        EquipmentInfo info,
+        DemandSet set,
+        IReadOnlyList<DemandProfile> profiles,
+        int top,
+        IReadOnlySet<string>? disabledProfileKeys)
+    {
+        if (profiles.Count == 0 || top <= 0)
             return Array.Empty<SetProfileRecommendation>();
 
         var part = EquipmentRules.DetectPart(info.Quality);
@@ -55,7 +93,7 @@ public static class SetProfileMatcher
         if (slotCount <= 0)
             return Array.Empty<SetProfileRecommendation>();
 
-        return set.Profiles
+        return profiles
             .Where(profile => disabledProfileKeys == null
                               || !disabledProfileKeys.Contains(CreateProfileKey(set.Code, profile.Id)))
             .Select(profile =>

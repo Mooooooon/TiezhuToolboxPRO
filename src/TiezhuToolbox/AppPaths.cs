@@ -10,6 +10,9 @@ internal static class AppPaths
 
     public static string SettingsPath => Path.Combine(UserRoot, "settings.json");
 
+    /// <summary>用户手动维护的套装属性子类，与内置需求数据及软件设置分开保存。</summary>
+    public static string CustomDemandProfilesPath => Path.Combine(UserRoot, "custom-demand-profiles.json");
+
     public static JsonSerializerOptions JsonOptions { get; } = new()
     {
         WriteIndented = true,

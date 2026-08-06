@@ -290,8 +290,7 @@ public static class EnhancementAdvisor
 
     private static CriticalMainStats GetRequiredCriticalMainStats(DemandSet? set, string profileId)
     {
-        var profile = set?.Profiles.FirstOrDefault(item =>
-            string.Equals(item.Id, profileId, StringComparison.Ordinal));
+        var profile = SetProfileMatcher.FindProfile(set, profileId);
         if (profile == null)
             return CriticalMainStats.None;
 

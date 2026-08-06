@@ -586,6 +586,75 @@ if (args.Contains("--star-forge"))
     return;
 }
 
+if (args.Contains("--custom-demand"))
+{
+    var testRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-custom-demand-test-" + Guid.NewGuid().ToString("N"));
+    Environment.SetEnvironmentVariable("TIEZHU_TOOLBOX_USER_ROOT", testRoot);
+    var database = DemandDatabase.Instance;
+    if (!database.IsLoaded)
+        throw new InvalidOperationException($"静态需求数据未加载：{database.ErrorMessage}");
+    var set = database.Sets.First(item => item.Profiles.Count > 0);
+    var store = CustomDemandProfileStore.Instance;
+    var custom = new CustomDemandProfile
+    {
+        SetCode = set.Code,
+        Name = "生命值·速度",
+        Stats = { "生命值", "速度" },
+        Weights = new Dictionary<string, double>
+        {
+            ["生命值"] = 2,
+            ["速度"] = 4,
+        },
+    };
+    store.Upsert(custom);
+    var saved = store.GetProfiles(set.Code).Single();
+    var customPath = Path.Combine(testRoot, "custom-demand-profiles.json");
+    if (!File.Exists(customPath) || File.Exists(Path.Combine(testRoot, "settings.json"))
+        || !saved.Id.StartsWith("custom-", StringComparison.Ordinal))
+    {
+        throw new InvalidOperationException("手动需求没有保存到独立文件");
+    }
+
+    var equipment = new EquipmentInfo
+    {
+        SetName = set.Name,
+        Level = 85,
+        Quality = "传说武器",
+        SubStats =
+        {
+            new SubStat { Name = "生命值", Value = "8%" },
+            new SubStat { Name = "速度", Value = "4" },
+        },
+    };
+    if (SetProfileMatcher.Match(equipment, top: int.MaxValue)
+        .All(result => result.ProfileId != saved.Id))
+    {
+        throw new InvalidOperationException("启用的手动需求没有参与套装匹配");
+    }
+
+    store.SetEnabled(set.Code, saved.Id, false);
+    if (SetProfileMatcher.Match(equipment, top: int.MaxValue)
+        .Any(result => result.ProfileId == saved.Id))
+    {
+        throw new InvalidOperationException("停用的手动需求仍参与套装匹配");
+    }
+
+    saved.Name = "生命值";
+    saved.Stats = new List<string> { "生命值" };
+    saved.Weights = new Dictionary<string, double> { ["生命值"] = 3 };
+    saved.Enabled = true;
+    store.Upsert(saved);
+    var edited = store.Find(set.Code, saved.Id);
+    if (edited?.Name != "生命值" || edited.Stats.Count != 1 || !edited.Enabled)
+        throw new InvalidOperationException("手动需求编辑结果不正确");
+
+    store.Remove(set.Code, saved.Id);
+    if (store.GetProfiles(set.Code).Count != 0)
+        throw new InvalidOperationException("手动需求删除失败");
+    Console.WriteLine("手动需求独立保存、添加、编辑、启停、删除及匹配测试通过");
+    return;
+}
+
 if (args.Contains("--config-smoke"))
 {
     var testRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-config-test-" + Guid.NewGuid().ToString("N"));
@@ -860,6 +929,15 @@ if (args.Contains("--ui-smoke"))
 {
     var uiTestRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-ui-test-" + Guid.NewGuid().ToString("N"));
     Environment.SetEnvironmentVariable("TIEZHU_TOOLBOX_USER_ROOT", uiTestRoot);
+    var uiCustomSet = DemandDatabase.Instance.Sets.First(set => set.Profiles.Count > 0);
+    var uiCustomProfile = new CustomDemandProfile
+    {
+        SetCode = uiCustomSet.Code,
+        Name = "攻击力·速度",
+        Stats = { "攻击力", "速度" },
+        Weights = new Dictionary<string, double> { ["攻击力"] = 3, ["速度"] = 4 },
+    };
+    CustomDemandProfileStore.Instance.Upsert(uiCustomProfile);
     Exception? uiError = null;
     var thread = new Thread(() =>
     {
@@ -1028,6 +1106,8 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(demandBrowser)!;
             var profilesPanel = (FlowLayoutPanel)demandBrowser.GetType().GetField("_profiles",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(demandBrowser)!;
+            var addProfileButton = (AntdUI.Button)demandBrowser.GetType().GetField("_addProfileButton",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(demandBrowser)!;
             if (setList.Items.Count != 23)
                 throw new InvalidOperationException($"需求分析套装数量错误：{setList.Items.Count}");
             var populatedIndex = Enumerable.Range(0, setList.Items.Count)
@@ -1039,16 +1119,39 @@ if (args.Contains("--ui-smoke"))
             var profileCards = profilesPanel.Controls.Cast<Control>()
                 .Where(control => Equals(control.Tag, "profile-card"))
                 .ToList();
+            static IEnumerable<Control> Descendants(Control parent) => parent.Controls.Cast<Control>()
+                .SelectMany(control => new[] { control }.Concat(Descendants(control)));
             var profileSwitches = profileCards
-                .SelectMany(card => card.Controls.Cast<Control>())
-                .OfType<Panel>()
-                .SelectMany(header => header.Controls.Cast<Control>())
+                .SelectMany(Descendants)
                 .OfType<AntdUI.Switch>()
                 .ToList();
-            if (profileSwitches.Count != ((DemandSet)setList.SelectedItem!).Profiles.Count
+            var selectedSet = (DemandSet)setList.SelectedItem!;
+            var expectedCustomCount = selectedSet.Code == uiCustomSet.Code ? 1 : 0;
+            if (!addProfileButton.Enabled
+                || profileSwitches.Count != selectedSet.Profiles.Count + expectedCustomCount
                 || profileSwitches.Any(profileSwitch => !profileSwitch.Checked))
                 throw new InvalidOperationException("需求子类参与匹配开关数量或默认状态错误");
-            var analysisCard = profileCards[0];
+            if (expectedCustomCount > 0)
+            {
+                var customCard = profileCards.Single(card => Descendants(card)
+                    .OfType<AntdUI.Switch>()
+                    .Any(profileSwitch => profileSwitch.Tag is string key
+                                          && key.Contains("/custom-", StringComparison.Ordinal)));
+                var customActions = Descendants(customCard).OfType<AntdUI.Button>()
+                    .Where(button => button.Text is "编辑" or "删除")
+                    .ToList();
+                var customActionPanel = customActions.FirstOrDefault()?.Parent;
+                if (customActions.Count != 2 || customActions.Any(button =>
+                        !button.Visible || button.Parent == null || button.Right > button.Parent.ClientSize.Width)
+                    || customActionPanel?.Parent == null
+                    || customActionPanel.Parent.GetChildAtPoint(new Point(
+                        customActionPanel.Left + 2, customActionPanel.Top + 2)) != customActionPanel)
+                {
+                    throw new InvalidOperationException("手动需求的编辑或删除按钮未显示在卡片范围内");
+                }
+            }
+            var analysisCard = profileCards.First(card => card.Controls.Cast<Control>()
+                .OfType<Panel>().Any(panel => panel.Cursor == Cursors.Hand));
             var analysisCollapsedHeight = analysisCard.Height;
             var analysisHeader = analysisCard.Controls.Cast<Control>().OfType<Panel>()
                 .First(panel => panel.Cursor == Cursors.Hand);
@@ -1063,7 +1166,8 @@ if (args.Contains("--ui-smoke"))
             if (!analysisBuilds.Visible || analysisCard.Height <= analysisCollapsedHeight)
                 throw new InvalidOperationException("需求分析页角色列表无法展开");
             CaptureTab("demand-analysis-expanded");
-            var firstProfileSwitch = profileSwitches[0];
+            var firstProfileSwitch = profileSwitches.First(profileSwitch =>
+                profileSwitch.Tag is string key && !key.Contains("/custom-", StringComparison.Ordinal));
             firstProfileSwitch.Checked = false;
             Application.DoEvents();
             var disabledProfiles = (IReadOnlySet<string>)typeof(TiezhuToolbox.MainForm)
