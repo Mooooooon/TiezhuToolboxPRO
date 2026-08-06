@@ -18,7 +18,7 @@
 ```
 src/TiezhuToolbox/            主程序（WinForms）
 ├── Program.cs                入口
-├── MainForm.cs / .Designer.cs 主界面与装备强化逻辑；AntdUI 页签包含装备强化、自动强化、星之铁匠铺、需求分析、软件设置。
+├── MainForm.cs / .Designer.cs 主界面与装备强化逻辑；AntdUI 页签包含装备强化、装备扫描、自动强化、星之铁匠铺、需求分析、软件设置。
 ├── MainForm.Tabs.cs          页签装配、设置持久化和页签间识别启停。
 ├── DemandBrowserControl.cs   只读套装需求浏览器，展示子类权重和英雄完整配装组合。
 ├── AppPaths.cs / AppSettings.cs 用户目录、原子写入和版本化软件设置（LocalAppData/TiezhuToolbox）。
@@ -34,6 +34,8 @@ src/TiezhuToolbox/            主程序（WinForms）
 │   ├── EquipmentScoreCalculator.cs 装备分数计算（民间算法，只统计副属性）
 │   └── EquipmentInfo.cs      识别结果模型
 ├── Modules/StarForge/        星之铁匠铺四副属性 OCR、目标匹配和 ADB 自动变更闭环
+├── Modules/GearScan/         Windows pktmon 抓包、PCAPNG/TCP 重组、游戏循环 XOR 传输层解码、
+│                             LZ4/MessagePack 本地解析与 Fribbels gear.txt 导出；不调用远程解析服务。
 ├── Modules/Recommend/
 │   ├── DemandDatabase.cs     只读加载并校验内置 demand-profiles.json，不联网、不使用用户覆盖。
 │   ├── DemandDataModels.cs   套装、属性子类、英雄完整配装和八维权重模型。
@@ -68,7 +70,9 @@ dotnet run --project src/TiezhuToolbox                  # 运行主程序
 cd tools/OcrTest && dotnet run -- <截图路径...>          # OCR 回归（改识别逻辑后必跑）
 cd tools/OcrTest && dotnet run -- --demand-data          # 23套装/171子类/644配装/100英雄及隐私字段校验
 cd tools/OcrTest && dotnet run -- --synthetic            # 权重匹配、右三满值、固定主属性和强化建议自检
-cd tools/OcrTest && dotnet run -- --ui-smoke             # 五页签、需求浏览器、离开装备页暂停持续识别
+cd tools/OcrTest && dotnet run -- --gear-scan            # 合成 PCAPNG、TCP/XOR、LZ4/MessagePack 与 gear.txt 转换
+cd tools/OcrTest && dotnet run -- --gear-scan-local <capture.pcapng> [gear.txt] # 保留抓包本地回放，可选与基准核心字段比对
+cd tools/OcrTest && dotnet run -- --ui-smoke             # 六页签、需求浏览器、离开装备页暂停持续识别
 cd tools/OcrTest && dotnet run -- --config-smoke         # 软件设置持久化/恢复默认
 dotnet publish src/TiezhuToolbox -c Release              # 单文件自包含发布
 ```
@@ -85,5 +89,7 @@ dotnet publish src/TiezhuToolbox -c Release              # 单文件自包含发
 - MuMu 12 默认 ADB 地址 `127.0.0.1:16384`，需在模拟器"设置中心 → 其他 → ADB 调试"中开启。
 - `demand-profiles.json` 是唯一需求真源，后续只通过仓库提交人工维护；禁止重新加入运行时联网覆盖或用户英雄配置。
 - 右三主属性按满值参与用途匹配但不进入装备分/重铸分：百分比、命中、抗性65，暴击60×1.5，暴伤70×1.125，速度45×2；85按90预估，88/90同档。
+- 装备扫描遇到静态映射未收录或等级为0的活动装备时，按不可重铸的88级装备修复；+15主属性固定档为攻击515、生命2765、防御310、百分比/命中/抗性65、暴击60、暴伤70、速度45。
+- 装备扫描的英雄过滤仅影响 `gear.txt` 的 `heroes` 列表，不删除装备，也不改动装备的 `ingameEquippedId` 归属字段；默认导出全部英雄。
 - 套装名必须与游戏内简体中文一致（破灭/守护/生命值/抵抗/夹攻等），否则无法匹配 OCR 的 SetName。
 - `screenshots/`、`bin/`、`obj/` 已在 .gitignore；运行时会额外生成 `*_debug.png`（识别框标注）和 `*_level.png`（等级数字裁剪）调试图。

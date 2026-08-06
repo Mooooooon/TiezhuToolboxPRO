@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TiezhuToolbox.Modules.GearScan;
 using TiezhuToolbox.Modules.StarForge;
 
 namespace TiezhuToolbox;
@@ -7,7 +8,7 @@ namespace TiezhuToolbox;
 /// <summary>软件设置。新增字段必须提供兼容旧文件的默认值。</summary>
 public class AppSettings
 {
-    public const int CurrentVersion = 9;
+    public const int CurrentVersion = 11;
 
     public int Version { get; set; } = CurrentVersion;
     public decimal LeftThreshold { get; set; } = 24;
@@ -17,6 +18,8 @@ public class AppSettings
     public bool ContinuousRecognition { get; set; }
     public decimal RecognitionIntervalSeconds { get; set; } = 0.1M;
     public string AdbAddress { get; set; } = "127.0.0.1:16384";
+    public int GearScanMinimumEnhance { get; set; } = 6;
+    public GearScanHeroFilter GearScanHeroFilterMode { get; set; } = GearScanHeroFilter.All;
     public int AutoEnhanceMaxEquipment { get; set; } = 50;
     public string AutoEnhanceDisposalMethod { get; set; } = "出售";
     // 保留旧 JSON 字段名，兼容已经保存的 settings.json。
@@ -51,6 +54,10 @@ public class AppSettings
             RecognitionHotKey = "F2";
         if (string.IsNullOrWhiteSpace(AdbAddress))
             AdbAddress = "127.0.0.1:16384";
+        if (GearScanMinimumEnhance is not (0 or 3 or 6 or 9 or 12 or 15))
+            GearScanMinimumEnhance = 6;
+        if (!Enum.IsDefined(GearScanHeroFilterMode))
+            GearScanHeroFilterMode = GearScanHeroFilter.All;
         DisabledDemandProfiles ??= new List<string>();
         DisabledDemandProfiles = DisabledDemandProfiles
             .Where(key => !string.IsNullOrWhiteSpace(key))

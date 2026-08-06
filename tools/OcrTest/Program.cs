@@ -2,7 +2,564 @@ using TiezhuToolbox.Modules.Ocr;
 using TiezhuToolbox.Modules.Recommend;
 using TiezhuToolbox.Modules.Automation;
 using TiezhuToolbox.Modules.StarForge;
+using TiezhuToolbox.Modules.GearScan;
 using System.Windows.Forms;
+
+if (args.Contains("--gear-scan-local"))
+{
+    var optionIndex = Array.IndexOf(args, "--gear-scan-local");
+    var capturePath = args.Skip(optionIndex + 1).FirstOrDefault()
+        ?? throw new ArgumentException("--gear-scan-local 后必须提供 PCAPNG 路径");
+    var baselinePath = args.Length > optionIndex + 2 ? args[optionIndex + 2] : null;
+    var minimumEnhance = 6;
+    if (baselinePath != null)
+    {
+        var baseline = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(baselinePath))!.AsObject();
+        minimumEnhance = baseline["items"]!.AsArray().OfType<System.Text.Json.Nodes.JsonObject>()
+            .Select(item => item["enhance"]?.GetValue<int>() ?? 0)
+            .DefaultIfEmpty(6)
+            .Min();
+    }
+    var result = new EpicSevenLocalGearParser().Parse(capturePath, minimumEnhance);
+    Console.WriteLine($"本地解析：装备={result.ItemCount}，英雄={result.HeroCount}，等级0={result.LevelZeroItemCount}，88级推断修复={result.InferredLevelItemCount}");
+
+    if (baselinePath != null)
+    {
+        var localRoot = System.Text.Json.Nodes.JsonNode.Parse(result.GearText)!.AsObject();
+        var baselineRoot = System.Text.Json.Nodes.JsonNode.Parse(File.ReadAllText(baselinePath))!.AsObject();
+        static System.Text.Json.Nodes.JsonObject Project(
+            System.Text.Json.Nodes.JsonObject source,
+            params string[] fields)
+        {
+            var result = new System.Text.Json.Nodes.JsonObject();
+            foreach (var field in fields)
+                result[field] = source[field]?.DeepClone();
+            return result;
+        }
+        static Dictionary<string, System.Text.Json.Nodes.JsonObject> IndexBy(
+            System.Text.Json.Nodes.JsonArray values,
+            string key) => values.OfType<System.Text.Json.Nodes.JsonObject>()
+            .Where(value => value[key] != null)
+            .ToDictionary(value => value[key]!.ToString(), StringComparer.Ordinal);
+
+        var localItems = IndexBy(localRoot["items"]!.AsArray(), "ingameId");
+        var baselineItems = IndexBy(baselineRoot["items"]!.AsArray(), "ingameId");
+        static bool IsExpectedLevel88Repair(
+            System.Text.Json.Nodes.JsonObject local,
+            System.Text.Json.Nodes.JsonObject baseline)
+        {
+            if (baseline["level"]?.GetValue<int>() != 0 || local["level"]?.GetValue<int>() != 88)
+                return false;
+            var localMain = local["main"]?.AsObject();
+            var baselineMain = baseline["main"]?.AsObject();
+            var type = localMain?["type"]?.GetValue<string>();
+            var expectedValue = type switch
+            {
+                "Attack" => 515,
+                "Health" => 2765,
+                "Defense" => 310,
+                "Speed" => 45,
+                "CriticalHitChancePercent" => 60,
+                "CriticalHitDamagePercent" => 70,
+                "AttackPercent" or "HealthPercent" or "DefensePercent"
+                    or "EffectivenessPercent" or "EffectResistancePercent" => 65,
+                _ => double.NaN,
+            };
+            return !double.IsNaN(expectedValue)
+                && localMain?["value"]?.GetValue<double>() == expectedValue
+                && localMain?["type"]?.ToString() == baselineMain?["type"]?.ToString()
+                && System.Text.Json.Nodes.JsonNode.DeepEquals(
+                    Project(local, "gear", "rank", "set", "enhance", "substats", "ingameEquippedId"),
+                    Project(baseline, "gear", "rank", "set", "enhance", "substats", "ingameEquippedId"));
+        }
+        var repairedIds = localItems.Keys.Intersect(baselineItems.Keys)
+            .Where(id => IsExpectedLevel88Repair(localItems[id], baselineItems[id]))
+            .ToHashSet(StringComparer.Ordinal);
+        var itemMismatch = localItems.Keys.Union(baselineItems.Keys).Count(id =>
+            !localItems.TryGetValue(id, out var local)
+            || !baselineItems.TryGetValue(id, out var baseline)
+            || (!repairedIds.Contains(id) && !System.Text.Json.Nodes.JsonNode.DeepEquals(
+                Project(local, "gear", "rank", "set", "level", "enhance", "main", "substats", "ingameEquippedId"),
+                Project(baseline, "gear", "rank", "set", "level", "enhance", "main", "substats", "ingameEquippedId"))));
+        var localOnly = localItems.Keys.Except(baselineItems.Keys).ToArray();
+        var baselineOnly = baselineItems.Keys.Except(localItems.Keys).ToArray();
+        Console.WriteLine($"装备 ID：仅本地={localOnly.Length}，仅基准={baselineOnly.Length}，按88级修复={repairedIds.Count}");
+        foreach (var id in localOnly.Take(30))
+        {
+            var item = localItems[id];
+            Console.WriteLine($"  仅本地 {id}: code={item["code"]} f={item["f"]} gear={item["gear"]} enhance={item["enhance"]} level={item["level"]}");
+        }
+        var comparisonFields = new[] { "gear", "rank", "set", "level", "enhance", "main", "substats", "ingameEquippedId" };
+        foreach (var field in comparisonFields)
+        {
+            var count = localItems.Keys.Intersect(baselineItems.Keys).Count(id =>
+                !repairedIds.Contains(id)
+                && !System.Text.Json.Nodes.JsonNode.DeepEquals(localItems[id][field], baselineItems[id][field]));
+            Console.WriteLine($"  字段 {field} 差异={count}");
+            foreach (var id in localItems.Keys.Intersect(baselineItems.Keys).Where(id =>
+                         !repairedIds.Contains(id)
+                         && !System.Text.Json.Nodes.JsonNode.DeepEquals(localItems[id][field], baselineItems[id][field])).Take(5))
+                Console.WriteLine($"    {id} code={localItems[id]["code"]} 本地={localItems[id][field]} 基准={baselineItems[id][field]}");
+        }
+
+        var localHeroes = IndexBy(localRoot["heroes"]!.AsArray(), "id");
+        var baselineHeroes = IndexBy(baselineRoot["heroes"]!.AsArray(), "id");
+        var heroMismatch = localHeroes.Keys.Union(baselineHeroes.Keys).Count(id =>
+            !localHeroes.TryGetValue(id, out var local)
+            || !baselineHeroes.TryGetValue(id, out var baseline)
+            || !System.Text.Json.Nodes.JsonNode.DeepEquals(
+                Project(local, "code", "name", "stars", "awaken"),
+                Project(baseline, "code", "name", "stars", "awaken")));
+        Console.WriteLine($"与基准核心字段对比：装备差异={itemMismatch}，英雄差异={heroMismatch}");
+        if (itemMismatch != 0 || heroMismatch != 0)
+            throw new InvalidOperationException("本地解析结果与远程解析基准不一致");
+    }
+    return;
+}
+
+if (args.Contains("--yuna-script-probe"))
+{
+    var optionIndex = Array.IndexOf(args, "--yuna-script-probe");
+    var sourcePath = args.Skip(optionIndex + 1).FirstOrDefault()
+        ?? throw new ArgumentException("--yuna-script-probe 后必须提供 init.bin/game.bin 路径");
+    var source = File.ReadAllBytes(sourcePath);
+    var signature = Convert.FromHexString("1B5307DF080C");
+    var key = Convert.FromHexString("170B060108630148160003229BDA9A2B");
+    if (!source.AsSpan().StartsWith(signature))
+        throw new InvalidDataException("Yuna 脚本签名不匹配");
+
+    static byte[]? DecryptXxtea(ReadOnlySpan<byte> encrypted, ReadOnlySpan<byte> key)
+    {
+        if (encrypted.Length < 8 || encrypted.Length % 4 != 0 || key.Length != 16)
+            return null;
+        var words = new uint[encrypted.Length / 4];
+        for (var index = 0; index < words.Length; index++)
+            words[index] = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(encrypted[(index * 4)..]);
+        Span<uint> keyWords = stackalloc uint[4];
+        for (var index = 0; index < keyWords.Length; index++)
+            keyWords[index] = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(key[(index * 4)..]);
+        const uint delta = 0x9E3779B9;
+        var n = words.Length - 1;
+        var rounds = 6 + 52 / (n + 1);
+        var sum = unchecked((uint)(rounds * delta));
+        var y = words[0];
+        while (sum != 0)
+        {
+            var e = (sum >> 2) & 3;
+            for (var p = n; p > 0; p--)
+            {
+                var z = words[p - 1];
+                var mix = unchecked((((z >> 5) ^ (y << 2)) + ((y >> 3) ^ (z << 4)))
+                    ^ ((sum ^ y) + (keyWords[(p & 3) ^ (int)e] ^ z)));
+                y = words[p] = unchecked(words[p] - mix);
+            }
+            var last = words[n];
+            var firstMix = unchecked((((last >> 5) ^ (y << 2)) + ((y >> 3) ^ (last << 4)))
+                ^ ((sum ^ y) + (keyWords[(int)e] ^ last)));
+            y = words[0] = unchecked(words[0] - firstMix);
+            sum = unchecked(sum - delta);
+        }
+        var plainLength = words[^1];
+        var maximumLength = (words.Length - 1) * 4;
+        if (plainLength > maximumLength || plainLength < maximumLength - 3)
+            return null;
+        var result = new byte[plainLength];
+        for (var index = 0; index < result.Length; index++)
+            result[index] = (byte)(words[index / 4] >> ((index % 4) * 8));
+        return result;
+    }
+
+    var plain = DecryptXxtea(source.AsSpan(signature.Length), key)
+        ?? throw new InvalidDataException("XXTEA 解密失败");
+    Console.WriteLine($"源={source.Length}，XXTEA 明文={plain.Length}，前64={Convert.ToHexString(plain.AsSpan(0, Math.Min(64, plain.Length)))}");
+    Console.WriteLine("ASCII=" + System.Text.Encoding.ASCII.GetString(plain.AsSpan(0, Math.Min(128, plain.Length))).Replace('\0', '.'));
+    if (args.Length > optionIndex + 2)
+    {
+        var outputPath = Path.GetFullPath(args[optionIndex + 2]);
+        File.WriteAllBytes(outputPath, plain);
+        Console.WriteLine("已写入：" + outputPath);
+    }
+    return;
+}
+
+if (args.Contains("--gear-scan-probe"))
+{
+    var capturePath = args.SkipWhile(arg => arg != "--gear-scan-probe").Skip(1).FirstOrDefault()
+        ?? throw new ArgumentException("--gear-scan-probe 后必须提供 PCAPNG 路径");
+    var streams = PcapngPayloadExtractor.ExtractHexStreams(capturePath);
+    var payloads = streams.Select(Convert.FromHexString).Where(bytes => bytes.Length > 0).ToArray();
+    var lengths = payloads.Select(bytes => bytes.Length).Order().ToArray();
+    var totalBytes = lengths.Sum(length => (long)length);
+    var byteCounts = new long[256];
+    foreach (var payload in payloads)
+        foreach (var value in payload)
+            byteCounts[value]++;
+    var entropy = byteCounts.Where(count => count > 0).Sum(count =>
+    {
+        var probability = count / (double)totalBytes;
+        return -probability * Math.Log2(probability);
+    });
+    var printableBytes = byteCounts.Skip(0x20).Take(0x7F - 0x20).Sum();
+    var zeroBytes = byteCounts[0];
+    var exactLengthPrefixes = payloads.Count(bytes => bytes.Length >= 4 &&
+        (System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(bytes) == bytes.Length - 4
+         || System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(bytes) == bytes.Length - 4));
+    var knownCompressionHeaders = payloads.Count(bytes => bytes.Length >= 2 &&
+        ((bytes[0] == 0x1F && bytes[1] == 0x8B)
+         || (bytes[0] == 0x78 && bytes[1] is 0x01 or 0x5E or 0x9C or 0xDA)
+         || (bytes[0] == 0x50 && bytes[1] == 0x4B)));
+    var jsonStarts = payloads.Count(bytes => bytes[0] is (byte)'{' or (byte)'[');
+    var commonPrefixLength = payloads.Length == 0 ? 0 : Enumerable.Range(0, payloads.Min(bytes => bytes.Length))
+        .TakeWhile(index => payloads.All(bytes => bytes[index] == payloads[0][index]))
+        .Count();
+    Console.WriteLine($"流数量={payloads.Length}，载荷总量={totalBytes} 字节");
+    if (lengths.Length > 0)
+        Console.WriteLine($"长度：最小={lengths[0]}，中位={lengths[lengths.Length / 2]}，P90={lengths[(int)((lengths.Length - 1) * 0.9)]}，最大={lengths[^1]}");
+    Console.WriteLine($"字节熵={entropy:F4} bit/byte，零字节={zeroBytes / (double)Math.Max(1, totalBytes):P2}，可打印 ASCII={printableBytes / (double)Math.Max(1, totalBytes):P2}");
+    Console.WriteLine($"整流长度前缀={exactLengthPrefixes}，已知压缩头={knownCompressionHeaders}，JSON 起始={jsonStarts}，全体公共前缀={commonPrefixLength} 字节");
+    foreach (var entry in payloads.Select((bytes, index) => new
+             {
+                 Index = index,
+                 Length = bytes.Length,
+                 Mod16 = bytes.Length % 16,
+                 Prefix = Convert.ToHexString(bytes.AsSpan(0, Math.Min(16, bytes.Length))),
+             }).OrderByDescending(entry => entry.Length))
+        Console.WriteLine($"  #{entry.Index:D2} 长度={entry.Length,7} mod16={entry.Mod16,2} 前16={entry.Prefix}");
+
+    var tcpSegments = PcapngPayloadExtractor.ReadTcpSegments(capturePath);
+    static string Endpoint(uint address, ushort port) => $"{address:X8}:{port}";
+    static string DirectionKey(PcapngPayloadExtractor.CapturedTcpSegment segment) =>
+        $"{Endpoint(segment.SourceAddress, segment.SourcePort)}>{Endpoint(segment.DestinationAddress, segment.DestinationPort)}";
+    static (byte[] Data, int GapCount, int OverlapBytes) Reassemble(IEnumerable<PcapngPayloadExtractor.CapturedTcpSegment> source)
+    {
+        var ordered = source.Where(segment => segment.Payload.Length > 0).OrderBy(segment => segment.Sequence).ToArray();
+        if (ordered.Length == 0)
+            return ([], 0, 0);
+        using var output = new MemoryStream();
+        var next = ordered[0].Sequence;
+        var gaps = 0;
+        var overlaps = 0;
+        foreach (var segment in ordered)
+        {
+            if (segment.Sequence > next)
+            {
+                gaps++;
+                next = segment.Sequence;
+            }
+            var consumed = next > segment.Sequence ? checked((int)(next - segment.Sequence)) : 0;
+            overlaps += Math.Min(consumed, segment.Payload.Length);
+            if (consumed < segment.Payload.Length)
+            {
+                output.Write(segment.Payload, consumed, segment.Payload.Length - consumed);
+                next = segment.Sequence + checked((uint)segment.Payload.Length);
+            }
+        }
+        return (output.ToArray(), gaps, overlaps);
+    }
+
+    Console.WriteLine($"TCP 段={tcpSegments.Count}（含握手/纯 ACK），方向流如下：");
+    foreach (var direction in tcpSegments.GroupBy(DirectionKey).OrderByDescending(group => group.Sum(segment => segment.Payload.Length)))
+    {
+        var (data, gaps, overlaps) = Reassemble(direction);
+        var first = Convert.ToHexString(data.AsSpan(0, Math.Min(24, data.Length)));
+        var firstPacket = direction.Min(segment => segment.PacketIndex);
+        var lastPacket = direction.Max(segment => segment.PacketIndex);
+        Console.WriteLine($"  {direction.Key} 段={direction.Count(),4} 载荷={data.Length,7} gaps={gaps} overlaps={overlaps} packet={firstPacket}-{lastPacket} 前24={first}");
+    }
+
+    static void DescribeCollections(object? value, string path, int depth = 0)
+    {
+        if (depth > 8)
+            return;
+        if (value is Dictionary<string, object?> map)
+        {
+            var childMaps = map.Values.OfType<Dictionary<string, object?>>().ToArray();
+            var interesting = path.Contains("equip", StringComparison.OrdinalIgnoreCase)
+                || path.Contains("unit", StringComparison.OrdinalIgnoreCase)
+                || path.Contains("hero", StringComparison.OrdinalIgnoreCase)
+                || map.Count >= 100;
+            if (interesting && map.Count > 0)
+            {
+                var sampleKeys = childMaps.Take(5).SelectMany(child => child.Keys).Distinct().Take(30);
+                Console.WriteLine($"    {path} map={map.Count} 子项字段=[{string.Join(',', sampleKeys)}]");
+            }
+            if (childMaps.Length >= 10 && !path.EndsWith("account_data", StringComparison.Ordinal))
+                return;
+            foreach (var (key, child) in map)
+                DescribeCollections(child, path + "." + key, depth + 1);
+            return;
+        }
+        if (value is List<object?> list)
+        {
+            var childMaps = list.OfType<Dictionary<string, object?>>().ToArray();
+            var interesting = path.Contains("equip", StringComparison.OrdinalIgnoreCase)
+                || path.Contains("unit", StringComparison.OrdinalIgnoreCase)
+                || path.Contains("hero", StringComparison.OrdinalIgnoreCase)
+                || list.Count >= 100;
+            if (interesting)
+            {
+                var sampleKeys = childMaps.Take(5).SelectMany(child => child.Keys).Distinct().Take(30);
+                Console.WriteLine($"    {path} array={list.Count} 子项字段=[{string.Join(',', sampleKeys)}]");
+            }
+            for (var index = 0; index < list.Count; index++)
+                DescribeCollections(list[index], path + "[]", depth + 1);
+        }
+    }
+
+    Console.WriteLine("本地完整解码（TCP XOR → LZ4 → MessagePack）：");
+    var localPayloads = EpicSevenTransportDecoder.DecodeServerPayloads(capturePath);
+    for (var index = 0; index < localPayloads.Count; index++)
+    {
+        var message = Lz4BlockDecoder.DecodeGamePayload(localPayloads[index]);
+        var document = new MessagePackReader(message).ReadDocument();
+        var rootKeys = document is Dictionary<string, object?> rootMap
+            ? string.Join(',', rootMap.Keys)
+            : document?.GetType().Name ?? "null";
+        Console.WriteLine($"  #{index:D2} 压缩={localPayloads[index].Length}，解压={message.Length}，根={rootKeys}");
+        if (document is Dictionary<string, object?> response
+            && response.TryGetValue("account_data", out var accountValue)
+            && accountValue is Dictionary<string, object?> account)
+        {
+            foreach (var (key, child) in account.Where(entry =>
+                         entry.Key.Contains("equip", StringComparison.OrdinalIgnoreCase)
+                         || entry.Key.Contains("unit", StringComparison.OrdinalIgnoreCase)))
+            {
+                var count = child switch
+                {
+                    Dictionary<string, object?> childMap => childMap.Count,
+                    List<object?> childList => childList.Count,
+                    _ => -1,
+                };
+                var fields = child is Dictionary<string, object?> childDictionary
+                    ? childDictionary.Values.OfType<Dictionary<string, object?>>().Take(5)
+                        .SelectMany(item => item.Keys).Distinct().ToArray()
+                    : [];
+                Console.WriteLine($"    account_data.{key}: count={count} fields=[{string.Join(',', fields)}]");
+            }
+        }
+        DescribeCollections(document, "$" + index);
+    }
+
+    static byte[]? TryXxteaDecrypt(ReadOnlySpan<byte> encrypted, ReadOnlySpan<byte> key)
+    {
+        if (encrypted.Length < 8 || encrypted.Length % 4 != 0 || key.Length != 16)
+            return null;
+        var words = new uint[encrypted.Length / 4];
+        for (var index = 0; index < words.Length; index++)
+            words[index] = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(encrypted[(index * 4)..]);
+        Span<uint> keyWords = stackalloc uint[4];
+        for (var index = 0; index < keyWords.Length; index++)
+            keyWords[index] = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(key[(index * 4)..]);
+        const uint delta = 0x9E3779B9;
+        var n = words.Length - 1;
+        var rounds = 6 + 52 / (n + 1);
+        var sum = unchecked((uint)(rounds * delta));
+        var y = words[0];
+        while (sum != 0)
+        {
+            var e = (sum >> 2) & 3;
+            for (var p = n; p > 0; p--)
+            {
+                var z = words[p - 1];
+                var mix = unchecked((((z >> 5) ^ (y << 2)) + ((y >> 3) ^ (z << 4)))
+                    ^ ((sum ^ y) + (keyWords[(p & 3) ^ (int)e] ^ z)));
+                y = words[p] = unchecked(words[p] - mix);
+            }
+            var last = words[n];
+            var firstMix = unchecked((((last >> 5) ^ (y << 2)) + ((y >> 3) ^ (last << 4)))
+                ^ ((sum ^ y) + (keyWords[(int)e] ^ last)));
+            y = words[0] = unchecked(words[0] - firstMix);
+            sum = unchecked(sum - delta);
+        }
+        var plainLength = words[^1];
+        var maximumLength = (words.Length - 1) * 4;
+        if (plainLength > maximumLength || plainLength < maximumLength - 3)
+            return null;
+        var result = new byte[plainLength];
+        for (var index = 0; index < result.Length; index++)
+            result[index] = (byte)(words[index / 4] >> ((index % 4) * 8));
+        return result;
+    }
+
+    var baseKey = System.Text.Encoding.ASCII.GetBytes("89ABCDEF01234567");
+    var xxteaMatches = 0;
+    foreach (var payload in payloads)
+    {
+        for (var offset = 0; offset < Math.Min(32, payload.Length - 7); offset++)
+        {
+            var plain = TryXxteaDecrypt(payload.AsSpan(offset), baseKey);
+            if (plain is null)
+                continue;
+            xxteaMatches++;
+            Console.WriteLine($"BASE_ENCRYPT_KEY 命中：密文={payload.Length} offset={offset} 明文={plain.Length} 前24={Convert.ToHexString(plain.AsSpan(0, Math.Min(24, plain.Length)))}");
+        }
+    }
+    Console.WriteLine($"BASE_ENCRYPT_KEY 标准 XXTEA 有效候选={xxteaMatches}");
+    return;
+}
+
+if (args.Contains("--gear-scan"))
+{
+    var testRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-gear-scan-test-" + Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(testRoot);
+    try
+    {
+        var pcapngPath = Path.Combine(testRoot, "synthetic.pcapng");
+        static byte[] TcpFrame(uint sequence, uint acknowledgement, byte[] payload)
+        {
+            var frame = new byte[14 + 20 + 20 + payload.Length];
+            frame[12] = 0x08;
+            frame[13] = 0x00;
+            var ip = frame.AsSpan(14);
+            ip[0] = 0x45;
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(ip[2..], (ushort)(20 + 20 + payload.Length));
+            ip[8] = 64;
+            ip[9] = 6;
+            ip[12] = 10;
+            ip[15] = 1;
+            ip[16] = 10;
+            ip[19] = 2;
+            var tcp = ip[20..];
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(tcp, 3333);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(tcp[2..], 50000);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(tcp[4..], sequence);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(tcp[8..], acknowledgement);
+            tcp[12] = 0x50;
+            tcp[13] = 0x18;
+            payload.CopyTo(tcp[20..]);
+            return frame;
+        }
+
+        using (var stream = File.Create(pcapngPath))
+        using (var writer = new BinaryWriter(stream))
+        {
+            writer.Write(0x0A0D0D0Au);
+            writer.Write(28u);
+            writer.Write(0x1A2B3C4Du);
+            writer.Write((ushort)1);
+            writer.Write((ushort)0);
+            writer.Write(ulong.MaxValue);
+            writer.Write(28u);
+
+            writer.Write(1u);
+            writer.Write(20u);
+            writer.Write((ushort)1);
+            writer.Write((ushort)0);
+            writer.Write(65535u);
+            writer.Write(20u);
+
+            void WritePacket(byte[] packet)
+            {
+                var paddedLength = (packet.Length + 3) & ~3;
+                var blockLength = (uint)(32 + paddedLength);
+                writer.Write(6u);
+                writer.Write(blockLength);
+                writer.Write(0u);
+                writer.Write(0u);
+                writer.Write(0u);
+                writer.Write((uint)packet.Length);
+                writer.Write((uint)packet.Length);
+                writer.Write(packet);
+                writer.Write(new byte[paddedLength - packet.Length]);
+                writer.Write(blockLength);
+            }
+
+            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
+            WritePacket(TcpFrame(100, 900, [0xAA, 0xBB]));
+            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
+            WritePacket(TcpFrame(200, 901, []));
+        }
+
+        var streams = PcapngPayloadExtractor.ExtractHexStreams(pcapngPath);
+        if (streams.Count != 1 || streams[0] != "aabbccdd")
+            throw new InvalidOperationException("PCAPNG TCP 重组错误：" + string.Join(",", streams));
+
+        const string parserResponse = """
+            {
+              "status":"SUCCESS",
+              "data":[
+                {
+                  "id":123456,"p":9988,"g":5,"f":"set_speed","type":"weapon","level":85,
+                  "name":"测试之剑","mainStatValue":500,
+                  "op":[
+                    ["att",500],
+                    ["att_rate",0.08],
+                    ["speed",4],
+                    ["cri",0.05],
+                    ["cri_dmg",0.07],
+                    ["acc",0.08],
+                    ["att_rate",0.07,"r"]
+                  ]
+                },
+                {
+                  "id":654321,"p":0,"g":5,"f":"set_cri","type":"helm","level":88,
+                  "name":"应被过滤","mainStatValue":100,
+                  "op":[["max_hp",100],["speed",3],["cri",0.04],["att_rate",0.05],["def_rate",0.06]]
+                }
+              ],
+              "units":[
+                [{"id":1,"name":"短列表","g":5,"z":3}],
+                [{"id":42,"name":"测试英雄","g":6,"z":6},{"id":43,"name":"第二英雄","g":5,"z":4},{"id":44,"name":"五星五觉英雄","g":5,"z":5}]
+              ]
+            }
+            """;
+        var result = FribbelsGearExporter.ConvertParserResponse(parserResponse, 6);
+        if (result.ItemCount != 1 || result.HeroCount != 3 || result.LevelZeroItemCount != 0)
+            throw new InvalidOperationException("gear.txt 汇总数量错误");
+        using var export = System.Text.Json.JsonDocument.Parse(result.GearText);
+        var item = export.RootElement.GetProperty("items")[0];
+        if (item.GetProperty("gear").GetString() != "Weapon"
+            || item.GetProperty("rank").GetString() != "Epic"
+            || item.GetProperty("set").GetString() != "SpeedSet"
+            || item.GetProperty("enhance").GetInt32() != 6
+            || item.GetProperty("main").GetProperty("type").GetString() != "Attack"
+            || item.GetProperty("substats")[0].GetProperty("value").GetDouble() != 15
+            || item.GetProperty("substats")[0].GetProperty("rolls").GetInt32() != 2
+            || item.GetProperty("ingameId").GetInt32() != 123456
+            || item.GetProperty("ingameEquippedId").GetString() != "9988")
+            throw new InvalidOperationException("gear.txt 装备字段转换错误");
+        var hero = export.RootElement.GetProperty("heroes")[0];
+        if (hero.GetProperty("stars").GetInt32() != 6 || hero.GetProperty("awaken").GetInt32() != 6)
+            throw new InvalidOperationException("gear.txt 英雄字段转换错误");
+        var fiveStarResult = FribbelsGearExporter.ConvertParserResponse(
+            parserResponse,
+            6,
+            GearScanHeroFilter.AtLeastFiveStarsFiveAwakened);
+        var sixStarResult = FribbelsGearExporter.ConvertParserResponse(
+            parserResponse,
+            6,
+            GearScanHeroFilter.SixStarsSixAwakened);
+        if (fiveStarResult.HeroCount != 2 || sixStarResult.HeroCount != 1)
+            throw new InvalidOperationException(
+                $"英雄星级/觉醒过滤错误：5星5觉={fiveStarResult.HeroCount}，6星6觉={sixStarResult.HeroCount}");
+
+        byte[] messagePack = [0x81, 0xA3, (byte)'r', (byte)'e', (byte)'s', 0xA2, (byte)'o', (byte)'k'];
+        var lz4Payload = new byte[8 + 1 + messagePack.Length];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lz4Payload, messagePack.Length);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lz4Payload.AsSpan(4), 1 + messagePack.Length);
+        lz4Payload[8] = (byte)(messagePack.Length << 4);
+        messagePack.CopyTo(lz4Payload.AsSpan(9));
+        var transportStream = new byte[4 + lz4Payload.Length];
+        transportStream[2] = (byte)(lz4Payload.Length >> 8);
+        transportStream[3] = (byte)lz4Payload.Length;
+        lz4Payload.CopyTo(transportStream.AsSpan(4));
+        var decodedPayloads = EpicSevenTransportDecoder.DecodeStream(transportStream);
+        if (decodedPayloads.Count != 1 || !decodedPayloads[0].AsSpan().SequenceEqual(lz4Payload))
+            throw new InvalidOperationException("游戏 TCP 查询层解码错误");
+        var decodedMessage = Lz4BlockDecoder.DecodeGamePayload(decodedPayloads[0]);
+        if (!decodedMessage.AsSpan().SequenceEqual(messagePack)
+            || new MessagePackReader(decodedMessage).ReadDocument() is not Dictionary<string, object?> message
+            || message.GetValueOrDefault("res") as string != "ok")
+            throw new InvalidOperationException("游戏 LZ4/MessagePack 解码错误");
+
+        Console.WriteLine("装备扫描自检通过：PCAPNG/TCP 重组、传输解码、LZ4、MessagePack、装备转换、英雄过滤与 +6 过滤均正常");
+    }
+    finally
+    {
+        Directory.Delete(testRoot, recursive: true);
+    }
+    return;
+}
 
 if (args.Contains("--star-forge"))
 {
@@ -58,6 +615,13 @@ if (args.Contains("--config-smoke"))
                     var address = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     address.Text = "127.0.0.1:5555";
+                    var gearScanMinimum = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanMinimumEnhance",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    gearScanMinimum.GetType().GetProperty("SelectedValue")!.SetValue(gearScanMinimum, "+12");
+                    var gearScanHeroFilter = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanHeroFilter",
+                        System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
+                    gearScanHeroFilter.GetType().GetProperty("SelectedValue")!
+                        .SetValue(gearScanHeroFilter, "仅6星6觉醒");
                     var maxAutoEquipment = typeof(TiezhuToolbox.MainForm).GetField("_numAutoMaxEquipment",
                         System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(firstForm)!;
                     maxAutoEquipment.GetType().GetProperty("Value")!.SetValue(maxAutoEquipment, 17M);
@@ -110,6 +674,14 @@ if (args.Contains("--config-smoke"))
                 var level88Value = (decimal)loadedLevel88Threshold.GetType().GetProperty("Value")!.GetValue(loadedLevel88Threshold)!;
                 var loadedAddress = (Control)typeof(TiezhuToolbox.MainForm).GetField("txtAddress",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var loadedGearScanMinimum = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanMinimumEnhance",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var gearScanMinimumValue = loadedGearScanMinimum.GetType().GetProperty("SelectedValue")!
+                    .GetValue(loadedGearScanMinimum) as string;
+                var loadedGearScanHeroFilter = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanHeroFilter",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
+                var gearScanHeroFilterValue = loadedGearScanHeroFilter.GetType().GetProperty("SelectedValue")!
+                    .GetValue(loadedGearScanHeroFilter) as string;
                 var loadedMaxAutoEquipment = typeof(TiezhuToolbox.MainForm).GetField("_numAutoMaxEquipment",
                     System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(secondForm)!;
                 var maxAutoValue = (decimal)loadedMaxAutoEquipment.GetType().GetProperty("Value")!.GetValue(loadedMaxAutoEquipment)!;
@@ -159,7 +731,8 @@ if (args.Contains("--config-smoke"))
                     || starForgeMaximumValue != 77M || !loadedSecondEnabled
                     || loadedSecondStat != "生命值" || loadedSecondMinimum != 250M
                     || !loadedDisabledProfiles.Contains(persistedProfileKey)
-                    || loadedAddress.Text != "127.0.0.1:5555")
+                    || loadedAddress.Text != "127.0.0.1:5555" || gearScanMinimumValue != "+12"
+                    || gearScanHeroFilterValue != "仅6星6觉醒")
                     throw new InvalidOperationException("软件设置重载结果不一致");
             }
             catch (Exception ex)
@@ -307,7 +880,7 @@ if (args.Contains("--ui-smoke"))
                 ?? throw new InvalidOperationException("未找到主页签");
             var tabs = tabsField.GetValue(form) ?? throw new InvalidOperationException("主页签未初始化");
             var pages = tabs.GetType().GetProperty("Pages")?.GetValue(tabs) as System.Collections.ICollection;
-            if (pages?.Count != 5)
+            if (pages?.Count != 6)
                 throw new InvalidOperationException($"页签数量错误：{pages?.Count}");
 
             var selectedIndex = tabs.GetType().GetProperty("SelectedIndex")!;
@@ -395,6 +968,31 @@ if (args.Contains("--ui-smoke"))
 
             selectedIndex.SetValue(tabs, 1);
             Application.DoEvents();
+            CaptureTab("gear-scan");
+            var gearScanStart = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnGearScanStart",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanStop = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnGearScanStop",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanExport = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnGearScanExport",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanLog = (RichTextBox)typeof(TiezhuToolbox.MainForm).GetField("_gearScanLog",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanMinimum = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanMinimumEnhance",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanMinimumValue = gearScanMinimum.GetType().GetProperty("SelectedValue")!.GetValue(gearScanMinimum) as string;
+            var gearScanHeroFilter = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanHeroFilter",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanHeroFilterValue = gearScanHeroFilter.GetType().GetProperty("SelectedValue")!
+                .GetValue(gearScanHeroFilter) as string;
+            if (!gearScanStart.Enabled || gearScanStop.Enabled || gearScanExport.Enabled
+                || !gearScanLog.ReadOnly || gearScanMinimumValue != "+6"
+                || gearScanHeroFilterValue != "全部英雄" || timer.Enabled)
+                throw new InvalidOperationException("装备扫描页初始状态不正确");
+            if (gearScanLog.Right < gearScanLog.Parent!.ClientSize.Width - gearScanLog.Parent.Padding.Right - 2)
+                throw new InvalidOperationException("装备扫描日志未填满内容区");
+
+            selectedIndex.SetValue(tabs, 2);
+            Application.DoEvents();
             CaptureTab("auto-enhance");
             var autoStart = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnAutoStart",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
@@ -406,7 +1004,7 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException(
                     $"自动强化日志未填满内容区：日志={autoLog.Bounds}，父容器={autoLog.Parent.ClientSize}");
 
-            selectedIndex.SetValue(tabs, 2);
+            selectedIndex.SetValue(tabs, 3);
             Application.DoEvents();
             CaptureTab("star-forge");
             var starForgeStart = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnStarForgeStart",
@@ -421,7 +1019,7 @@ if (args.Contains("--ui-smoke"))
             if (starForgeLog.Right < starForgeLog.Parent!.ClientSize.Width - starForgeLog.Parent.Padding.Right - 2)
                 throw new InvalidOperationException("星之铁匠铺日志未填满内容区");
 
-            selectedIndex.SetValue(tabs, 3);
+            selectedIndex.SetValue(tabs, 4);
             Application.DoEvents();
             CaptureTab("demand-analysis");
             var demandBrowser = typeof(TiezhuToolbox.MainForm).GetField("_demandBrowserControl",
@@ -477,7 +1075,7 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException("需求子类开关没有更新匹配过滤配置");
             if (timer.Enabled)
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
-            selectedIndex.SetValue(tabs, 4);
+            selectedIndex.SetValue(tabs, 5);
             Application.DoEvents();
             var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "numLevel88Threshold", "comboRecognitionHotKey", "numRecognitionInterval" }
                 .Select(name => (Control)typeof(TiezhuToolbox.MainForm).GetField(name,
@@ -561,7 +1159,7 @@ if (args.Contains("--ui-smoke"))
         throw new TimeoutException("界面冒烟测试超时");
     if (uiError != null)
         throw new InvalidOperationException("界面冒烟测试失败", uiError);
-    Console.WriteLine("界面冒烟测试通过：5 个页签，23 个套装需求");
+    Console.WriteLine("界面冒烟测试通过：6 个页签，23 个套装需求");
     return;
 }
 

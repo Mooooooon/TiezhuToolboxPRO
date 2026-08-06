@@ -38,6 +38,7 @@ public partial class MainForm
             Padding = new Padding(0),
         };
         _equipmentTab = new AntdUI.TabPage { Text = "装备强化", BackColor = Color.White };
+        _gearScanTab = new AntdUI.TabPage { Text = "装备扫描", BackColor = Color.FromArgb(245, 246, 248) };
         _autoEnhanceTab = new AntdUI.TabPage { Text = "自动强化", BackColor = Color.FromArgb(245, 246, 248) };
         _starForgeTab = new AntdUI.TabPage { Text = "星之铁匠铺", BackColor = Color.FromArgb(245, 246, 248) };
         var demandTab = new AntdUI.TabPage { Text = "需求分析", BackColor = Color.White };
@@ -61,6 +62,10 @@ public partial class MainForm
         demandTab.Controls.Add(_demandBrowserControl);
         _demandBrowserControl.ApplyInitialDpiScale(_layoutDpi);
 
+        var gearScanContent = CreateGearScanContent();
+        _gearScanTab.Controls.Add(gearScanContent);
+        ScaleRuntimePage(gearScanContent);
+
         var autoEnhanceContent = CreateAutoEnhanceContent();
         _autoEnhanceTab.Controls.Add(autoEnhanceContent);
         ScaleRuntimePage(autoEnhanceContent);
@@ -74,6 +79,7 @@ public partial class MainForm
         ScaleRuntimePage(settingsContent);
 
         _mainTabs.Pages.Add(_equipmentTab);
+        _mainTabs.Pages.Add(_gearScanTab);
         _mainTabs.Pages.Add(_autoEnhanceTab);
         _mainTabs.Pages.Add(_starForgeTab);
         _mainTabs.Pages.Add(demandTab);
@@ -389,6 +395,8 @@ public partial class MainForm
             numRecognitionInterval.Value = _settings.RecognitionIntervalSeconds;
             continuousRecognitionTimer.Interval = Math.Max(100, (int)(_settings.RecognitionIntervalSeconds * 1000));
             txtAddress.Text = _settings.AdbAddress;
+            _comboGearScanMinimumEnhance.SelectedValue = $"+{_settings.GearScanMinimumEnhance}";
+            _comboGearScanHeroFilter.SelectedValue = GetGearScanHeroFilterText(_settings.GearScanHeroFilterMode);
             _numAutoMaxEquipment.Value = _settings.AutoEnhanceMaxEquipment;
             _comboAutoDisposalMethod.SelectedValue = _settings.AutoEnhanceDisposalMethod;
             _numHeroMatchThreshold.Value = _settings.MinimumDemandMatchScore;
@@ -425,6 +433,8 @@ public partial class MainForm
         _settings.ContinuousRecognition = chkContinuousRecognition.Checked;
         _settings.RecognitionIntervalSeconds = numRecognitionInterval.Value;
         _settings.AdbAddress = txtAddress.Text.Trim();
+        _settings.GearScanMinimumEnhance = GetGearScanMinimumEnhance();
+        _settings.GearScanHeroFilterMode = GetGearScanHeroFilter();
         _settings.AutoEnhanceMaxEquipment = (int)_numAutoMaxEquipment.Value;
         _settings.AutoEnhanceDisposalMethod = _comboAutoDisposalMethod.SelectedValue as string
             ?? _comboAutoDisposalMethod.Text;
@@ -469,6 +479,8 @@ public partial class MainForm
         _settings.ContinuousRecognition = defaults.ContinuousRecognition;
         _settings.RecognitionIntervalSeconds = defaults.RecognitionIntervalSeconds;
         _settings.AdbAddress = defaults.AdbAddress;
+        _settings.GearScanMinimumEnhance = defaults.GearScanMinimumEnhance;
+        _settings.GearScanHeroFilterMode = defaults.GearScanHeroFilterMode;
         _settings.AutoEnhanceMaxEquipment = defaults.AutoEnhanceMaxEquipment;
         _settings.AutoEnhanceDisposalMethod = defaults.AutoEnhanceDisposalMethod;
         _settings.MinimumDemandMatchScore = defaults.MinimumDemandMatchScore;
@@ -532,6 +544,7 @@ public partial class MainForm
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        RequestGearScanShutdown();
         _autoEnhanceCancellation?.Cancel();
         _starForgeCancellation?.Cancel();
         base.OnFormClosing(e);
