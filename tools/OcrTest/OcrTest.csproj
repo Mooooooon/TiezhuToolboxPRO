@@ -21,6 +21,10 @@
       <Link>Assets\HeroData\demand-profiles.json</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\..\src\TiezhuToolbox\Assets\OptimizerData\*.json">
+      <Link>Assets\OptimizerData\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

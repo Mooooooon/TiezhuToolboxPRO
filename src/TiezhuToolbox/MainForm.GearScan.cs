@@ -1,4 +1,5 @@
 using TiezhuToolbox.Modules.GearScan;
+using TiezhuToolbox.Modules.Account;
 
 namespace TiezhuToolbox;
 
@@ -8,6 +9,7 @@ public partial class MainForm
     private AntdUI.Button _btnGearScanStart = null!;
     private AntdUI.Button _btnGearScanStop = null!;
     private AntdUI.Button _btnGearScanExport = null!;
+    private AntdUI.Button _btnGearScanImport = null!;
     private AntdUI.Button _btnGearScanClearLog = null!;
     private AntdUI.Select _comboGearScanMinimumEnhance = null!;
     private AntdUI.Select _comboGearScanHeroFilter = null!;
@@ -17,6 +19,7 @@ public partial class MainForm
     private RichTextBox _gearScanLog = null!;
     private GearScanCapture? _gearScanCapture;
     private GearScanResult? _gearScanResult;
+    private bool _gearScanImportBlocked;
     private CancellationTokenSource? _gearScanCancellation;
     private int _activeGearScanMinimumEnhance = 6;
     private GearScanHeroFilter _activeGearScanHeroFilter = GearScanHeroFilter.All;
@@ -58,7 +61,7 @@ public partial class MainForm
         };
         var hint = new Label
         {
-            Text = "关闭游戏后开始扫描，再启动第七史诗并进入大厅；如需仓库装备，请在停止前打开装备仓库一次。",
+            Text = "彻底关闭游戏（含后台）后开始扫描，再启动第七史诗并进入大厅；如需仓库装备，请在停止前打开装备仓库一次。",
             ForeColor = Color.FromArgb(95, 99, 104),
             Location = new Point(24, 55),
             Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
@@ -162,12 +165,24 @@ public partial class MainForm
             Enabled = false,
         };
         _btnGearScanExport.Click += btnGearScanExport_Click;
+        _btnGearScanImport = new AntdUI.Button
+        {
+            Text = "导入到本软件",
+            Anchor = AnchorStyles.Top | AnchorStyles.Right,
+            Location = new Point(984, 164),
+            Size = new Size(126, 34),
+            Radius = 6,
+            Enabled = false,
+            Type = AntdUI.TTypeMini.Primary,
+        };
+        _btnGearScanImport.Click += btnGearScanImport_Click;
 
         controlCard.Resize += (_, _) =>
         {
             hint.Width = Math.Max(ScalePixel(360), controlCard.ClientSize.Width - ScalePixel(48));
             privacy.Width = hint.Width;
-            _btnGearScanExport.Left = controlCard.ClientSize.Width - ScalePixel(142);
+            _btnGearScanImport.Left = controlCard.ClientSize.Width - ScalePixel(148);
+            _btnGearScanExport.Left = _btnGearScanImport.Left - ScalePixel(128);
             _btnGearScanStop.Left = _btnGearScanExport.Left - ScalePixel(120);
             _btnGearScanStart.Left = _btnGearScanStop.Left - ScalePixel(112);
         };
@@ -176,7 +191,7 @@ public partial class MainForm
             title, hint, privacy, enhanceLabel, _comboGearScanMinimumEnhance,
             heroFilterLabel, _comboGearScanHeroFilter,
             _chkGearScanKeepCapture,
-            _btnGearScanStart, _btnGearScanStop, _btnGearScanExport,
+            _btnGearScanStart, _btnGearScanStop, _btnGearScanExport, _btnGearScanImport,
         });
 
         var logCard = new Panel
@@ -264,6 +279,7 @@ public partial class MainForm
         }
 
         _gearScanResult = null;
+        _gearScanImportBlocked = false;
         _activeGearScanMinimumEnhance = GetGearScanMinimumEnhance();
         _activeGearScanHeroFilter = GetGearScanHeroFilter();
         _gearScanCancellation?.Dispose();
@@ -316,7 +332,22 @@ public partial class MainForm
                     _activeGearScanHeroFilter),
                 _gearScanCancellation.Token);
             succeeded = true;
-            _lblGearScanStats.Text = $"装备 {_gearScanResult.ItemCount} · 英雄 {_gearScanResult.HeroCount}";
+            _lblGearScanStats.Text = $"完整装备 {_gearScanResult.FullItemCount} · 英雄 {_gearScanResult.FullHeroCount}";
+            try
+            {
+                var preview = AccountImportService.Parse(_gearScanResult.GearText, "扫描预验证");
+                var unknownHeroes = preview.Heroes.Count(hero => !_accountWorkspace.GameData.TryGetHero(hero.Code, out _));
+                var unknownArtifacts = preview.Heroes.Count(hero => !string.IsNullOrWhiteSpace(hero.ArtifactCode)
+                    && !_accountWorkspace.GameData.TryGetArtifact(hero.ArtifactCode, out _));
+                AppendGearScanLog(
+                    $"导入预验证通过：养成字段提示 {preview.Warnings.Count} 条，英雄目录未覆盖 {unknownHeroes} 名，神器目录未覆盖 {unknownArtifacts} 件。",
+                    unknownHeroes + unknownArtifacts + preview.Warnings.Count == 0 ? AdviceContinueColor : AdviceGambleColor);
+            }
+            catch (Exception validationError)
+            {
+                AppendGearScanLog("本软件导入数据验证失败（仍可导出 Fribbels）：" + validationError.Message, AdviceGiveUpColor);
+                _gearScanImportBlocked = true;
+            }
             var levelZero = _gearScanResult.LevelZeroItemCount > 0
                 ? $"；其中 {_gearScanResult.LevelZeroItemCount} 件等级为 0，导入 Fribbels 后需手动修正"
                 : string.Empty;
@@ -380,6 +411,32 @@ public partial class MainForm
         }
     }
 
+    private void btnGearScanImport_Click(object? sender, EventArgs e)
+    {
+        if (_gearScanResult == null || _gearScanImportBlocked)
+            return;
+        var confirm = MessageBox.Show(this,
+            $"将用本次扫描的 {_gearScanResult.ItemCount} 件装备、{_gearScanResult.HeroCount} 名英雄" +
+            $"（{GetGearScanHeroFilterText(_activeGearScanHeroFilter)}、最低强化 +{_activeGearScanMinimumEnhance}）替换当前账号快照。\n" +
+            "英雄优先级、阵型、专属和神器设置会按英雄 ID 保留。是否继续？",
+            "确认导入账号快照", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (confirm != DialogResult.Yes)
+            return;
+        try
+        {
+            var snapshot = _accountWorkspace.Import(_gearScanResult.GearText, "本地装备扫描", allowMissingOwners: true);
+            AppendGearScanLog($"已导入本软件：{snapshot.Items.Count} 件装备、{snapshot.Heroes.Count} 名英雄" +
+                "（已套用最低强化与英雄过滤）。", AdviceContinueColor);
+            if (snapshot.Warnings.Count > 0)
+                AppendGearScanLog($"导入包含 {snapshot.Warnings.Count} 条提示，可在英雄页查看未覆盖状态。", AdviceGambleColor);
+            UpdateStatus("账号快照导入完成");
+        }
+        catch (Exception ex)
+        {
+            AppendGearScanLog("导入失败，原账号快照未改变：" + ex.Message, AdviceGiveUpColor);
+        }
+    }
+
     private int GetGearScanMinimumEnhance()
     {
         var value = _comboGearScanMinimumEnhance.SelectedValue as string ?? _comboGearScanMinimumEnhance.Text;
@@ -410,6 +467,8 @@ public partial class MainForm
         _btnGearScanStart.Enabled = !running && !processing;
         _btnGearScanStop.Enabled = running && !processing;
         _btnGearScanExport.Enabled = !running && !processing && _gearScanResult != null;
+        _btnGearScanImport.Enabled = !running && !processing && _gearScanResult != null
+            && !_gearScanImportBlocked;
         _comboGearScanMinimumEnhance.Enabled = !running;
         _comboGearScanHeroFilter.Enabled = !running;
         _lblGearScanState.Text = state;

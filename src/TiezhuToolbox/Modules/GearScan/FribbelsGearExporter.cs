@@ -8,7 +8,9 @@ public sealed record GearScanResult(
     int ItemCount,
     int HeroCount,
     int LevelZeroItemCount,
-    int InferredLevelItemCount = 0);
+    int InferredLevelItemCount = 0,
+    int FullItemCount = 0,
+    int FullHeroCount = 0);
 
 public enum GearScanHeroFilter
 {
@@ -71,20 +73,24 @@ public sealed class FribbelsGearExporter
         var root = JsonNode.Parse(responseText) as JsonObject
             ?? throw new InvalidDataException("测试响应不是 JSON 对象");
         var items = new JsonArray();
+        var allItems = new JsonArray();
         foreach (var node in root["data"] as JsonArray ?? [])
         {
             if (node is not JsonObject raw || string.IsNullOrWhiteSpace(GetString(raw, "f")))
                 continue;
             var item = (JsonObject)raw.DeepClone();
             ConvertItem(item);
+            allItems.Add(item.DeepClone());
             if (GetInt(item, "enhance") >= minimumEnhance)
                 items.Add(item);
         }
         var heroes = ConvertHeroes(root["units"] as JsonArray, heroFilter);
+        var allHeroes = ConvertHeroes(root["units"] as JsonArray, GearScanHeroFilter.All);
         var text = new JsonObject { ["items"] = items, ["heroes"] = heroes }
             .ToJsonString(new JsonSerializerOptions { WriteIndented = false });
         return new GearScanResult(text, items.Count, heroes.Count,
-            items.Count(node => node is JsonObject item && GetInt(item, "level") == 0));
+            items.Count(node => node is JsonObject item && GetInt(item, "level") == 0),
+            FullItemCount: allItems.Count, FullHeroCount: allHeroes.Count);
     }
 
     private static void ConvertItem(JsonObject item)
@@ -113,7 +119,9 @@ public sealed class FribbelsGearExporter
         item["substats"] = ConvertSubstats(operations);
 
         item["ingameId"] = item["id"]?.DeepClone();
-        item["ingameEquippedId"] = item["p"]?.ToString() ?? string.Empty;
+        var owner = item["p"]?.ToString() ?? string.Empty;
+        item["storage"] = owner == "-1";
+        item["ingameEquippedId"] = owner is "0" or "-1" ? string.Empty : owner;
     }
 
     private static JsonObject ConvertMainStat(JsonObject item, JsonArray operations)

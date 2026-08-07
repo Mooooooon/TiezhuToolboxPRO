@@ -36,6 +36,8 @@ src/TiezhuToolbox/            主程序（WinForms）
 ├── Modules/StarForge/        星之铁匠铺四副属性 OCR、目标匹配和 ADB 自动变更闭环
 ├── Modules/GearScan/         Windows pktmon 抓包、PCAPNG/TCP 重组、游戏循环 XOR 传输层解码、
 │                             LZ4/MessagePack 本地解析与 Fribbels gear.txt 导出；不调用远程解析服务。
+│   └── HeroExpTable.cs       英雄累计经验（units.exp）→ 等级换算：按自然星级（取自
+│                             hero-catalog.json 的 Rarity）查 2-5 星经验表，再按当前星级封顶
 ├── Modules/Recommend/
 │   ├── DemandDatabase.cs     只读加载并校验内置 demand-profiles.json，不联网、不使用用户覆盖。
 │   ├── DemandDataModels.cs   套装、属性子类、英雄完整配装和八维权重模型。
@@ -60,6 +62,8 @@ src/TiezhuToolbox/            主程序（WinForms）
 
 tools/OcrTest/                OCR 回归工具；--demand-data 校验静态数据，--synthetic 验证匹配与强化算法
 tools/TemplateGenerator/      从截图提取数字模板的脚手架（按需改坐标用）
+tools/GenerateHeroNamesZh.ps1 生成 Assets/OptimizerData/hero-names-zh.json（code→英雄中文名，需用 pwsh 7 运行）；
+                              优先级：demand-profiles.json 人工维护名 > Fribbels 简中 translation.json
 ```
 
 ## 构建与验证
@@ -72,7 +76,8 @@ cd tools/OcrTest && dotnet run -- --demand-data          # 23套装/171子类/64
 cd tools/OcrTest && dotnet run -- --synthetic            # 权重匹配、右三满值、固定主属性和强化建议自检
 cd tools/OcrTest && dotnet run -- --gear-scan            # 合成 PCAPNG、TCP/XOR、LZ4/MessagePack 与 gear.txt 转换
 cd tools/OcrTest && dotnet run -- --gear-scan-local <capture.pcapng> [gear.txt] # 保留抓包本地回放，可选与基准核心字段比对
-cd tools/OcrTest && dotnet run -- --ui-smoke             # 六页签、需求浏览器、离开装备页暂停持续识别
+cd tools/OcrTest && dotnet run -- --gear-scan-dump-keys <capture.pcapng> # 列出抓包各响应的顶层字段（排障用）
+cd tools/OcrTest && dotnet run -- --ui-smoke             # 九页签、英雄列表头像渲染、需求浏览器、离开装备页暂停持续识别
 cd tools/OcrTest && dotnet run -- --config-smoke         # 软件设置持久化/恢复默认
 dotnet publish src/TiezhuToolbox -c Release              # 单文件自包含发布
 ```
@@ -90,6 +95,8 @@ dotnet publish src/TiezhuToolbox -c Release              # 单文件自包含发
 - `demand-profiles.json` 是唯一需求真源，后续只通过仓库提交人工维护；禁止重新加入运行时联网覆盖或用户英雄配置。
 - 右三主属性按满值参与用途匹配但不进入装备分/重铸分：百分比、命中、抗性65，暴击60×1.5，暴伤70×1.125，速度45×2；85按90预估，88/90同档。
 - 装备扫描遇到静态映射未收录或等级为0的活动装备时，按不可重铸的88级装备修复；+15主属性固定档为攻击515、生命2765、防御310、百分比/命中/抗性65、暴击60、暴伤70、速度45。
-- 装备扫描的英雄过滤仅影响 `gear.txt` 的 `heroes` 列表，不删除装备，也不改动装备的 `ingameEquippedId` 归属字段；默认导出全部英雄。
+- 装备扫描的英雄过滤仅影响 `gear.txt` 的 `heroes` 列表，不删除装备，也不改动装备的 `ingameEquippedId` 归属字段；默认导出全部英雄。最低强化与英雄过滤同时作用于导出的 `gear.txt` 和"导入到本软件"（两者数量一致）；归属被过滤英雄的装备保留归属 ID，导入时用 `allowMissingOwners` 跳过逐条提示。游戏 units 数据不含等级字段，英雄等级由 `exp` 按 `HeroExpTable` 换算后写入快照。
+- 全量账号数据只在冷启动登录响应的 `account_data` 字段中；`account_data_update` 只是大厅增量（不含 units/equips）。游戏后台恢复不会重发全量，此时解析会报"只抓到游戏大厅增量数据"，需彻底结束游戏进程后重扫。
 - 套装名必须与游戏内简体中文一致（破灭/守护/生命值/抵抗/夹攻等），否则无法匹配 OCR 的 SetName。
+- 英雄页中文显示走 `StaticGameData.DisplayHeroName`（hero-names-zh.json）与 `HeroAttributeCatalog`/`HeroRoleCatalog`（属性/职业小字典，数据里自然属性写作 wind、精灵师写作 manauser）；gear.txt 导出仍用英文名，不要汉化导出数据。
 - `screenshots/`、`bin/`、`obj/` 已在 .gitignore；运行时会额外生成 `*_debug.png`（识别框标注）和 `*_level.png`（等级数字裁剪）调试图。

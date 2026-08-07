@@ -1,0 +1,2549 @@
+[
+  {
+    "Code": "efw21",
+    "Name": "A Little Queen's Huge Crown",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk23",
+    "Name": "A Precious Connection",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef412",
+    "Name": "A Song for Everybody",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 15.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef504",
+    "Name": "A Symbol of Unity",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm01",
+    "Name": "Abyssal Crown",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk04",
+    "Name": "Adamant Shield",
+    "Role": "knight",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr17",
+    "Name": "Air-to-Surface Missile: MISHA",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa12",
+    "Name": "Alabastron",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw13",
+    "Name": "Alencinox's Wrath",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa07",
+    "Name": "Alexa's Basket",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef307",
+    "Name": "Alsacian Spear",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 4.0,
+    "BaseHealth": 58.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr07",
+    "Name": "Ambrote",
+    "Role": "ranger",
+    "Rarity": 4,
+    "BaseAttack": 15.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr24",
+    "Name": "An Offer You Can't Refuse",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk14",
+    "Name": "Ancient Dragon's Legacy",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef304",
+    "Name": "Ancient Sheath",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 14.0,
+    "BaseHealth": 21.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr11",
+    "Name": "Andre's Crossbow",
+    "Role": "ranger",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw23",
+    "Name": "Anti-Magic Mask",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef314",
+    "Name": "Aqua Rose",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 1.0,
+    "BaseHealth": 65.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef315",
+    "Name": "Ascending Axe",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 18.0,
+    "BaseHealth": 7.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef306",
+    "Name": "Atma's Portal",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 4.0,
+    "BaseHealth": 58.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk03",
+    "Name": "Aurius",
+    "Role": "knight",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw22",
+    "Name": "Azure Comet",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm15",
+    "Name": "Barthez's Orbuculum",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef507",
+    "Name": "Bastion of Hope",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk09",
+    "Name": "Bastion of Perlutia",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa24",
+    "Name": "Beguiling Wings",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw30",
+    "Name": "Benimaru's Tachi",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef104",
+    "Name": "Biting Wind Star",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 12.0,
+    "BaseHealth": 4.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm16",
+    "Name": "Black Hand of the Goddess",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef425",
+    "Name": "Blazing Full Moon Trophy",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef408",
+    "Name": "Blessings of Camaraderie",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef506",
+    "Name": "Blood-Seared Moon",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef205",
+    "Name": "Bloodbead Dagger",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 16.0,
+    "BaseHealth": 6.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr01",
+    "Name": "Bloodstone",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm14",
+    "Name": "Bloody Rose",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw07",
+    "Name": "Border Coin",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef426",
+    "Name": "Brilliant Confidence",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk20",
+    "Name": "Broken Will of the Priest",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef318",
+    "Name": "Butterfly Mandolin",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 9.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef401",
+    "Name": "Card of Small Miracles",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh06",
+    "Name": "Celestine",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw18",
+    "Name": "Champion's Trophy",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm07",
+    "Name": "Chatty",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 18.0,
+    "BaseHealth": 43.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw17",
+    "Name": "Circus Fantasia",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw16",
+    "Name": "Cradle of Life",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw09",
+    "Name": "Creation & Destruction",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm18",
+    "Name": "Crimson Moon of Nightmares",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw10",
+    "Name": "Crimson Seed",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk13",
+    "Name": "Crown of Glory",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef503",
+    "Name": "Cruel Mischief",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef309",
+    "Name": "Cursed Compass",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 16.0,
+    "BaseHealth": 14.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef434",
+    "Name": "Cutie Pando",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa25",
+    "Name": "Dark Blood Keeper",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef317",
+    "Name": "Daydream Joker",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 16.0,
+    "BaseHealth": 14.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef420",
+    "Name": "Days of Destiny",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef201",
+    "Name": "Deadly Sword",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 12.0,
+    "BaseHealth": 19.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef102",
+    "Name": "Demon's Pistol",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 12.0,
+    "BaseHealth": 4.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef312",
+    "Name": "Devil's Brand",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 4.0,
+    "BaseHealth": 58.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm13",
+    "Name": "Dignus Orb",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh12",
+    "Name": "Doctor's Bag",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa16",
+    "Name": "Double-Edged Decrescent",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw11",
+    "Name": "Draco Plate",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef103",
+    "Name": "Dream Scroll",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 2.0,
+    "BaseHealth": 39.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw02",
+    "Name": "Durandal",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 18.0,
+    "BaseHealth": 43.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa05",
+    "Name": "Dust Devil",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr12",
+    "Name": "Dux Noctis",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef302",
+    "Name": "Egg of Delusion",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 16.0,
+    "BaseHealth": 14.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw03",
+    "Name": "El's Fist",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk02",
+    "Name": "Elbris Ritual Sword",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr25",
+    "Name": "Elegiac Candles",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef202",
+    "Name": "Elf's Bow",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 16.0,
+    "BaseHealth": 6.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa04",
+    "Name": "Elyha's Knife",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef106",
+    "Name": "Enhanced Gauntlet",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 2.0,
+    "BaseHealth": 39.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef319",
+    "Name": "Envoy's Pipe",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 4.0,
+    "BaseHealth": 58.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh08",
+    "Name": "Eternus",
+    "Role": "manauser",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm02",
+    "Name": "Etica's Scepter",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 18.0,
+    "BaseHealth": 43.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh17",
+    "Name": "EXIF Detective (E.d.) Gadget",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef316",
+    "Name": "Exorcist's Tonfa",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 16.0,
+    "BaseHealth": 14.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm19",
+    "Name": "Fairy Tale for a Nightmare",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef204",
+    "Name": "Fairy's Grimoire",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 3.0,
+    "BaseHealth": 51.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh18",
+    "Name": "Fan of Light and Dark",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef206",
+    "Name": "Firm Shield",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 2.0,
+    "BaseHealth": 41.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh15",
+    "Name": "Flawless Garments",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw15",
+    "Name": "Flower Shower",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef321",
+    "Name": "Forest Totem",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 1.0,
+    "BaseHealth": 65.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm28",
+    "Name": "Frame of Light",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw28",
+    "Name": "Fullmetals Automail",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr19",
+    "Name": "Glo-Wings 21",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa19",
+    "Name": "Goblet of Oath",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef313",
+    "Name": "Goblin's Lamp",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 9.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef411",
+    "Name": "Golden Cocoa Cookie",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw31",
+    "Name": "Golden Rose",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef301",
+    "Name": "Grail of Blood",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 14.0,
+    "BaseHealth": 21.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh14",
+    "Name": "Guardian Ice Crystals",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef506",
+    "Name": "Guide to a Decision",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr13",
+    "Name": "Guiding Light",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw04",
+    "Name": "Hell Cutter",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk05",
+    "Name": "Hilag Lance",
+    "Role": "knight",
+    "Rarity": 4,
+    "BaseAttack": 10.0,
+    "BaseHealth": 55.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk01",
+    "Name": "Holy Sacrifice",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa22",
+    "Name": "Hostess of the Banquet",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh07",
+    "Name": "Idol's Cheer",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm08",
+    "Name": "Iela Violin",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 14.0,
+    "BaseHealth": 51.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm26",
+    "Name": "Ignition Cloth Gloves",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef428",
+    "Name": "III. The Empress",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw26",
+    "Name": "Indestructible Gaiters",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr03",
+    "Name": "Infinity Basket",
+    "Role": "ranger",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr08",
+    "Name": "Iron Fan",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef429",
+    "Name": "IV. The Emperor",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw25",
+    "Name": "Jack-O's Symbol",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw08",
+    "Name": "Junkyard Dog",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk07",
+    "Name": "Justice for All",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm04",
+    "Name": "Kal'adra",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm20",
+    "Name": "Knowledge Seed",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef308",
+    "Name": "Labyrinth Cube",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 9.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm17",
+    "Name": "Last Teatime",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef402",
+    "Name": "Love Potion",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh05",
+    "Name": "Magaraha's Tome",
+    "Role": "manauser",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm23",
+    "Name": "Magic for Friends",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa13",
+    "Name": "Manica of Control",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk18",
+    "Name": "Mature Sunglasses",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw14",
+    "Name": "Merciless Glutton",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef406",
+    "Name": "Midnight Bloom",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef311",
+    "Name": "Mighty Yaksha",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 9.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa03",
+    "Name": "Moonlight Dreamblade",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef415",
+    "Name": "Moonlight's Vestige",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr14",
+    "Name": "Ms. Confille",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm10",
+    "Name": "Necro & Undine",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef410",
+    "Name": "New Year Cookies",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk06",
+    "Name": "Noble Oath",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef427",
+    "Name": "Nostalgic Music Box",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef322",
+    "Name": "Oath Key",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 12.0,
+    "BaseHealth": 28.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef423",
+    "Name": "Official Levulin Beach Volleyball",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr26",
+    "Name": "Old Gardening Shears",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef405",
+    "Name": "One Year of Gratitude",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr06",
+    "Name": "Otherworldly Machinery",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef435",
+    "Name": "Our Beautiful Seasons",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef508",
+    "Name": "P.O.S",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef432",
+    "Name": "Prelude to a New Era",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 15.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef403",
+    "Name": "Portrait of the Saviors",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 15.0,
+    "BaseHealth": 36.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw32",
+    "Name": "Prayer of Solitude",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef501",
+    "Name": "Proof of Valor",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef303",
+    "Name": "Prophetic Candlestick",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 14.0,
+    "BaseHealth": 21.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw24",
+    "Name": "Pure White Trust",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm09",
+    "Name": "Radiant Forever",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef404",
+    "Name": "Rainbow Scale",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef305",
+    "Name": "Ranon's Memorandum",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 6.0,
+    "BaseHealth": 51.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef424",
+    "Name": "Records of Unity",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr10",
+    "Name": "Reingar's Special Drink",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef409",
+    "Name": "Resolute Soldier Series",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa01",
+    "Name": "Rhianna & Luciella",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk12",
+    "Name": "Rise of a Monarch",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk19",
+    "Name": "Rocket Punch Gauntlet",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh01",
+    "Name": "Rod of Amaryllis",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr05",
+    "Name": "Rosa Hargana",
+    "Role": "ranger",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh16",
+    "Name": "Sacred Tree Branch",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw20",
+    "Name": "Samsara Prayer Beads",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa06",
+    "Name": "Santa Muerte",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr04",
+    "Name": "Sashe Ithanes",
+    "Role": "ranger",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm25",
+    "Name": "Scroll of Shadows",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr22",
+    "Name": "Seal of Capture",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa14",
+    "Name": "Secret Art - Storm Sword",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa23",
+    "Name": "Seductive Flower",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw12",
+    "Name": "Sepulcrum",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm22",
+    "Name": "Severed Horn Wand",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr20",
+    "Name": "Sharpshooters Handgun",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa15",
+    "Name": "Shepherd of the Hollow",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa10",
+    "Name": "Shepherds of Chaos",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh02",
+    "Name": "Shimadra Staff",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw01",
+    "Name": "Sigurd Scythe",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa11",
+    "Name": "Silver Rain",
+    "Role": "assassin",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm05",
+    "Name": "Sira-Ren",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw19",
+    "Name": "Snow Crystal",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh19",
+    "Name": "Sole Consolation",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr02",
+    "Name": "Song of Stars",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr21",
+    "Name": "Spatiotemporal Fan",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk15",
+    "Name": "Spear of a New Dawn",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw27",
+    "Name": "Spear of Purification",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr23",
+    "Name": "Sphere of Inferno",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk17",
+    "Name": "Sphere of Sadism",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm11",
+    "Name": "Spirit's Breath",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef407",
+    "Name": "Spooky Solayu Stories",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef203",
+    "Name": "Staff of Wisdom",
+    "Role": "",
+    "Rarity": 2,
+    "BaseAttack": 9.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr18",
+    "Name": "Star of the Deep Sea",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk10",
+    "Name": "Steadfast Gatekeeper",
+    "Role": "knight",
+    "Rarity": 4,
+    "BaseAttack": 10.0,
+    "BaseHealth": 55.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh09",
+    "Name": "Stella Harpa",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw05",
+    "Name": "Strak Gauntlet",
+    "Role": "warrior",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef427",
+    "Name": "Succubus Mirror",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 8.0,
+    "BaseHealth": 67.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef413",
+    "Name": "Super Duper Water Gun Shooter",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw35",
+    "Name": "Sweet Miracle",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw29",
+    "Name": "Sword of Autumn Eclipse",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa20",
+    "Name": "Sword of Cycling Seasons",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk08",
+    "Name": "Sword of Ezera",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr09",
+    "Name": "Sword of Judgment",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa17",
+    "Name": "Sword of Summer Twilight",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef310",
+    "Name": "Sword of the Morning",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 12.0,
+    "BaseHealth": 28.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef101",
+    "Name": "Sword of the Sun",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 9.0,
+    "BaseHealth": 15.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa18",
+    "Name": "Sword of Winter Shadow",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm03",
+    "Name": "Tagehel's Ancient Book",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm12",
+    "Name": "Tear of the Desert",
+    "Role": "mage",
+    "Rarity": 4,
+    "BaseAttack": 19.0,
+    "BaseHealth": 30.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa21",
+    "Name": "The Armament",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef421",
+    "Name": "The Guardian Star's Blessing",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm06",
+    "Name": "Time Matter",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 18.0,
+    "BaseHealth": 43.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef320",
+    "Name": "Timeless Anchor",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 8.0,
+    "BaseHealth": 44.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef414",
+    "Name": "To a New World",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa09",
+    "Name": "Torn Sleeve",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh11",
+    "Name": "Touch of Rekos",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw33",
+    "Name": "Tyrant's Descent",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm21",
+    "Name": "Twilight Calamity",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw06",
+    "Name": "Uberius's Tooth",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm29",
+    "Name": "Umbral Keystones",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh10",
+    "Name": "Unfading Memories",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr16",
+    "Name": "Unseen Observer",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm24",
+    "Name": "Upgraded Dragon Knuckles",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef105",
+    "Name": "Venus Orb",
+    "Role": "",
+    "Rarity": 1,
+    "BaseAttack": 7.0,
+    "BaseHealth": 24.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef502",
+    "Name": "Victorious Flag",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa08",
+    "Name": "Violet Talisman",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr15",
+    "Name": "Wall of Order",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef505",
+    "Name": "War Horn",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh03",
+    "Name": "Water's Origin",
+    "Role": "manauser",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa02",
+    "Name": "Wind Rider",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk16",
+    "Name": "Wings of Light and Shadow",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh04",
+    "Name": "Wondrous Potion Vial",
+    "Role": "manauser",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef431",
+    "Name": "VII. The Chariot",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef433",
+    "Name": "VI. The Lovers",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef417",
+    "Name": "XIII. Death",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef422",
+    "Name": "XIV. Temperance",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef430",
+    "Name": "XIX. The Sun",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 7.0,
+    "BaseHealth": 63.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef418",
+    "Name": "XVI. The Tower",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef419",
+    "Name": "XVIII. The Moon",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm30",
+    "Name": "Staff of Ainz Ooal Gown",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk21",
+    "Name": "3F",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw34",
+    "Name": "Pipette Lance",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw36",
+    "Name": "Ruyi Jingu Bang",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef439",
+    "Name": "Midnight Pizza Delivery",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm31",
+    "Name": "Magic Bubble Maker",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh21",
+    "Name": "Spotted Mouse Hair Tie",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr28",
+    "Name": "Renewed Will",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh20",
+    "Name": "Bird's-Eye View",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr27",
+    "Name": "Dreamlike Holiday",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh22",
+    "Name": "Homage to Tarman",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh23",
+    "Name": "Proof of Friendship",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh25",
+    "Name": "Proof of Love",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa26",
+    "Name": "Feed of Criticism",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa27",
+    "Name": "Discreet Hands",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk22",
+    "Name": "M.O.A.S",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr29",
+    "Name": "An Assassin's Pledge",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef509",
+    "Name": "Frantic Flight",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh26",
+    "Name": "Queen's Whistle",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa28",
+    "Name": "Summer Photogenic",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 0.0,
+    "BaseDefense": 5.0
+  },
+  {
+    "Code": "efa29",
+    "Name": "Lethal Whispers",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm32",
+    "Name": "Mirrored Lotus Ring",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm33",
+    "Name": "Butterfly Hair Ornament",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw39",
+    "Name": "Jumbo Berry Special",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr30",
+    "Name": "Awakened Leaf",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw38",
+    "Name": "Strike of Aspiration",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw37",
+    "Name": "Thorn of the Blue Rose",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 0.0,
+    "BaseDefense": 11.0
+  },
+  {
+    "Code": "efw28",
+    "Name": "Fullmetal's Automail",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr25",
+    "Name": "Elegiac Candle",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr20",
+    "Name": "Sharpshooter's Handgun",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh27",
+    "Name": "Cure-All Magic Wand",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa31",
+    "Name": "Glorious Flag",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa30",
+    "Name": "Master of the Nightmare",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef443",
+    "Name": "Reingar Festival Dumpling",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef442",
+    "Name": "XII. The Hanged Man",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef441",
+    "Name": "XV. The Devil",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef440",
+    "Name": "Special Strawberry Cake",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 18.0,
+    "BaseHealth": 27.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef438",
+    "Name": "XVII. The Star",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef437",
+    "Name": "Flames on a snowy mountain",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef436",
+    "Name": "New Year's Festival Souvenir",
+    "Role": "",
+    "Rarity": 4,
+    "BaseAttack": 12.0,
+    "BaseHealth": 45.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef315",
+    "Name": "Axe of Heavenly Mandate",
+    "Role": "",
+    "Rarity": 3,
+    "BaseAttack": 18.0,
+    "BaseHealth": 7.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw41",
+    "Name": "Tome of Life's End",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 32.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efw40",
+    "Name": "Ritual of Sealing Flames",
+    "Role": "warrior",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 0.0,
+    "BaseDefense": 5.0
+  },
+  {
+    "Code": "efr31",
+    "Name": "Gifted Pen",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efk24",
+    "Name": "Glorious Throne",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "ef510",
+    "Name": "Unleashed Axe of Heavenly Mandate",
+    "Role": "",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa32",
+    "Name": "Shadow Winds 7",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 21.0,
+    "BaseHealth": 0.0,
+    "BaseDefense": 5.0
+  },
+  {
+    "Code": "efh28",
+    "Name": "Veritas",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 0.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 5.0
+  },
+  {
+    "Code": "efk25",
+    "Name": "With a Little Friend",
+    "Role": "knight",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efh29",
+    "Name": "Excommunicant's Censer",
+    "Role": "manauser",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efr32",
+    "Name": "Aubade Orb",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efa33",
+    "Name": "Butterfly's Baptism",
+    "Role": "assassin",
+    "Rarity": 5,
+    "BaseAttack": 15.0,
+    "BaseHealth": 54.0,
+    "BaseDefense": 0.0
+  },
+  {
+    "Code": "efm34",
+    "Name": "Refracted Desire",
+    "Role": "mage",
+    "Rarity": 5,
+    "BaseAttack": 0.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 5.0
+  },
+  {
+    "Code": "efr33",
+    "Name": "Intoxicating Indulgence",
+    "Role": "ranger",
+    "Rarity": 5,
+    "BaseAttack": 9.0,
+    "BaseHealth": 76.0,
+    "BaseDefense": 0.0
+  }
+]

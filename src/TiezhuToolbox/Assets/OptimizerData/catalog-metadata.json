@@ -1,0 +1,10 @@
+{
+  "SchemaVersion": 1,
+  "GeneratedAt": "2026-08-07T02:36:54.4666454+08:00",
+  "HeroSource": "herodata.json",
+  "ArtifactSource": "artifactdata.json",
+  "SourceVersion": "76df68324e65527901944e9b2daddd7649283cc9",
+  "SourceRepository": "https://github.com/fribbels/Fribbels-Epic-7-Optimizer",
+  "Reference": "https://ceciliabot.github.io/#/hero/",
+  "Note": "仅包含角色与神器的事实型数值，不包含第三方代码或图片；当前来源未提供可验证的转职符文树增量，界面会标记未覆盖。"
+}

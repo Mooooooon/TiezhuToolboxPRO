@@ -1,10 +1,12 @@
 using TiezhuToolbox.Modules.Recommend;
+using TiezhuToolbox.Modules.Account;
 
 namespace TiezhuToolbox;
 
 public partial class MainForm
 {
     private readonly AppSettings _settings = AppSettingsStore.Load();
+    private readonly AccountWorkspace _accountWorkspace = new();
     private readonly HashSet<string> _disabledDemandProfiles = new(StringComparer.Ordinal);
     private AntdUI.Tabs _mainTabs = null!;
     private AntdUI.TabPage _equipmentTab = null!;
@@ -41,6 +43,9 @@ public partial class MainForm
         _gearScanTab = new AntdUI.TabPage { Text = "装备扫描", BackColor = Color.FromArgb(245, 246, 248) };
         _autoEnhanceTab = new AntdUI.TabPage { Text = "自动强化", BackColor = Color.FromArgb(245, 246, 248) };
         _starForgeTab = new AntdUI.TabPage { Text = "星之铁匠铺", BackColor = Color.FromArgb(245, 246, 248) };
+        var heroTab = new AntdUI.TabPage { Text = "英雄", BackColor = Color.FromArgb(245, 246, 248) };
+        var gearBrowserTab = new AntdUI.TabPage { Text = "装备", BackColor = Color.FromArgb(245, 246, 248) };
+        var optimizerTab = new AntdUI.TabPage { Text = "配装", BackColor = Color.FromArgb(245, 246, 248) };
         var demandTab = new AntdUI.TabPage { Text = "需求分析", BackColor = Color.White };
         var settingsTab = new AntdUI.TabPage { Text = "软件设置", BackColor = Color.FromArgb(245, 246, 248) };
 
@@ -75,6 +80,18 @@ public partial class MainForm
         _starForgeTab.Controls.Add(starForgeContent);
         ScaleRuntimePage(starForgeContent);
 
+        var heroBrowser = new HeroBrowserControl(_accountWorkspace);
+        heroTab.Controls.Add(heroBrowser);
+        ScaleRuntimePage(heroBrowser);
+
+        var gearBrowser = new GearBrowserControl(_accountWorkspace);
+        gearBrowserTab.Controls.Add(gearBrowser);
+        ScaleRuntimePage(gearBrowser);
+
+        var optimizer = new OptimizerControl(_accountWorkspace);
+        optimizerTab.Controls.Add(optimizer);
+        ScaleRuntimePage(optimizer);
+
         var settingsContent = CreateSettingsContent();
         settingsTab.Controls.Add(settingsContent);
         ScaleRuntimePage(settingsContent);
@@ -83,6 +100,9 @@ public partial class MainForm
         _mainTabs.Pages.Add(_gearScanTab);
         _mainTabs.Pages.Add(_autoEnhanceTab);
         _mainTabs.Pages.Add(_starForgeTab);
+        _mainTabs.Pages.Add(heroTab);
+        _mainTabs.Pages.Add(gearBrowserTab);
+        _mainTabs.Pages.Add(optimizerTab);
         _mainTabs.Pages.Add(demandTab);
         _mainTabs.Pages.Add(settingsTab);
         _mainTabs.SelectedIndex = 0;

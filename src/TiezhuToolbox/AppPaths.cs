@@ -13,6 +13,12 @@ internal static class AppPaths
     /// <summary>用户手动维护的套装属性子类，与内置需求数据及软件设置分开保存。</summary>
     public static string CustomDemandProfilesPath => Path.Combine(UserRoot, "custom-demand-profiles.json");
 
+    public static string AccountSnapshotPath => Path.Combine(UserRoot, "account-snapshot.json");
+
+    public static string HeroPreferencesPath => Path.Combine(UserRoot, "hero-preferences.json");
+
+    public static string OptimizerPresetsPath => Path.Combine(UserRoot, "optimizer-presets.json");
+
     public static JsonSerializerOptions JsonOptions { get; } = new()
     {
         WriteIndented = true,

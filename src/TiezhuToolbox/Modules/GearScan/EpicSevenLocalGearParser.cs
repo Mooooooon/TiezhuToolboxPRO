@@ -10,6 +10,7 @@ public sealed class EpicSevenLocalGearParser
     private static readonly double[] MainStatMultipliers = [1, 1.6, 2.2, 2.8, 3.6, 5];
 
     private readonly IReadOnlyDictionary<string, string> _heroNames;
+    private readonly IReadOnlyDictionary<string, int> _heroRarities;
     private readonly IReadOnlyDictionary<string, int> _equipmentLevels;
     private readonly IReadOnlyDictionary<string, string> _equipmentTypes;
 
@@ -19,6 +20,9 @@ public sealed class EpicSevenLocalGearParser
         _heroNames = LoadDictionary<string>(Path.Combine(root, "hero-names.json"));
         _equipmentLevels = LoadDictionary<int>(Path.Combine(root, "equipment-levels.json"));
         _equipmentTypes = LoadDictionary<string>(Path.Combine(root, "equipment-types.json"));
+        // 自然星级用于 exp→等级换算；目录缺失时留空，对应英雄回落到默认养成提示。
+        _heroRarities = LoadHeroRarities(
+            Path.GetFullPath(Path.Combine(root, "..", "OptimizerData", "hero-catalog.json")));
     }
 
     public GearScanResult Parse(
@@ -31,6 +35,7 @@ public sealed class EpicSevenLocalGearParser
 
         Dictionary<string, object?>? accountData = null;
         var storageItems = new List<Dictionary<string, object?>>();
+        var sawLobbyUpdateOnly = false;
         foreach (var payload in EpicSevenTransportDecoder.DecodeServerPayloads(pcapngPath))
         {
             var unpacked = Lz4BlockDecoder.DecodeGamePayload(payload);
@@ -39,13 +44,17 @@ public sealed class EpicSevenLocalGearParser
             if (response.TryGetValue("account_data", out var accountValue)
                 && accountValue is Dictionary<string, object?> account)
                 accountData = account;
+            else if (response.ContainsKey("account_data_update"))
+                sawLobbyUpdateOnly = true;
             if (response.TryGetValue("equip_storage", out var storageValue)
                 && storageValue is Dictionary<string, object?> storage)
                 storageItems.AddRange(storage.Values.OfType<Dictionary<string, object?>>());
         }
 
         if (accountData == null)
-            throw new InvalidDataException("本地解析未找到登录账号数据；请从游戏完全关闭状态开始扫描，并等待进入大厅后再停止");
+            throw new InvalidDataException(sawLobbyUpdateOnly
+                ? "只抓到游戏大厅增量数据，没有完整登录数据；游戏不是从完全关闭状态启动的（后台恢复不会重发全量账号数据）。请彻底结束游戏进程（含模拟器里的后台）后重新开始扫描"
+                : "本地解析未找到登录账号数据；请从游戏完全关闭状态开始扫描，并等待进入大厅后再停止");
         if (!accountData.TryGetValue("equips", out var equipsValue)
             || equipsValue is not Dictionary<string, object?> equips)
             throw new InvalidDataException("本地解析未找到装备数据");
@@ -69,6 +78,8 @@ public sealed class EpicSevenLocalGearParser
                 continue;
             var hero = ConvertMap(raw);
             hero["name"] = name;
+            if (ResolveHeroLevel(raw, code) is { } level)
+                hero["level"] = level;
             heroes.Add(hero);
         }
 
@@ -122,6 +133,30 @@ public sealed class EpicSevenLocalGearParser
         if (code != null && _equipmentLevels.TryGetValue(code, out var known) && known > 0)
             return (known, false);
         return (88, true);
+    }
+
+    private int? ResolveHeroLevel(Dictionary<string, object?> raw, string code)
+    {
+        if (!_heroRarities.TryGetValue(code, out var rarity))
+            return null;
+        var exp = raw.TryGetValue("exp", out var expValue) ? (long)ToDouble(expValue) : 0;
+        return HeroExpTable.ResolveLevel(exp, rarity, GetInt(raw, "g"));
+    }
+
+    private static IReadOnlyDictionary<string, int> LoadHeroRarities(string path)
+    {
+        if (!File.Exists(path))
+            return new Dictionary<string, int>();
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var result = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var element in document.RootElement.EnumerateArray())
+        {
+            if (!element.TryGetProperty("Code", out var codeNode) || codeNode.GetString() is not { } code)
+                continue;
+            if (element.TryGetProperty("Rarity", out var rarityNode) && rarityNode.TryGetInt32(out var rarity))
+                result[code] = rarity;
+        }
+        return result;
     }
 
     private static double ResolveMainStatValue(Dictionary<string, object?> raw, int level)

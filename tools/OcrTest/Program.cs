@@ -3,7 +3,388 @@ using TiezhuToolbox.Modules.Recommend;
 using TiezhuToolbox.Modules.Automation;
 using TiezhuToolbox.Modules.StarForge;
 using TiezhuToolbox.Modules.GearScan;
+using TiezhuToolbox.Modules.Account;
+using TiezhuToolbox.Modules.Optimizer;
 using System.Windows.Forms;
+
+if (args.Contains("--gear-scan-dump-keys"))
+{
+    var dumpPath = args.SkipWhile(arg => arg != "--gear-scan-dump-keys").Skip(1).FirstOrDefault()
+        ?? throw new ArgumentException("--gear-scan-dump-keys 后必须提供 PCAPNG 路径");
+    var ports = new HashSet<ushort> { 3333, 5222 };
+    var directions = PcapngPayloadExtractor.ReadTcpSegments(dumpPath)
+        .Where(segment => ports.Contains(segment.SourcePort) && segment.Payload.Length > 0)
+        .GroupBy(segment => (segment.SourceAddress, segment.SourcePort, segment.DestinationPort));
+    foreach (var direction in directions)
+    {
+        Console.WriteLine($"方向 {direction.Key.SourceAddress:X8}:{direction.Key.SourcePort} 段={direction.Count()}");
+        byte[] stream;
+        try
+        {
+            var ordered = direction.OrderBy(segment => segment.Sequence).ToArray();
+            using var output = new MemoryStream();
+            var next = ordered[0].Sequence;
+            foreach (var segment in ordered)
+            {
+                if (segment.Sequence > next)
+                {
+                    Console.WriteLine($"  缺口：期望 {next} 实际 {segment.Sequence}");
+                    break;
+                }
+                var overlap = next > segment.Sequence ? (int)(next - segment.Sequence) : 0;
+                if (overlap >= segment.Payload.Length) continue;
+                output.Write(segment.Payload, overlap, segment.Payload.Length - overlap);
+                next = segment.Sequence + (uint)segment.Payload.Length;
+            }
+            stream = output.ToArray();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("  重组失败：" + ex.Message);
+            continue;
+        }
+        IReadOnlyList<byte[]> packets;
+        try
+        {
+            packets = EpicSevenTransportDecoder.DecodeStream(stream);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"  传输解码失败（流长 {stream.Length}）：{ex.Message}");
+            continue;
+        }
+        Console.WriteLine($"  查询包={packets.Count}，流长={stream.Length}");
+        foreach (var packet in packets)
+        {
+            try
+            {
+                var unpacked = Lz4BlockDecoder.DecodeGamePayload(packet);
+                var document = new MessagePackReader(unpacked).ReadDocument();
+                if (document is Dictionary<string, object?> map)
+                {
+                    Console.WriteLine($"    包 {packet.Length}B → [{string.Join(", ", map.Keys)}]");
+                    foreach (var nestedKey in new[] { "account_data", "account_data_update" })
+                    {
+                        if (map.TryGetValue(nestedKey, out var nested) && nested is Dictionary<string, object?> nestedMap)
+                            Console.WriteLine($"      {nestedKey} → [{string.Join(", ", nestedMap.Keys)}]");
+                        else if (map.TryGetValue(nestedKey, out var other) && other != null)
+                            Console.WriteLine($"      {nestedKey} → {other.GetType().Name}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"    包 {packet.Length}B → 非字典 {document?.GetType().Name ?? "null"}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"    包 {packet.Length}B → 解码失败：{ex.Message}");
+            }
+        }
+    }
+    return;
+}
+
+if (args.Contains("--account-data-file"))
+{
+    var optionIndex = Array.IndexOf(args, "--account-data-file");
+    var path = args.Skip(optionIndex + 1).FirstOrDefault()
+        ?? throw new ArgumentException("--account-data-file 后必须提供 gear.txt 或账号 JSON 路径");
+    var snapshot = AccountImportService.Parse(File.ReadAllText(path), "文件验证");
+    Console.WriteLine($"账号文件验证通过：装备={snapshot.Items.Count}，英雄={snapshot.Heroes.Count}，提示={snapshot.Warnings.Count}");
+    foreach (var warning in snapshot.Warnings.Take(10))
+        Console.WriteLine("  " + warning);
+    if (snapshot.Warnings.Count > 10)
+        Console.WriteLine($"  ……其余 {snapshot.Warnings.Count - 10} 条提示已省略");
+    return;
+}
+
+if (args.Contains("--account-data"))
+{
+    var accountRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-account-test-" + Guid.NewGuid().ToString("N"));
+    Environment.SetEnvironmentVariable("TIEZHU_TOOLBOX_USER_ROOT", accountRoot);
+    Directory.CreateDirectory(accountRoot);
+    try
+    {
+        const string valid = """
+            {"items":[
+              {"ingameId":"g1","name":"剑","gear":"Weapon","set":"SpeedSet","rank":"Epic","level":85,"enhance":15,"main":{"type":"Attack","value":500},"substats":[{"type":"Speed","value":10}],"ingameEquippedId":"h1"},
+              {"ingameId":"g2","name":"盔","gear":"Helmet","set":"SpeedSet","rank":"Epic","level":85,"enhance":15,"main":{"type":"Health","value":2700},"substats":[],"ingameEquippedId":"0"},
+              {"ingameId":"g3","name":"固定生命项链","gear":"Necklace","set":"HealthSet","rank":"Epic","level":85,"enhance":15,"main":{"type":"Health","value":2700},"substats":[],"ingameEquippedId":"0"}
+            ],"heroes":[
+              {"id":"h1","code":"c1001","name":"拉斯","level":60,"stars":6,"awaken":6},
+              {"id":"h2","code":"c1002","name":"赛西莉亚","l":true,"stars":6,"awaken":6},
+              {"id":"h3","code":"c1003","name":"尤菲妮","level":60,"stars":6,"awaken":6}
+            ]}
+            """;
+        var workspace = new AccountWorkspace();
+        var snapshot = workspace.Import(valid, "synthetic");
+        if (snapshot.Items.Count != 3 || snapshot.Heroes.Count != 3 || snapshot.Items[1].EquippedHeroId.Length != 0
+            || !File.Exists(Path.Combine(accountRoot, "account-snapshot.json")))
+            throw new InvalidOperationException("账号快照没有完整保存");
+        workspace.MovePriority("h3", 1);
+        if (workspace.GetPreference("h3")?.Priority != 1 || workspace.GetPreference("h1")?.Priority != 2)
+            throw new InvalidOperationException("英雄连续优先级移动错误");
+        workspace.Import(valid, "synthetic-2");
+        if (workspace.GetPreference("h3")?.Priority != 1
+            || !File.Exists(Path.Combine(accountRoot, "account-snapshot.json.bak")))
+            throw new InvalidOperationException("重新导入没有保留英雄偏好或上一份备份");
+
+        var presets = new OptimizerPresetDocument
+        {
+            Presets = [new OptimizerPreset { Name = "高速", HeroId = "h3", Weights = new HeroStats(0, 0, 0, 1, 0, 0, 0, 0) }],
+        };
+        var presetRepository = new OptimizerPresetRepository();
+        presetRepository.Save(presets);
+        if (presetRepository.Load().Presets.Single().Name != "高速")
+            throw new InvalidOperationException("配装预设没有正确保存并恢复");
+
+        var duplicate = valid.Replace("\"ingameId\":\"g2\"", "\"ingameId\":\"g1\"");
+        try
+        {
+            workspace.Import(duplicate, "invalid");
+            throw new InvalidOperationException("重复装备 ID 未被拒绝");
+        }
+        catch (AccountImportException)
+        {
+        }
+        var reloaded = new AccountRepository().LoadSnapshot();
+        if (reloaded?.Items.Count != 3 || reloaded.Source != "synthetic-2")
+            throw new InvalidOperationException("非法导入破坏了原子快照");
+        Console.WriteLine("账号数据测试通过：验证、原子替换、备份、偏好与配装预设均正常");
+    }
+    finally
+    {
+        if (Directory.Exists(accountRoot)) Directory.Delete(accountRoot, recursive: true);
+    }
+    return;
+}
+
+if (args.Contains("--stat-calc") || args.Contains("--optimizer") || args.Contains("--optimizer-performance"))
+{
+    var gameData = new StaticGameData();
+    var calculator = new HeroStatCalculator(gameData);
+    var heroCode = gameData.Heroes.First(value => value.Level60SixStar.Attack > 0).Code;
+    var heroCatalog = gameData.Heroes.First(value => value.Code == heroCode);
+    var hero = new AccountHero { Id = "target", Code = heroCode, Name = heroCatalog.Name, Level = 60, Stars = 6, Awaken = 6 };
+    var preference = new HeroPreference { HeroId = hero.Id, HeroCode = hero.Code, Priority = 50 };
+
+    static AccountGear Gear(string id, GearSlot slot, string set, GearStatType type, double value, string owner = "") => new()
+    {
+        Id = id, Name = id, Slot = slot, Set = set, Rank = "Epic", Level = 85, Enhance = 15,
+        Main = new GearStat(type, value), EquippedHeroId = owner,
+    };
+
+    if (args.Contains("--stat-calc"))
+    {
+        var gear = new[]
+        {
+            Gear("w", GearSlot.Weapon, "AttackSet", GearStatType.AttackPercent, 10),
+            Gear("h", GearSlot.Helmet, "AttackSet", GearStatType.AttackPercent, 10),
+            Gear("a", GearSlot.Armor, "AttackSet", GearStatType.AttackPercent, 10),
+            Gear("n", GearSlot.Necklace, "AttackSet", GearStatType.AttackPercent, 10),
+            Gear("r", GearSlot.Ring, "HealthSet", GearStatType.AttackPercent, 10),
+            Gear("b", GearSlot.Boots, "HealthSet", GearStatType.AttackPercent, 10),
+        };
+        var panel = calculator.Calculate(hero, preference, gear);
+        var expectedAttack = Math.Floor(heroCatalog.Level60SixStar.Attack * 2.05);
+        var expectedHealth = Math.Floor(heroCatalog.Level60SixStar.Health * 1.20);
+        if (panel.RawStats.Attack != expectedAttack || panel.RawStats.Health != expectedHealth
+            || panel.ActiveSets.Count != 2 || panel.ActiveSets.All(value => value != "AttackSet"))
+            throw new InvalidOperationException($"面板公式错误：攻击={panel.RawStats.Attack}/{expectedAttack}，生命={panel.RawStats.Health}/{expectedHealth}");
+
+        var catalogRoot = Path.Combine(Path.GetTempPath(), "TiezhuToolbox-stat-catalog-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(catalogRoot);
+        try
+        {
+            File.WriteAllText(Path.Combine(catalogRoot, "hero-catalog.json"), """
+                [{"code":"synthetic","name":"测试英雄","attribute":"fire","role":"warrior","rarity":5,
+                  "level50FiveStar":{"attack":800,"health":8000,"defense":400,"speed":95,"criticalChance":15,"criticalDamage":150,"effectiveness":0,"resistance":0},
+                  "level60SixStar":{"attack":1000,"health":10000,"defense":500,"speed":100,"criticalChance":15,"criticalDamage":150,"effectiveness":0,"resistance":0},
+                  "imprintType":"att_rate","imprintGrades":{"S":0.10},
+                  "exclusiveEquipment":[{"type":"speed","value":7}],
+                  "specialtyTreeBonus":{"attack":10,"health":20,"defense":30,"speed":4,"criticalChance":5,"criticalDamage":6,"effectiveness":7,"resistance":8},
+                  "specialtyTreeDataAvailable":true}]
+                """);
+            File.WriteAllText(Path.Combine(catalogRoot, "artifact-catalog.json"), """
+                [{"code":"artifact","name":"测试神器","role":"warrior","rarity":5,"baseAttack":10,"baseHealth":20,"baseDefense":5}]
+                """);
+            var syntheticCalculator = new HeroStatCalculator(new StaticGameData(catalogRoot));
+            var syntheticHero = new AccountHero { Id = "s", Code = "synthetic", Name = "测试英雄", Level = 60, Stars = 6, Awaken = 6 };
+            var syntheticPreference = new HeroPreference
+            {
+                HeroId = "s", HeroCode = "synthetic", ImprintGrade = "S", ExclusiveEquipmentIndex = 0,
+                ArtifactCode = "artifact", ArtifactLevel = 30, MaxSpecialtyTree = true,
+            };
+            var syntheticGear = new[]
+            {
+                Gear("sw", GearSlot.Weapon, "AttackSet", GearStatType.Speed, 0),
+                Gear("sh", GearSlot.Helmet, "AttackSet", GearStatType.Speed, 0),
+                Gear("sa", GearSlot.Armor, "AttackSet", GearStatType.Speed, 0),
+                Gear("sn", GearSlot.Necklace, "AttackSet", GearStatType.Speed, 0),
+                Gear("sr", GearSlot.Ring, "CriticalSet", GearStatType.Speed, 0),
+                Gear("sb", GearSlot.Boots, "CriticalSet", GearStatType.Speed, 0),
+            };
+            syntheticGear[0].Substats.Add(new GearStat(GearStatType.CriticalHitChancePercent, 100));
+            syntheticGear[1].Substats.Add(new GearStat(GearStatType.CriticalHitDamagePercent, 250));
+            var syntheticPanel = syntheticCalculator.Calculate(syntheticHero, syntheticPreference, syntheticGear);
+            var expectedSynthetic = new HeroStats(1695, 10280, 595, 111, 132, 406, 7, 8);
+            if (syntheticPanel.RawStats != expectedSynthetic || syntheticPanel.CriticalChanceOverflow != 32
+                || syntheticPanel.CriticalDamageOverflow != 56)
+                throw new InvalidOperationException($"阵型/专属/神器/转职树或溢出计算错误：{syntheticPanel.RawStats}");
+
+            syntheticPreference.ArtifactCode = "missing";
+            var missingArtifact = syntheticCalculator.Calculate(syntheticHero, syntheticPreference, syntheticGear);
+            if (missingArtifact.Warning?.Contains("静态目录未覆盖神器", StringComparison.Ordinal) != true)
+                throw new InvalidOperationException("缺失神器没有显示数据未覆盖警告");
+        }
+        finally
+        {
+            Directory.Delete(catalogRoot, recursive: true);
+        }
+        Console.WriteLine("面板计算测试通过：装备、套装、自身阵型、专属、神器、转职树及暴击/暴伤溢出均正确");
+        return;
+    }
+
+    var slots = Enum.GetValues<GearSlot>();
+    var smallGear = new List<AccountGear>();
+    for (var index = 0; index < slots.Length; index++)
+    {
+        smallGear.Add(Gear($"{index}-low", slots[index], "SpeedSet", GearStatType.Speed, 0));
+        smallGear.Add(Gear($"{index}-high", slots[index], "SpeedSet", GearStatType.Speed, 1 << index));
+    }
+    var request = new OptimizationRequest
+    {
+        Hero = hero, HeroPreference = preference, Equipment = smallGear, HeroPriorities = [preference],
+        Weights = new HeroStats(0, 0, 0, 1, 0, 0, 0, 0), RequiredSets = ["SpeedSet"], ResultLimit = 20,
+    };
+
+    if (args.Contains("--optimizer"))
+    {
+        var optimizer = new BuildOptimizer(calculator);
+        var actual = optimizer.Search(request);
+        var brute = new List<(double Score, string Key)>();
+        for (var mask = 0; mask < 64; mask++)
+        {
+            var selected = Enumerable.Range(0, 6).Select(index => smallGear[index * 2 + ((mask >> index) & 1)]).ToArray();
+            var panel = calculator.Calculate(hero, preference, selected);
+            brute.Add((HeroStatCalculator.CalculateWeightedScore(panel.BaseStats, panel.RawStats, request.Weights),
+                string.Join(",", selected.Select(value => value.Id).OrderBy(value => value))));
+        }
+        var expected = brute.OrderByDescending(value => value.Score).Take(20).ToArray();
+        var actualRows = actual.Results.Select(value => (value.Score,
+            string.Join(",", value.Equipment.Select(item => item.Id).OrderBy(id => id)))).ToArray();
+        if (actualRows.Length != expected.Length || actualRows.Where((value, index) =>
+                Math.Abs(value.Score - expected[index].Score) > 0.0001 || value.Item2 != expected[index].Key).Any())
+            throw new InvalidOperationException("精确搜索 Top-K 与暴力枚举不一致");
+
+        // 多组随机小数据逐件对拍，覆盖不同套装可达性、属性下限和 Top-K 阈值。
+        for (var seed = 1; seed <= 12; seed++)
+        {
+            var random = new Random(seed);
+            var randomGear = new List<AccountGear>();
+            foreach (var slot in slots)
+            {
+                for (var candidateIndex = 0; candidateIndex < 3; candidateIndex++)
+                {
+                    var set = random.Next(3) switch { 0 => "SpeedSet", 1 => "HealthSet", _ => "CriticalSet" };
+                    randomGear.Add(Gear($"r{seed}-{(int)slot}-{candidateIndex}", slot, set,
+                        GearStatType.Speed, random.NextDouble() * 20 + candidateIndex * 0.000001));
+                }
+            }
+            var randomRequest = new OptimizationRequest
+            {
+                Hero = hero, HeroPreference = preference, Equipment = randomGear, HeroPriorities = [preference],
+                Weights = new HeroStats(0, 0, 0, 1, 0, 0, 0, 0),
+                StatRanges = new Dictionary<GearStatType, StatRange>
+                {
+                    [GearStatType.Speed] = new(heroCatalog.Level60SixStar.Speed + 25, null),
+                },
+                RequiredSets = seed % 2 == 0 ? ["HealthSet"] : [], ResultLimit = 35,
+            };
+            var randomActual = optimizer.Search(randomRequest).Results
+                .Select(value => (value.Score, Key: string.Join(",", value.Equipment.Select(item => item.Id).OrderBy(id => id))))
+                .OrderByDescending(value => value.Score).ThenBy(value => value.Key, StringComparer.Ordinal).ToArray();
+            var randomBrute = new List<(double Score, string Key)>();
+            for (var combination = 0; combination < 729; combination++)
+            {
+                var cursor = combination;
+                var selected = new AccountGear[6];
+                for (var slotIndex = 0; slotIndex < 6; slotIndex++)
+                {
+                    selected[slotIndex] = randomGear[slotIndex * 3 + cursor % 3];
+                    cursor /= 3;
+                }
+                var setCounts = selected.GroupBy(item => item.Set).ToDictionary(group => group.Key, group => group.Count());
+                if (randomRequest.RequiredSets.Any(set => setCounts.GetValueOrDefault(set) < EquipmentSetCatalog.RequiredPieces(set)))
+                    continue;
+                var randomPanel = calculator.Calculate(hero, preference, selected);
+                if (!randomRequest.StatRanges.All(pair => pair.Value.Contains(pair.Key == GearStatType.Speed ? randomPanel.RawStats.Speed : 0)))
+                    continue;
+                randomBrute.Add((HeroStatCalculator.CalculateWeightedScore(randomPanel.BaseStats, randomPanel.RawStats, randomRequest.Weights),
+                    string.Join(",", selected.Select(value => value.Id).OrderBy(value => value))));
+            }
+            var randomExpected = randomBrute.OrderByDescending(value => value.Score).ThenBy(value => value.Key, StringComparer.Ordinal)
+                .Take(35).ToArray();
+            if (!randomActual.SequenceEqual(randomExpected))
+            {
+                var firstDifference = randomActual.Zip(randomExpected)
+                    .Select((pair, index) => (pair.First, pair.Second, index))
+                    .FirstOrDefault(value => value.First != value.Second);
+                Console.WriteLine($"seed={seed} actual={randomActual.Length} expected={randomExpected.Length} first={firstDifference.index}: " +
+                                  $"actual {firstDifference.First.Score:0.000000}/{firstDifference.First.Key}; " +
+                                  $"expected {firstDifference.Second.Score:0.000000}/{firstDifference.Second.Key}");
+                throw new InvalidOperationException($"随机数据 seed={seed} 的精确搜索与暴力枚举不一致");
+            }
+        }
+
+        var priorities = Enumerable.Range(1, 60).Select(index => new HeroPreference
+            { HeroId = "hero" + index, HeroCode = heroCode, Priority = index }).ToList();
+        preference.Priority = 50;
+        priorities[49] = preference;
+        var protectedGear = smallGear.Select((item, index) =>
+        {
+            item.EquippedHeroId = index == 0 ? "hero1" : index == 1 ? "hero51" : string.Empty;
+            return item;
+        }).ToList();
+        // 单独构造优先级保护请求。
+        var protectedRequest = new OptimizationRequest
+        {
+            Hero = hero, HeroPreference = preference, Equipment = protectedGear, HeroPriorities = priorities,
+            OccupationMode = EquipmentOccupationMode.ProtectHigherPriority,
+            Weights = request.Weights, RequiredSets = request.RequiredSets, ResultLimit = 20,
+        };
+        var protectedResult = optimizer.Search(protectedRequest);
+        if (protectedResult.Results.SelectMany(value => value.Equipment).Any(item => item.EquippedHeroId == "hero1"))
+            throw new InvalidOperationException("第 50 名英雄错误使用了第 1 名英雄装备");
+        Console.WriteLine("配装搜索测试通过：12 组随机数据 Top-K 与暴力枚举逐件一致，英雄优先级保护正确");
+        return;
+    }
+
+    var performanceGear = new List<AccountGear>(2004);
+    for (var index = 0; index < 2004; index++)
+    {
+        var slot = slots[index % slots.Length];
+        var owner = index < 1944 ? "protected" : string.Empty;
+        performanceGear.Add(Gear("p" + index, slot, "SpeedSet", GearStatType.Speed, index % 17, owner));
+    }
+    var perfRequest = new OptimizationRequest
+    {
+        Hero = hero, HeroPreference = preference, Equipment = performanceGear,
+        HeroPriorities = [new HeroPreference { HeroId = "protected", Priority = 1 }, preference],
+        OccupationMode = EquipmentOccupationMode.ProtectHigherPriority,
+        Weights = request.Weights, RequiredSets = ["SpeedSet"], ResultLimit = 200,
+    };
+    var beforeMemory = GC.GetTotalMemory(true);
+    var watch = System.Diagnostics.Stopwatch.StartNew();
+    var perfResult = new BuildOptimizer(calculator).Search(perfRequest);
+    watch.Stop();
+    var memory = GC.GetTotalMemory(false) - beforeMemory;
+    if (perfResult.Results.Count == 0 || watch.Elapsed > TimeSpan.FromSeconds(5))
+        throw new InvalidOperationException($"2000+ 装备性能目标未达成：{watch.Elapsed.TotalSeconds:0.00}s");
+    Console.WriteLine($"配装性能测试通过：装备={performanceGear.Count}，结果={perfResult.Results.Count}，耗时={watch.Elapsed.TotalSeconds:0.000}s，内存增量={memory / 1024D / 1024D:0.0}MB");
+    return;
+}
 
 if (args.Contains("--gear-scan-local"))
 {
@@ -22,6 +403,11 @@ if (args.Contains("--gear-scan-local"))
     }
     var result = new EpicSevenLocalGearParser().Parse(capturePath, minimumEnhance);
     Console.WriteLine($"本地解析：装备={result.ItemCount}，英雄={result.HeroCount}，等级0={result.LevelZeroItemCount}，88级推断修复={result.InferredLevelItemCount}");
+    var accountSnapshot = AccountImportService.Parse(result.GearText, "本地抓包回放", allowMissingOwners: true);
+    Console.WriteLine($"筛选导入验证：装备={accountSnapshot.Items.Count}，英雄={accountSnapshot.Heroes.Count}，提示={accountSnapshot.Warnings.Count}");
+    var levelGroups = accountSnapshot.Heroes.GroupBy(hero => hero.Level).OrderByDescending(group => group.Key)
+        .Select(group => $"{group.Key}级×{group.Count()}");
+    Console.WriteLine("英雄等级分布：" + string.Join("，", levelGroups));
 
     if (baselinePath != null)
     {
@@ -405,6 +791,38 @@ if (args.Contains("--gear-scan"))
     try
     {
         var pcapngPath = Path.Combine(testRoot, "synthetic.pcapng");
+        static void WritePacket(BinaryWriter writer, byte[] packet)
+        {
+            var paddedLength = (packet.Length + 3) & ~3;
+            var blockLength = (uint)(32 + paddedLength);
+            writer.Write(6u);
+            writer.Write(blockLength);
+            writer.Write(0u);
+            writer.Write(0u);
+            writer.Write(0u);
+            writer.Write((uint)packet.Length);
+            writer.Write((uint)packet.Length);
+            writer.Write(packet);
+            writer.Write(new byte[paddedLength - packet.Length]);
+            writer.Write(blockLength);
+        }
+        static void WritePcapngHeader(BinaryWriter writer)
+        {
+            writer.Write(0x0A0D0D0Au);
+            writer.Write(28u);
+            writer.Write(0x1A2B3C4Du);
+            writer.Write((ushort)1);
+            writer.Write((ushort)0);
+            writer.Write(ulong.MaxValue);
+            writer.Write(28u);
+
+            writer.Write(1u);
+            writer.Write(20u);
+            writer.Write((ushort)1);
+            writer.Write((ushort)0);
+            writer.Write(65535u);
+            writer.Write(20u);
+        }
         static byte[] TcpFrame(uint sequence, uint acknowledgement, byte[] payload)
         {
             var frame = new byte[14 + 20 + 20 + payload.Length];
@@ -433,41 +851,11 @@ if (args.Contains("--gear-scan"))
         using (var stream = File.Create(pcapngPath))
         using (var writer = new BinaryWriter(stream))
         {
-            writer.Write(0x0A0D0D0Au);
-            writer.Write(28u);
-            writer.Write(0x1A2B3C4Du);
-            writer.Write((ushort)1);
-            writer.Write((ushort)0);
-            writer.Write(ulong.MaxValue);
-            writer.Write(28u);
-
-            writer.Write(1u);
-            writer.Write(20u);
-            writer.Write((ushort)1);
-            writer.Write((ushort)0);
-            writer.Write(65535u);
-            writer.Write(20u);
-
-            void WritePacket(byte[] packet)
-            {
-                var paddedLength = (packet.Length + 3) & ~3;
-                var blockLength = (uint)(32 + paddedLength);
-                writer.Write(6u);
-                writer.Write(blockLength);
-                writer.Write(0u);
-                writer.Write(0u);
-                writer.Write(0u);
-                writer.Write((uint)packet.Length);
-                writer.Write((uint)packet.Length);
-                writer.Write(packet);
-                writer.Write(new byte[paddedLength - packet.Length]);
-                writer.Write(blockLength);
-            }
-
-            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
-            WritePacket(TcpFrame(100, 900, [0xAA, 0xBB]));
-            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
-            WritePacket(TcpFrame(200, 901, []));
+            WritePcapngHeader(writer);
+            WritePacket(writer, TcpFrame(102, 900, [0xCC, 0xDD]));
+            WritePacket(writer, TcpFrame(100, 900, [0xAA, 0xBB]));
+            WritePacket(writer, TcpFrame(102, 900, [0xCC, 0xDD]));
+            WritePacket(writer, TcpFrame(200, 901, []));
         }
 
         var streams = PcapngPayloadExtractor.ExtractHexStreams(pcapngPath);
@@ -479,7 +867,7 @@ if (args.Contains("--gear-scan"))
               "status":"SUCCESS",
               "data":[
                 {
-                  "id":123456,"p":9988,"g":5,"f":"set_speed","type":"weapon","level":85,
+                  "id":123456,"p":42,"g":5,"f":"set_speed","type":"weapon","level":85,
                   "name":"测试之剑","mainStatValue":500,
                   "op":[
                     ["att",500],
@@ -487,7 +875,7 @@ if (args.Contains("--gear-scan"))
                     ["speed",4],
                     ["cri",0.05],
                     ["cri_dmg",0.07],
-                    ["acc",0.08],
+                    ["speed",1],
                     ["att_rate",0.07,"r"]
                   ]
                 },
@@ -506,6 +894,18 @@ if (args.Contains("--gear-scan"))
         var result = FribbelsGearExporter.ConvertParserResponse(parserResponse, 6);
         if (result.ItemCount != 1 || result.HeroCount != 3 || result.LevelZeroItemCount != 0)
             throw new InvalidOperationException("gear.txt 汇总数量错误");
+        if (result.FullItemCount != 2 || result.FullHeroCount != 3)
+            throw new InvalidOperationException("完整扫描统计错误");
+        var importedAccount = AccountImportService.Parse(result.GearText, "gear-scan-test");
+        if (importedAccount.Items.Count != 1 || importedAccount.Items[0].EquippedHeroId != "42")
+            throw new InvalidOperationException("筛选后的扫描数据无法通过账号导入验证");
+        const string orphanGear = """
+            {"items":[{"ingameId":"g9","gear":"Weapon","set":"SpeedSet","rank":"Epic","level":85,"enhance":15,
+              "main":{"type":"Attack","value":500},"ingameEquippedId":"hX"}],"heroes":[]}
+            """;
+        if (AccountImportService.Parse(orphanGear, "gear-scan-test").Warnings.Count != 1
+            || AccountImportService.Parse(orphanGear, "gear-scan-test", allowMissingOwners: true).Warnings.Count != 0)
+            throw new InvalidOperationException("持有英雄未导入时的提示开关错误");
         using var export = System.Text.Json.JsonDocument.Parse(result.GearText);
         var item = export.RootElement.GetProperty("items")[0];
         if (item.GetProperty("gear").GetString() != "Weapon"
@@ -516,7 +916,7 @@ if (args.Contains("--gear-scan"))
             || item.GetProperty("substats")[0].GetProperty("value").GetDouble() != 15
             || item.GetProperty("substats")[0].GetProperty("rolls").GetInt32() != 2
             || item.GetProperty("ingameId").GetInt32() != 123456
-            || item.GetProperty("ingameEquippedId").GetString() != "9988")
+            || item.GetProperty("ingameEquippedId").GetString() != "42")
             throw new InvalidOperationException("gear.txt 装备字段转换错误");
         var hero = export.RootElement.GetProperty("heroes")[0];
         if (hero.GetProperty("stars").GetInt32() != 6 || hero.GetProperty("awaken").GetInt32() != 6)
@@ -532,6 +932,15 @@ if (args.Contains("--gear-scan"))
         if (fiveStarResult.HeroCount != 2 || sixStarResult.HeroCount != 1)
             throw new InvalidOperationException(
                 $"英雄星级/觉醒过滤错误：5星5觉={fiveStarResult.HeroCount}，6星6觉={sixStarResult.HeroCount}");
+        if (HeroExpTable.ResolveLevel(833510, 3, 6) != 60
+            || HeroExpTable.ResolveLevel(0, 5, 5) != 1
+            || HeroExpTable.ResolveLevel(16364, 3, 3) != 19
+            || HeroExpTable.ResolveLevel(16365, 3, 3) != 20
+            || HeroExpTable.ResolveLevel(833510, 3, 5) != 50
+            || HeroExpTable.ResolveLevel(1384450, 5, 6) != 60
+            || HeroExpTable.ResolveLevel(833510, 9, 6) != null
+            || HeroExpTable.ResolveLevel(833510, 3, 0) != null)
+            throw new InvalidOperationException("英雄累计经验等级换算错误");
 
         byte[] messagePack = [0x81, 0xA3, (byte)'r', (byte)'e', (byte)'s', 0xA2, (byte)'o', (byte)'k'];
         var lz4Payload = new byte[8 + 1 + messagePack.Length];
@@ -551,6 +960,34 @@ if (args.Contains("--gear-scan"))
             || new MessagePackReader(decodedMessage).ReadDocument() is not Dictionary<string, object?> message
             || message.GetValueOrDefault("res") as string != "ok")
             throw new InvalidOperationException("游戏 LZ4/MessagePack 解码错误");
+
+        // 只抓到大厅增量数据（account_data_update，无完整 account_data）时应报出可操作的错误
+        byte[] lobbyOnlyMessagePack = [0x81, 0xB3, .."account_data_update"u8, 0x80];
+        var lobbyLz4 = new byte[8 + 2 + lobbyOnlyMessagePack.Length];
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lobbyLz4, lobbyOnlyMessagePack.Length);
+        System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lobbyLz4.AsSpan(4), 2 + lobbyOnlyMessagePack.Length);
+        lobbyLz4[8] = 0xF0;
+        lobbyLz4[9] = (byte)(lobbyOnlyMessagePack.Length - 15);
+        lobbyOnlyMessagePack.CopyTo(lobbyLz4.AsSpan(10));
+        var lobbyStream = new byte[4 + lobbyLz4.Length];
+        lobbyStream[2] = (byte)(lobbyLz4.Length >> 8);
+        lobbyStream[3] = (byte)lobbyLz4.Length;
+        lobbyLz4.CopyTo(lobbyStream.AsSpan(4));
+        var lobbyOnlyPath = Path.Combine(testRoot, "lobby-only.pcapng");
+        using (var stream = File.Create(lobbyOnlyPath))
+        using (var writer = new BinaryWriter(stream))
+        {
+            WritePcapngHeader(writer);
+            WritePacket(writer, TcpFrame(100, 900, lobbyStream));
+        }
+        try
+        {
+            new EpicSevenLocalGearParser().Parse(lobbyOnlyPath, 6);
+            throw new InvalidOperationException("只有大厅增量数据时解析应当失败");
+        }
+        catch (InvalidDataException ex) when (ex.Message.Contains("大厅增量数据"))
+        {
+        }
 
         Console.WriteLine("装备扫描自检通过：PCAPNG/TCP 重组、传输解码、LZ4、MessagePack、装备转换、英雄过滤与 +6 过滤均正常");
     }
@@ -958,7 +1395,7 @@ if (args.Contains("--ui-smoke"))
                 ?? throw new InvalidOperationException("未找到主页签");
             var tabs = tabsField.GetValue(form) ?? throw new InvalidOperationException("主页签未初始化");
             var pages = tabs.GetType().GetProperty("Pages")?.GetValue(tabs) as System.Collections.ICollection;
-            if (pages?.Count != 6)
+            if (pages?.Count != 9)
                 throw new InvalidOperationException($"页签数量错误：{pages?.Count}");
 
             var selectedIndex = tabs.GetType().GetProperty("SelectedIndex")!;
@@ -980,6 +1417,9 @@ if (args.Contains("--ui-smoke"))
             var deviceListMode = (bool)deviceSelect.GetType().GetProperty("List")!.GetValue(deviceSelect)!;
             if (!deviceListMode)
                 throw new InvalidOperationException("设备下拉框仍允许文字输入");
+            var deviceItems = deviceSelect.GetType().GetProperty("Items")!.GetValue(deviceSelect) as System.Collections.IList;
+            if (deviceItems?.Count == 0)
+                deviceItems.Add("emulator-test");
             var expandDrop = deviceSelect.GetType().GetProperty("ExpandDrop")!;
             expandDrop.SetValue(deviceSelect, true);
             Application.DoEvents();
@@ -1053,6 +1493,8 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var gearScanExport = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnGearScanExport",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var gearScanImport = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnGearScanImport",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var gearScanLog = (RichTextBox)typeof(TiezhuToolbox.MainForm).GetField("_gearScanLog",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var gearScanMinimum = typeof(TiezhuToolbox.MainForm).GetField("_comboGearScanMinimumEnhance",
@@ -1062,7 +1504,7 @@ if (args.Contains("--ui-smoke"))
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             var gearScanHeroFilterValue = gearScanHeroFilter.GetType().GetProperty("SelectedValue")!
                 .GetValue(gearScanHeroFilter) as string;
-            if (!gearScanStart.Enabled || gearScanStop.Enabled || gearScanExport.Enabled
+            if (!gearScanStart.Enabled || gearScanStop.Enabled || gearScanExport.Enabled || gearScanImport.Enabled
                 || !gearScanLog.ReadOnly || gearScanMinimumValue != "+6"
                 || gearScanHeroFilterValue != "全部英雄" || timer.Enabled)
                 throw new InvalidOperationException("装备扫描页初始状态不正确");
@@ -1098,6 +1540,59 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException("星之铁匠铺日志未填满内容区");
 
             selectedIndex.SetValue(tabs, 4);
+            Application.DoEvents();
+            var heroBrowser = form.Controls.Cast<Control>().SelectMany(Descendants)
+                .OfType<TiezhuToolbox.HeroBrowserControl>().FirstOrDefault()
+                ?? throw new InvalidOperationException("英雄页未初始化");
+            var heroWorkspace = heroBrowser.GetType().GetField("_workspace",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(heroBrowser)!;
+            heroWorkspace.GetType().GetMethod("Import")!.Invoke(heroWorkspace,
+            [
+                "{\"items\":[],\"heroes\":[" +
+                "{\"id\":\"h1\",\"code\":\"c1001\",\"name\":\"Ras\",\"level\":60,\"stars\":6,\"awaken\":6}," +
+                "{\"id\":\"h2\",\"code\":\"c5190\",\"name\":\"Aube\",\"level\":60,\"stars\":5,\"awaken\":0}," +
+                "{\"id\":\"h3\",\"code\":\"x9999\",\"name\":\"NoAvatar\",\"level\":1,\"stars\":2,\"awaken\":0}]}",
+                "ui-smoke", false,
+            ]);
+            Application.DoEvents();
+            CaptureTab("heroes");
+            var heroRows = (System.Collections.IEnumerable)(heroBrowser.GetType().GetField("_rows",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                .GetValue(heroBrowser) ?? throw new InvalidOperationException("英雄列表行未初始化"));
+            var avatarCount = 0;
+            foreach (var row in heroRows)
+            {
+                var code = row.GetType().GetProperty("Code")!.GetValue(row) as string;
+                var avatar = row.GetType().GetProperty("Avatar")!.GetValue(row);
+                if (code == "x9999")
+                {
+                    if (avatar != null)
+                        throw new InvalidOperationException("无头像资源英雄的 Avatar 应为空");
+                    continue;
+                }
+                var cellImage = avatar as AntdUI.CellImage
+                    ?? throw new InvalidOperationException($"英雄 {code} 的头像列不是图片单元格");
+                if (cellImage.Image == null)
+                    throw new InvalidOperationException($"英雄 {code} 的头像未加载");
+                avatarCount++;
+            }
+            if (avatarCount != 2)
+                throw new InvalidOperationException($"英雄头像数量错误：{avatarCount}");
+
+            selectedIndex.SetValue(tabs, 5);
+            Application.DoEvents();
+            CaptureTab("gear-browser");
+            if (!form.Controls.Cast<Control>().SelectMany(Descendants).OfType<TiezhuToolbox.GearBrowserControl>().Any())
+                throw new InvalidOperationException("装备浏览页未初始化");
+
+            selectedIndex.SetValue(tabs, 6);
+            Application.DoEvents();
+            CaptureTab("optimizer");
+            if (!form.Controls.Cast<Control>().SelectMany(Descendants).OfType<TiezhuToolbox.OptimizerControl>().Any())
+                throw new InvalidOperationException("配装页未初始化");
+
+            selectedIndex.SetValue(tabs, 7);
             Application.DoEvents();
             CaptureTab("demand-analysis");
             var demandBrowser = typeof(TiezhuToolbox.MainForm).GetField("_demandBrowserControl",
@@ -1179,7 +1674,7 @@ if (args.Contains("--ui-smoke"))
                 throw new InvalidOperationException("需求子类开关没有更新匹配过滤配置");
             if (timer.Enabled)
                 throw new InvalidOperationException("离开装备页后持续识别仍在运行");
-            selectedIndex.SetValue(tabs, 5);
+            selectedIndex.SetValue(tabs, 8);
             Application.DoEvents();
             var settingInputs = new[] { "numLeftThreshold", "numRightThreshold", "numLevel88Threshold", "comboRecognitionHotKey", "numRecognitionInterval" }
                 .Select(name => (Control)typeof(TiezhuToolbox.MainForm).GetField(name,
@@ -1263,7 +1758,7 @@ if (args.Contains("--ui-smoke"))
         throw new TimeoutException("界面冒烟测试超时");
     if (uiError != null)
         throw new InvalidOperationException("界面冒烟测试失败", uiError);
-    Console.WriteLine("界面冒烟测试通过：6 个页签，23 个套装需求");
+    Console.WriteLine("界面冒烟测试通过：9 个页签，英雄/装备/配装页与 23 个套装需求");
     return;
 }
 
