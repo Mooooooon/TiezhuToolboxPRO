@@ -194,11 +194,11 @@ public class OcrEngine : IDisposable
                 if (zoneRight > panelRect.X && zoneBottom > zoneY)
                 {
                     iconZone = new Rect(panelRect.X, zoneY, zoneRight - panelRect.X, zoneBottom - zoneY);
-                    RecognizeLevels(mat, iconZone.Value, qualityLine, info);
+                    RecognizeLevels(mat, iconZone.Value, qualityLine, words, info);
                 }
             }
 
-            SaveDebugImage(imagePath, mat, panelRect, qualityTextRect, lines, iconZone);
+            SaveDebugImage(imagePath, mat, panelRect, qualityTextRect, words, iconZone);
         }
         catch (Exception ex)
         {
@@ -211,8 +211,45 @@ public class OcrEngine : IDisposable
     /// <summary>
     /// 识别装备等级（图标左上角数字）和强化等级（右上角橙色徽章）。
     /// </summary>
-    private void RecognizeLevels(Mat mat, Rect zone, OcrLine textAnchor, EquipmentInfo info)
+    private void RecognizeLevels(
+        Mat mat,
+        Rect zone,
+        OcrLine textAnchor,
+        IReadOnlyList<OcrWord> panelWords,
+        EquipmentInfo info)
     {
+        // 整面板 OCR 已经拿到了未经 GroupLines 合并的原始文字框，优先复用图标区里的等级和强化等级。
+        // 这可以避免 "85" 与 "+15" 被显示为同一个行框后，局部二次 OCR 偶发漏掉 85 并误走 88 模板兜底。
+        var panelZoneWords = panelWords
+            .Where(w => IsWordCenterInside(w, zone))
+            .ToList();
+
+        var panelLevelWord = panelZoneWords
+            .Select(w => (Word: w, Parsed: TryParseEquipmentLevel(w.Text, out var level), Level: level))
+            .Where(candidate => candidate.Parsed)
+            .OrderBy(candidate => candidate.Word.X)
+            .FirstOrDefault();
+        if (panelLevelWord.Parsed)
+        {
+            info.Level = panelLevelWord.Level;
+            info.RawText += $"{Environment.NewLine}[debug] level-from-panel='{panelLevelWord.Word.Text}' -> {info.Level}";
+        }
+
+        if (info.EnhanceLevel == 0)
+        {
+            var panelEnhanceWord = panelZoneWords
+                .Select(w => (Word: w, Match: Regex.Match(w.Text.Trim(), @"^\+\s*(\d{1,2})$")))
+                .FirstOrDefault(candidate => candidate.Match.Success
+                    && int.TryParse(candidate.Match.Groups[1].Value, out var enhance)
+                    && IsValidEnhanceLevel(enhance));
+            if (panelEnhanceWord.Match?.Success == true
+                && int.TryParse(panelEnhanceWord.Match.Groups[1].Value, out var panelEnhance))
+            {
+                info.EnhanceLevel = panelEnhance;
+                info.RawText += $"{Environment.NewLine}[debug] enhance-from-panel='{panelEnhanceWord.Word.Text}' -> +{info.EnhanceLevel}";
+            }
+        }
+
         using var zoneMat = ImagePreprocessor.Crop(mat, zone);
         if (zoneMat.Empty())
             return;
@@ -225,13 +262,14 @@ public class OcrEngine : IDisposable
                 info.RawText += $"{Environment.NewLine}[debug] zonebox '{tb.Text}' ({tb.Box.X},{tb.Box.Y},{tb.Box.Width},{tb.Box.Height})";
 
             var levelBox = boxes
-                .Where(t => Regex.IsMatch(t.Text.Trim(), @"^\d{1,3}$"))
-                .OrderBy(t => t.Text.Trim().Length == 2 ? 0 : 1)
-                .ThenBy(t => t.Box.Y)
-                .ThenBy(t => t.Box.X)
+                .Select(t => (Box: t, Parsed: TryParseEquipmentLevel(t.Text, out var level), Level: level))
+                .Where(candidate => candidate.Parsed)
+                .OrderBy(candidate => candidate.Box.Text.Trim().Length == 2 ? 0 : 1)
+                .ThenBy(candidate => candidate.Box.Box.Y)
+                .ThenBy(candidate => candidate.Box.Box.X)
                 .FirstOrDefault();
-            if (levelBox != null && int.TryParse(levelBox.Text.Trim(), out var lvl2))
-                info.Level = lvl2;
+            if (info.Level == 0 && levelBox.Parsed)
+                info.Level = levelBox.Level;
 
             var enhBox = boxes.FirstOrDefault(t => Regex.IsMatch(t.Text.Trim(), @"^\+\d{1,2}$"));
             if (info.EnhanceLevel == 0
@@ -379,8 +417,7 @@ public class OcrEngine : IDisposable
                     var (maskLabel, maskConf) = _digitMatcher.MatchBinaryCropBest(digitCrop);
                     info.RawText += $"{Environment.NewLine}[debug] strip mask best='{maskLabel}' conf={maskConf:F3}";
                     if (maskConf >= 0.65
-                        && int.TryParse(maskLabel.Replace("_mask", ""), out var maskLevel)
-                        && maskLevel is >= 1 and <= 99)
+                        && TryParseEquipmentLevel(maskLabel.Replace("_mask", ""), out var maskLevel))
                         info.Level = maskLevel;
 
                     // 方案 B：PaddleOCR 直读原始彩色数字条。
@@ -398,7 +435,7 @@ public class OcrEngine : IDisposable
                             var colorText = GetPaddle().RecognizeLine(stripColor);
                             info.RawText += $"{Environment.NewLine}[debug] strip paddle-color='{colorText}'";
                             var cm = Regex.Match(colorText.Trim(), @"^(\d{1,3})\D{0,2}$");
-                            if (cm.Success && int.TryParse(cm.Groups[1].Value, out var clvl) && clvl is >= 1 and <= 99)
+                            if (cm.Success && TryParseEquipmentLevel(cm.Groups[1].Value, out var clvl))
                                 info.Level = clvl;
                         }
                         catch { /* 忽略 */ }
@@ -412,7 +449,7 @@ public class OcrEngine : IDisposable
                             var paddleText = GetPaddle().RecognizeLine(digitBig);
                             info.RawText += $"{Environment.NewLine}[debug] strip paddle='{paddleText}'";
                             var pm = Regex.Match(paddleText.Trim(), @"^\d{1,3}$");
-                            if (pm.Success && int.TryParse(pm.Value, out var plvl))
+                            if (pm.Success && TryParseEquipmentLevel(pm.Value, out var plvl))
                                 info.Level = plvl;
                         }
                         catch { /* 忽略 */ }
@@ -427,7 +464,7 @@ public class OcrEngine : IDisposable
 
         using var topLeft = ImagePreprocessor.Crop(zoneMat, new Rect(0, 0, zoneMat.Width / 2, zoneMat.Height / 2));
         var (tv, tconf) = _digitMatcher.RecognizeLevel(topLeft);
-        if (tconf > 0.5)
+        if (tconf > 0.5 && tv is 85 or 88 or 90)
             info.Level = tv;
     }
 
@@ -483,6 +520,17 @@ public class OcrEngine : IDisposable
 
     private static bool IsValidEnhanceLevel(int level)
         => level is 3 or 6 or 9 or 12 or 15;
+
+    private static bool TryParseEquipmentLevel(string text, out int level)
+        => int.TryParse(text.Trim(), out level) && level is 85 or 88 or 90;
+
+    private static bool IsWordCenterInside(OcrWord word, Rect rect)
+    {
+        var centerX = word.X + word.W / 2;
+        var centerY = word.Y + word.H / 2;
+        return centerX >= rect.X && centerX < rect.Right
+            && centerY >= rect.Y && centerY < rect.Bottom;
+    }
 
     /// <summary>
     /// 根据品质、当前副属性条数和已显示的强化次数推导强化等级。
@@ -611,7 +659,7 @@ public class OcrEngine : IDisposable
         Mat mat,
         Rect panelRect,
         Rect qualityTextRect,
-        List<OcrLine> lines,
+        IReadOnlyList<OcrWord> words,
         Rect? iconZone)
     {
         try
@@ -619,8 +667,10 @@ public class OcrEngine : IDisposable
             using var debug = mat.Clone();
             Cv2.Rectangle(debug, panelRect, new Scalar(0, 255, 255), 2);
             Cv2.Rectangle(debug, qualityTextRect, new Scalar(255, 0, 255), 2);
-            foreach (var l in lines)
-                Cv2.Rectangle(debug, new Rect(l.X, l.Y, l.W, l.H), new Scalar(0, 255, 0), 1);
+            // 绘制 Paddle 返回的原始文字框，不绘制 GroupLines 合并后的行框。
+            // 等级与强化徽章即使被归到同一行，也应在调试图中保持为两个独立绿框。
+            foreach (var word in words)
+                Cv2.Rectangle(debug, new Rect(word.X, word.Y, word.W, word.H), new Scalar(0, 255, 0), 1);
             if (iconZone is Rect z)
                 Cv2.Rectangle(debug, z, new Scalar(255, 0, 0), 2);
 
