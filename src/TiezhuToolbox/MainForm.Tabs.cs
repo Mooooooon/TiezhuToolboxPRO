@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TiezhuToolbox.Modules.Recommend;
 
 namespace TiezhuToolbox;
@@ -11,6 +12,10 @@ public partial class MainForm
     private DemandBrowserControl _demandBrowserControl = null!;
     private bool _isLoadingSettings;
     private Label _settingsRulesLabel = null!;
+    private LinkLabel _githubLink = null!;
+    private AntdUI.Button _btnCheckUpdate = null!;
+    private Label _lblUpdateStatus = null!;
+    private bool _isCheckingUpdate;
 
     private bool IsEquipmentTabActive => _mainTabs.SelectedTab == _equipmentTab;
 
@@ -127,7 +132,7 @@ public partial class MainForm
         {
             BackColor = Color.White,
             Location = new Point(24, 24),
-            Size = new Size(720, 950),
+            Size = new Size(720, 1070),
             Padding = new Padding(24),
         };
         host.Resize += (_, _) => card.Width = Math.Min(
@@ -335,16 +340,68 @@ public partial class MainForm
         };
         rulesPanel.Controls.Add(_settingsRulesLabel);
 
+        var aboutTitle = CreateSettingsHeading(
+            "关于与更新",
+            "查看项目主页，或检查 GitHub Releases 并下载最新 Windows 版本。",
+            856);
+        var versionLabel = new Label
+        {
+            Text = $"当前版本 {GitHubUpdateService.CurrentVersionText}",
+            ForeColor = TextDarkColor,
+            Location = new Point(24, 920),
+            Size = new Size(135, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+        };
+        _githubLink = new LinkLabel
+        {
+            Name = "githubRepositoryLink",
+            Text = "GitHub 项目主页",
+            LinkColor = AccentColor,
+            ActiveLinkColor = Color.FromArgb(13, 71, 161),
+            Location = new Point(165, 920),
+            Size = new Size(125, 34),
+            TextAlign = ContentAlignment.MiddleLeft,
+            TabStop = true,
+        };
+        _githubLink.LinkClicked += (_, _) => OpenExternalUrl(GitHubUpdateService.RepositoryUrl);
+
+        _btnCheckUpdate = new AntdUI.Button
+        {
+            Name = "btnCheckUpdate",
+            Text = "检查更新",
+            Location = new Point(306, 920),
+            Size = new Size(104, 34),
+            Radius = 6,
+            Type = AntdUI.TTypeMini.Primary,
+        };
+        _btnCheckUpdate.Click += async (_, _) => await CheckForUpdatesAsync();
+
+        _lblUpdateStatus = new Label
+        {
+            Name = "lblUpdateStatus",
+            Text = "更新检查只访问 GitHub，不上传任何本地数据。",
+            ForeColor = Color.FromArgb(95, 99, 104),
+            Location = new Point(24, 958),
+            Size = new Size(650, 28),
+            TextAlign = ContentAlignment.MiddleLeft,
+            AutoEllipsis = true,
+        };
+
         var reset = new AntdUI.Button
         {
             Text = "恢复默认设置",
-            Location = new Point(24, 866),
+            Location = new Point(24, 1002),
             Size = new Size(120, 34),
             Radius = 6,
         };
         reset.Click += (_, _) => ResetSettings();
 
         card.Controls.Add(reset);
+        card.Controls.Add(_lblUpdateStatus);
+        card.Controls.Add(_btnCheckUpdate);
+        card.Controls.Add(_githubLink);
+        card.Controls.Add(versionLabel);
+        card.Controls.Add(aboutTitle);
         card.Controls.Add(rulesPanel);
         card.Controls.Add(rulesTitle);
         card.Controls.Add(_chkAutoStopOnValuableEquipment);
@@ -360,6 +417,67 @@ public partial class MainForm
         card.Controls.Add(title);
         host.Controls.Add(card);
         return host;
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        if (_isCheckingUpdate)
+            return;
+
+        _isCheckingUpdate = true;
+        _btnCheckUpdate.Enabled = false;
+        _btnCheckUpdate.Text = "正在检查";
+        _lblUpdateStatus.ForeColor = Color.FromArgb(95, 99, 104);
+        _lblUpdateStatus.Text = "正在连接 GitHub Releases…";
+
+        try
+        {
+            var release = await GitHubUpdateService.GetLatestReleaseAsync();
+            if (release.Version <= GitHubUpdateService.CurrentVersion)
+            {
+                _lblUpdateStatus.ForeColor = AdviceContinueColor;
+                _lblUpdateStatus.Text = $"已是最新版本（{GitHubUpdateService.CurrentVersionText}）。";
+                return;
+            }
+
+            _lblUpdateStatus.ForeColor = AdviceGambleColor;
+            _lblUpdateStatus.Text = $"发现新版本 {release.TagName}。";
+            var result = MessageBox.Show(
+                this,
+                $"发现新版本 {release.TagName}，当前版本为 {GitHubUpdateService.CurrentVersionText}。\r\n\r\n是否立即下载 Windows x64 更新包？",
+                "发现软件更新",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                OpenExternalUrl(release.DownloadUrl ?? release.ReleasePageUrl);
+                _lblUpdateStatus.Text = $"已在浏览器中打开 {release.TagName} 下载链接。";
+            }
+        }
+        catch (Exception ex)
+        {
+            _lblUpdateStatus.ForeColor = AdviceGiveUpColor;
+            _lblUpdateStatus.Text = $"检查更新失败：{ex.Message}";
+        }
+        finally
+        {
+            _isCheckingUpdate = false;
+            _btnCheckUpdate.Enabled = true;
+            _btnCheckUpdate.Text = "检查更新";
+        }
+    }
+
+    private void OpenExternalUrl(string url)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, $"无法打开链接：{ex.Message}", "打开链接失败",
+                MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
     }
 
     /// <summary>

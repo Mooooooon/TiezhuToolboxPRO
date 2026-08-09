@@ -1225,6 +1225,17 @@ if (args.Contains("--ui-smoke"))
                     $"88级阈值输入框被裁剪：输入框={level88Input.Bounds}，容器={thresholdPanel.ClientSize}");
             var settingsRulesLabel = (Label)typeof(TiezhuToolbox.MainForm).GetField("_settingsRulesLabel",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var githubLink = (LinkLabel)typeof(TiezhuToolbox.MainForm).GetField("_githubLink",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var checkUpdateButton = (Control)typeof(TiezhuToolbox.MainForm).GetField("_btnCheckUpdate",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            var updateStatus = (Label)typeof(TiezhuToolbox.MainForm).GetField("_lblUpdateStatus",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
+            if (!githubLink.Text.Contains("GitHub", StringComparison.Ordinal)
+                || !checkUpdateButton.Enabled
+                || checkUpdateButton.Text != "检查更新"
+                || !updateStatus.Text.Contains("GitHub", StringComparison.Ordinal))
+                throw new InvalidOperationException("软件设置页 GitHub 链接或更新控件初始化错误");
             var heroicOnlySpeedCheck = (Control)typeof(TiezhuToolbox.MainForm).GetField("_chkHeroicOnlyGambleSpeed",
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(form)!;
             if (heroicOnlySpeedCheck.Width < DpiPixel(400) || heroicOnlySpeedCheck.Height < DpiPixel(32))
