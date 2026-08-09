@@ -405,7 +405,7 @@ if (args.Contains("--gear-scan"))
     try
     {
         var pcapngPath = Path.Combine(testRoot, "synthetic.pcapng");
-        static byte[] TcpFrame(uint sequence, uint acknowledgement, byte[] payload)
+        static byte[] TcpFrame(uint sequence, uint acknowledgement, ushort sourcePort, byte[] payload)
         {
             var frame = new byte[14 + 20 + 20 + payload.Length];
             frame[12] = 0x08;
@@ -420,7 +420,7 @@ if (args.Contains("--gear-scan"))
             ip[16] = 10;
             ip[19] = 2;
             var tcp = ip[20..];
-            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(tcp, 3333);
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(tcp, sourcePort);
             System.Buffers.Binary.BinaryPrimitives.WriteUInt16BigEndian(tcp[2..], 50000);
             System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(tcp[4..], sequence);
             System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(tcp[8..], acknowledgement);
@@ -464,15 +464,30 @@ if (args.Contains("--gear-scan"))
                 writer.Write(blockLength);
             }
 
-            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
-            WritePacket(TcpFrame(100, 900, [0xAA, 0xBB]));
-            WritePacket(TcpFrame(102, 900, [0xCC, 0xDD]));
-            WritePacket(TcpFrame(200, 901, []));
+            // 国际服 3333：故意乱序并重复尾段，验证 TCP 重组与去重。
+            WritePacket(TcpFrame(104, 900, 3333, [0xAA, 0xBB, 0xCC, 0xDD]));
+            WritePacket(TcpFrame(100, 900, 3333, [0x00, 0x00, 0x00, 0x04]));
+            WritePacket(TcpFrame(104, 900, 3333, [0xAA, 0xBB, 0xCC, 0xDD]));
+
+            // 中国服 5222：与国际服使用相同查询层协议，应由默认端口集合一并解码。
+            WritePacket(TcpFrame(200, 901, 5222, [0x00, 0x00, 0x00, 0x02, 0xEE, 0xFF]));
+            WritePacket(TcpFrame(300, 902, 3333, []));
         }
 
         var streams = PcapngPayloadExtractor.ExtractHexStreams(pcapngPath);
-        if (streams.Count != 1 || streams[0] != "aabbccdd")
+        var expectedStreams = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "00000004aabbccdd",
+            "00000002eeff",
+        };
+        if (streams.Count != 2 || !streams.ToHashSet(StringComparer.Ordinal).SetEquals(expectedStreams))
             throw new InvalidOperationException("PCAPNG TCP 重组错误：" + string.Join(",", streams));
+
+        var serverPayloads = EpicSevenTransportDecoder.DecodeServerPayloads(pcapngPath)
+            .Select(Convert.ToHexString)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (!serverPayloads.SetEquals(["AABBCCDD", "EEFF"]))
+            throw new InvalidOperationException("国际服/中国服端口解码错误：" + string.Join(",", serverPayloads));
 
         const string parserResponse = """
             {
@@ -552,7 +567,7 @@ if (args.Contains("--gear-scan"))
             || message.GetValueOrDefault("res") as string != "ok")
             throw new InvalidOperationException("游戏 LZ4/MessagePack 解码错误");
 
-        Console.WriteLine("装备扫描自检通过：PCAPNG/TCP 重组、传输解码、LZ4、MessagePack、装备转换、英雄过滤与 +6 过滤均正常");
+        Console.WriteLine("装备扫描自检通过：国际服3333/中国服5222、PCAPNG/TCP重组、传输解码、LZ4、MessagePack、装备转换、英雄过滤与+6过滤均正常");
     }
     finally
     {

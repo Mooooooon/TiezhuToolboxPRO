@@ -67,7 +67,7 @@ public partial class MainForm
         };
         var privacy = new Label
         {
-            Text = "无需 Python/Npcap/Wireshark，也不会上传游戏数据。抓包使用 Windows 自带 pktmon（开始时需 UAC），解析与导出全部在本机完成。",
+            Text = "支持国际服（3333）与中国服（5222）自动识别；无需 Python/Npcap/Wireshark，游戏数据全程仅在本机处理。",
             ForeColor = AdviceContinueColor,
             Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Bold),
             Location = new Point(24, 80),

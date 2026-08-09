@@ -18,6 +18,7 @@ public static class PcapngPayloadExtractor
     private const ushort LinkTypeRaw = 101;
     private const ushort LinkTypeLinuxSll = 113;
 
+    // Fribbels 扫描器使用 3333 抓取国际服，5222 抓取中国服；同时监听即可自动兼容两种服务器。
     private static readonly HashSet<ushort> TargetPorts = [3333, 5222];
 
     public readonly record struct CapturedTcpSegment(

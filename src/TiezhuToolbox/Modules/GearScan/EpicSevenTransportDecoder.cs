@@ -6,6 +6,7 @@ namespace TiezhuToolbox.Modules.GearScan;
 /// </summary>
 public static class EpicSevenTransportDecoder
 {
+    // 3333：国际服；5222：中国服。与抓包过滤端口保持一致。
     private static readonly HashSet<ushort> DefaultServerPorts = [3333, 5222];
     private static readonly byte[] XorKey = Convert.FromHexString(
         "91AE4ED4644F585162EC1BD5EF24ADDBAF838242AEF51E97804B134FFD8CE5BB" +
